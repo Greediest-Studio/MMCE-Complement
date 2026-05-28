@@ -4,12 +4,8 @@ import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -30,8 +26,6 @@ import javax.annotation.Nullable;
  */
 public class BlockFluxOutputHatch extends BlockMachineComponent {
 
-    public static final PropertyDirection FACING = PropertyDirection.create("facing");
-
     public BlockFluxOutputHatch() {
         super(Material.IRON);
         setHardness(2.0F);
@@ -40,39 +34,6 @@ public class BlockFluxOutputHatch extends BlockMachineComponent {
         setHarvestLevel("pickaxe", 1);
         setTranslationKey("mmce_complement.flux_output_hatch");
         setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
-    }
-
-    @Override
-    @Nonnull
-    protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING);
-    }
-
-    @Override
-    @Nonnull
-    public IBlockState getStateFromMeta(int meta) {
-        EnumFacing facing = EnumFacing.byIndex(meta & 7);
-        return getDefaultState().withProperty(FACING, facing);
-    }
-
-    @Override
-    public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getIndex();
-    }
-
-    @Override
-    @Nonnull
-    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
-                                            float hitX, float hitY, float hitZ, int meta,
-                                            EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, facing.getOpposite());
-    }
-
-    @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
-                                EntityLivingBase placer, ItemStack stack) {
-        world.setBlockState(pos, state.withProperty(FACING, placer.getHorizontalFacing().getOpposite()), 2);
     }
 
     @Override

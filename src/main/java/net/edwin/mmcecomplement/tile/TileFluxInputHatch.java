@@ -36,7 +36,7 @@ public class TileFluxInputHatch extends TileFluxHatchBase implements IFluxPoint 
 
     @Override
     protected long computeRequest() {
-        long max = tier.maxEnergy;
+        long max = getBufferCapacityRaw();
         long cur = buffer.get();
         long room = max - cur;
         if (room <= 0L) {

@@ -48,6 +48,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     protected int folderID = -1;
 
     protected EnergyHatchData tier = EnergyHatchData.LUDICROUS;
+    protected long bufferCapacity = tier.maxEnergy;
 
     protected boolean chunkLoaded = true;
     protected boolean chunkLoadingRequested = false;
@@ -123,6 +124,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         networkID = nbt.getInteger("networkID");
         priority = nbt.getInteger("priority");
         transferLimit = nbt.hasKey("limit") ? nbt.getLong("limit") : Long.MAX_VALUE;
+        bufferCapacity = nbt.hasKey("bufferCapacity") ? nbt.getLong("bufferCapacity") : tier.maxEnergy;
         disableLimit = !nbt.hasKey("disableLimit") || nbt.getBoolean("disableLimit");
         surgeMode = nbt.getBoolean("surgeMode");
         chunkLoadingRequested = nbt.getBoolean("chunkLoading");
@@ -139,12 +141,14 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         if (nbt.hasUniqueId("owner")) {
             playerUUID = nbt.getUniqueId("owner");
         }
+        clampBufferCapacityAndStoredEnergy();
     }
 
     private void writeFluxNBT(NBTTagCompound nbt) {
         nbt.setInteger("networkID", networkID);
         nbt.setInteger("priority", priority);
         nbt.setLong("limit", transferLimit);
+        nbt.setLong("bufferCapacity", bufferCapacity);
         nbt.setBoolean("disableLimit", disableLimit);
         nbt.setBoolean("chunkLoading", chunkLoadingRequested);
         nbt.setBoolean("surgeMode", surgeMode);
@@ -288,6 +292,20 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         markDirty();
     }
 
+    public void setBufferCapacityRaw(long value) {
+        this.bufferCapacity = Math.max(0L, Math.min(value, getBufferCapacityCeiling()));
+        clampBufferCapacityAndStoredEnergy();
+        markDirty();
+    }
+
+    public long getBufferCapacityRaw() {
+        return bufferCapacity;
+    }
+
+    public long getBufferCapacityCeiling() {
+        return tier.maxEnergy;
+    }
+
     public void setSurgeModeRaw(boolean v) {
         this.surgeMode = v;
         markDirty();
@@ -390,7 +408,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
         @Override
         public void addToBuffer(long amount) {
-            long max = tier.maxEnergy;
+            long max = getBufferCapacityRaw();
             long cur = buffer.get();
             long add = Math.min(amount, max - cur);
             if (add > 0L) {
@@ -445,13 +463,13 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     @Override
     public void setCurrentEnergy(long value) {
-        long clamped = Math.max(0L, Math.min(value, tier.maxEnergy));
+        long clamped = Math.max(0L, Math.min(value, getBufferCapacityRaw()));
         buffer.set(clamped);
     }
 
     @Override
     public long getMaxEnergy() {
-        return tier.maxEnergy;
+        return getBufferCapacityRaw();
     }
 
     // ---- Public helpers ------------------------------------------------
@@ -462,5 +480,15 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     public void setTier(EnergyHatchData tier) {
         this.tier = tier;
+        clampBufferCapacityAndStoredEnergy();
+    }
+
+    private void clampBufferCapacityAndStoredEnergy() {
+        long maxAllowed = getBufferCapacityCeiling();
+        bufferCapacity = Math.max(0L, Math.min(bufferCapacity, maxAllowed));
+        long cur = buffer.get();
+        if (cur > bufferCapacity) {
+            buffer.set(bufferCapacity);
+        }
     }
 }

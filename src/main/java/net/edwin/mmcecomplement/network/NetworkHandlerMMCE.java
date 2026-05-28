@@ -53,6 +53,7 @@ public final class NetworkHandlerMMCE {
     public static final int FIELD_SURGE_MODE    = 4;
     public static final int FIELD_DISABLE_LIMIT = 5;
     public static final int FIELD_CHUNK_LOAD    = 6;
+    public static final int FIELD_BUFFER_CAP    = 7;
 
     // -- Packet ---------------------------------------------------------
 
@@ -225,6 +226,9 @@ public final class NetworkHandlerMMCE {
                     break;
                 case FIELD_CHUNK_LOAD:
                     hatch.setChunkLoadingRequested(nbt.getBoolean("v"));
+                    break;
+                case FIELD_BUFFER_CAP:
+                    hatch.setBufferCapacityRaw(nbt.getLong("v"));
                     break;
                 default:
                     return;

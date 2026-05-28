@@ -4,6 +4,7 @@ import net.edwin.mmcecomplement.network.NetworkHandlerMMCE;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import sonar.fluxnetworks.api.gui.EnumNavigationTabs;
@@ -32,6 +33,7 @@ public class GuiFluxHatchHome extends GuiTabCore {
     public TextboxButton fluxName;
     public TextboxButton priority;
     public TextboxButton limit;
+    public TextboxButton bufferCap;
     public SlidedSwitchButton surge;
     public SlidedSwitchButton disableLimit;
     public SlidedSwitchButton chunkLoad;
@@ -77,6 +79,13 @@ public class GuiFluxHatchHome extends GuiTabCore {
         limit.setMaxStringLength(19);
         limit.setText(String.valueOf(hatch.getRawLimit()));
 
+        bufferCap = TextboxButton.create(this,
+            I18n.format("gui.mmce_complement.max_buffer") + ":", 3, fontRenderer, 16, 79, 144, 12)
+            .setOutlineColor(outline)
+            .setDigitsOnly();
+        bufferCap.setMaxStringLength(19);
+        bufferCap.setText(String.valueOf(hatch.getBufferCapacityRaw()));
+
         // Slide switches — positions match GuiFluxConnectorHome.initGui exactly.
         surge = new SlidedSwitchButton(140, 120, 1, guiLeft, guiTop, hatch.getSurgeMode());
         disableLimit = new SlidedSwitchButton(140, 132, 2, guiLeft, guiTop, hatch.getDisableLimit());
@@ -89,6 +98,7 @@ public class GuiFluxHatchHome extends GuiTabCore {
         textBoxes.add(fluxName);
         textBoxes.add(priority);
         textBoxes.add(limit);
+        textBoxes.add(bufferCap);
     }
 
     @Override
@@ -102,7 +112,7 @@ public class GuiFluxHatchHome extends GuiTabCore {
                 : "None";
 
         renderNetwork(netName, color, 20, 8);
-        renderTransfer(hatch, 0xFFFFFF, 30, 90);
+        renderTransfer(hatch, 0xFFFFFF, 30, 100);
 
         fontRenderer.drawString(FluxTranslate.SURGE_MODE.t(), 20, 120, color);
         fontRenderer.drawString(FluxTranslate.DISABLE_LIMIT.t(), 20, 132, color);
@@ -131,6 +141,12 @@ public class GuiFluxHatchHome extends GuiTabCore {
                 limit.setText(cur);
             }
         }
+        if (bufferCap != null && !bufferCap.isFocused()) {
+            String cur = String.valueOf(hatch.getBufferCapacityRaw());
+            if (!cur.equals(bufferCap.getText())) {
+                bufferCap.setText(cur);
+            }
+        }
 
         timer++;
         if (timer >= 20) {
@@ -156,6 +172,12 @@ public class GuiFluxHatchHome extends GuiTabCore {
             NBTTagCompound t = new NBTTagCompound();
             t.setLong("v", v);
             send(NetworkHandlerMMCE.FIELD_LIMIT, t);
+        } else if (box == bufferCap) {
+            long v = Math.min(bufferCap.getLongFromText(true), hatch.getBufferCapacityCeiling());
+            bufferCap.setText(String.valueOf(v));
+            NBTTagCompound t = new NBTTagCompound();
+            t.setLong("v", v);
+            send(NetworkHandlerMMCE.FIELD_BUFFER_CAP, t);
         }
     }
 

@@ -55,7 +55,7 @@ public class TileFluxOutputHatch extends TileFluxHatchBase implements IFluxPlug 
 
     @Override
     public boolean receiveEnergy(long amount) {
-        long max = tier.maxEnergy;
+        long max = getBufferCapacityRaw();
         long cur = buffer.get();
         if (cur + amount > max) {
             return false;

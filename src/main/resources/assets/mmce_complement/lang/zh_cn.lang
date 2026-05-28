@@ -1,2 +1,3 @@
 tile.mmce_complement.flux_input_hatch.name=无线通量网络输入仓
 tile.mmce_complement.flux_output_hatch.name=无线通量网络输出仓
+gui.mmce_complement.max_buffer=最大缓存

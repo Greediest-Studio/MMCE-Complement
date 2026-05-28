@@ -1,10 +1,5 @@
 {
     "variants": {
-        "facing=north": { "model": "mmce_complement:flux_output_hatch" },
-        "facing=south": { "model": "mmce_complement:flux_output_hatch", "y": 180 },
-        "facing=east":  { "model": "mmce_complement:flux_output_hatch", "y": 90 },
-        "facing=west":  { "model": "mmce_complement:flux_output_hatch", "y": 270 },
-        "facing=up":    { "model": "mmce_complement:flux_output_hatch", "x": 270 },
-        "facing=down":  { "model": "mmce_complement:flux_output_hatch", "x": 90 }
+        "normal": { "model": "mmce_complement:flux_output_hatch" }
     }
 }
