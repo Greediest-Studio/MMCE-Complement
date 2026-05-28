@@ -63,6 +63,10 @@ if (propertyBool('publish_to_curseforge')) {
                         requiredDependency 'assetmover'
                     }
                 }
+                relations {
+                    requiredDependency 'flux-networks'
+                    requiredDependency 'modularmachinery-community-edition'
+                }
             }
             options {
                 debug = propertyBool('curseforge_debug')
