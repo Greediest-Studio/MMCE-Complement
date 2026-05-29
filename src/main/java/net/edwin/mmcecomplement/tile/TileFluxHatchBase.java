@@ -126,6 +126,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         priority = nbt.getInteger("priority");
         transferLimit = nbt.hasKey("limit") ? nbt.getLong("limit") : Long.MAX_VALUE;
         bufferCapacity = nbt.hasKey("bufferCapacity") ? nbt.getLong("bufferCapacity") : tier.maxEnergy;
+        lastCycleChange = nbt.hasKey("fnChange") ? nbt.getLong("fnChange") : 0L;
         disableLimit = !nbt.hasKey("disableLimit") || nbt.getBoolean("disableLimit");
         surgeMode = nbt.getBoolean("surgeMode");
         chunkLoadingRequested = nbt.getBoolean("chunkLoading");
@@ -150,6 +151,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         nbt.setInteger("priority", priority);
         nbt.setLong("limit", transferLimit);
         nbt.setLong("bufferCapacity", bufferCapacity);
+        nbt.setLong("fnChange", lastCycleChange);
         nbt.setBoolean("disableLimit", disableLimit);
         nbt.setBoolean("chunkLoading", chunkLoadingRequested);
         nbt.setBoolean("surgeMode", surgeMode);
@@ -416,7 +418,8 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
             long add = Math.min(amount, max - cur);
             if (add > 0L) {
                 buffer.addAndGet(add);
-                transferChange += add;
+                // FN expects points/controllers to report outgoing transfer as negative.
+                transferChange -= add;
             }
         }
 
@@ -426,7 +429,8 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
             long take = Math.min(amount, cur);
             if (take > 0L) {
                 buffer.addAndGet(-take);
-                transferChange -= take;
+                // FN expects plugs to report injected transfer as positive.
+                transferChange += take;
             }
             return take;
         }
