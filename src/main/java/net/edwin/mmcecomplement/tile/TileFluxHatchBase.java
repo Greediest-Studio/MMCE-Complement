@@ -35,6 +35,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     protected final AtomicLong buffer = new AtomicLong(0L);
     protected long transferChange = 0L;
+    protected long lastCycleChange = 0L;
 
     protected int networkID = -1;
     protected IFluxNetwork network = null;
@@ -342,7 +343,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     @Override
     public long getTransferChange() {
-        return transferChange;
+        return lastCycleChange;
     }
 
     // ---- INetworkConnector --------------------------------------------
@@ -383,12 +384,14 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     private final ITransferHandler transferHandler = new ITransferHandler() {
         @Override
         public void onCycleStart() {
-            transferChange = 0L;
+            // reset accumulated at cycle end; nothing needed here
         }
 
         @Override
         public void onCycleEnd() {
-            // No-op.
+            lastCycleChange = transferChange;
+            transferChange = 0L;
+            markForUpdateSync();
         }
 
         @Override
@@ -403,7 +406,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
         @Override
         public long getChange() {
-            return transferChange;
+            return lastCycleChange;
         }
 
         @Override
@@ -436,11 +439,13 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         @Override
         public void writeCustomNBT(NBTTagCompound nbt, NBTType type) {
             nbt.setLong("buffer", buffer.get());
+            nbt.setLong("fnChange", lastCycleChange);
         }
 
         @Override
         public void readCustomNBT(NBTTagCompound nbt, NBTType type) {
             buffer.set(nbt.getLong("buffer"));
+            lastCycleChange = nbt.getLong("fnChange");
         }
 
         @Override
@@ -451,6 +456,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         @Override
         public void reset() {
             transferChange = 0L;
+            lastCycleChange = 0L;
         }
     };
 
