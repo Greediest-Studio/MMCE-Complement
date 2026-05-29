@@ -30,15 +30,26 @@ public final class ClientColorEvents {
     public static void onBlockColors(ColorHandlerEvent.Block event) {
         registerBlock(event, ModBlocks.FLUX_INPUT_HATCH);
         registerBlock(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        registerBlock(event, ModBlocks.ME_ENERGY_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
+        registerBlock(event, ModBlocks.ME_MANA_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_MANA_OUTPUT_BUS);
     }
 
     @SubscribeEvent
     public static void onItemColors(ColorHandlerEvent.Item event) {
         registerItem(event, ModBlocks.FLUX_INPUT_HATCH);
         registerItem(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        registerItem(event, ModBlocks.ME_ENERGY_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
+        registerItem(event, ModBlocks.ME_MANA_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_MANA_OUTPUT_BUS);
     }
 
     private static void registerBlock(ColorHandlerEvent.Block event, Block block) {
+        if (block == null) {
+            return;
+        }
         if (!(block instanceof BlockDynamicColor)) {
             return;
         }
@@ -49,6 +60,9 @@ public final class ClientColorEvents {
     }
 
     private static void registerItem(ColorHandlerEvent.Item event, Block block) {
+        if (block == null) {
+            return;
+        }
         if (!(block instanceof BlockDynamicColor)) {
             return;
         }

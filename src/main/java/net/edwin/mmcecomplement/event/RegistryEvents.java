@@ -3,6 +3,15 @@ package net.edwin.mmcecomplement.event;
 import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
 import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
+import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyOutputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaOutputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
@@ -18,6 +27,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import hellfirepvp.modularmachinery.common.item.ItemBlockMEMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 
 /**
@@ -42,6 +52,36 @@ public final class RegistryEvents {
                 new ResourceLocation(Tags.MOD_ID, "flux_input_hatch"));
         GameRegistry.registerTileEntity(TileFluxOutputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "flux_output_hatch"));
+
+        if (CompatMods.isAeEnergyCompatLoaded()) {
+            ModBlocks.ME_ENERGY_INPUT_BUS = new BlockMEEnergyInputBus();
+            ModBlocks.ME_ENERGY_INPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_energy_input_bus"));
+            event.getRegistry().register(ModBlocks.ME_ENERGY_INPUT_BUS);
+
+            ModBlocks.ME_ENERGY_OUTPUT_BUS = new BlockMEEnergyOutputBus();
+            ModBlocks.ME_ENERGY_OUTPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_energy_output_bus"));
+            event.getRegistry().register(ModBlocks.ME_ENERGY_OUTPUT_BUS);
+
+            GameRegistry.registerTileEntity(TileMEEnergyInputBus.class,
+                new ResourceLocation(Tags.MOD_ID, "me_energy_input_bus"));
+            GameRegistry.registerTileEntity(TileMEEnergyOutputBus.class,
+                new ResourceLocation(Tags.MOD_ID, "me_energy_output_bus"));
+        }
+
+        if (CompatMods.isAeManaCompatLoaded()) {
+            ModBlocks.ME_MANA_INPUT_BUS = new BlockMEManaInputBus();
+            ModBlocks.ME_MANA_INPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_mana_input_bus"));
+            event.getRegistry().register(ModBlocks.ME_MANA_INPUT_BUS);
+
+            ModBlocks.ME_MANA_OUTPUT_BUS = new BlockMEManaOutputBus();
+            ModBlocks.ME_MANA_OUTPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_mana_output_bus"));
+            event.getRegistry().register(ModBlocks.ME_MANA_OUTPUT_BUS);
+
+            GameRegistry.registerTileEntity(TileMEManaInputBus.class,
+                new ResourceLocation(Tags.MOD_ID, "me_mana_input_bus"));
+            GameRegistry.registerTileEntity(TileMEManaOutputBus.class,
+                new ResourceLocation(Tags.MOD_ID, "me_mana_output_bus"));
+        }
     }
 
     @SubscribeEvent
@@ -55,6 +95,30 @@ public final class RegistryEvents {
         outItem.setRegistryName(ModBlocks.FLUX_OUTPUT_HATCH.getRegistryName());
         outItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
         event.getRegistry().register(outItem);
+
+        if (CompatMods.isAeEnergyCompatLoaded()) {
+            ItemBlockMEMachineComponent inBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_ENERGY_INPUT_BUS);
+            inBusItem.setRegistryName(ModBlocks.ME_ENERGY_INPUT_BUS.getRegistryName());
+            inBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            event.getRegistry().register(inBusItem);
+
+            ItemBlockMEMachineComponent outBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_ENERGY_OUTPUT_BUS);
+            outBusItem.setRegistryName(ModBlocks.ME_ENERGY_OUTPUT_BUS.getRegistryName());
+            outBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            event.getRegistry().register(outBusItem);
+        }
+
+        if (CompatMods.isAeManaCompatLoaded()) {
+            ItemBlockMEMachineComponent inBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_MANA_INPUT_BUS);
+            inBusItem.setRegistryName(ModBlocks.ME_MANA_INPUT_BUS.getRegistryName());
+            inBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            event.getRegistry().register(inBusItem);
+
+            ItemBlockMEMachineComponent outBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_MANA_OUTPUT_BUS);
+            outBusItem.setRegistryName(ModBlocks.ME_MANA_OUTPUT_BUS.getRegistryName());
+            outBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            event.getRegistry().register(outBusItem);
+        }
     }
 
     @SubscribeEvent
@@ -62,6 +126,14 @@ public final class RegistryEvents {
     public static void onModelRegister(ModelRegistryEvent event) {
         registerBlockItemModel(ModBlocks.FLUX_INPUT_HATCH);
         registerBlockItemModel(ModBlocks.FLUX_OUTPUT_HATCH);
+        if (CompatMods.isAeEnergyCompatLoaded()) {
+            registerBlockItemModel(ModBlocks.ME_ENERGY_INPUT_BUS);
+            registerBlockItemModel(ModBlocks.ME_ENERGY_OUTPUT_BUS);
+        }
+        if (CompatMods.isAeManaCompatLoaded()) {
+            registerBlockItemModel(ModBlocks.ME_MANA_INPUT_BUS);
+            registerBlockItemModel(ModBlocks.ME_MANA_OUTPUT_BUS);
+        }
     }
 
     @SideOnly(Side.CLIENT)

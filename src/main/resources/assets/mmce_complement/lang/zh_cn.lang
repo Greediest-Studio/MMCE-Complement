@@ -1,3 +1,15 @@
 tile.mmce_complement.flux_input_hatch.name=无线通量网络输入仓
 tile.mmce_complement.flux_output_hatch.name=无线通量网络输出仓
+tile.mmce_complement.me_energy_input_bus.name=ME机械能源输入总线
+tile.mmce_complement.me_energy_output_bus.name=ME机械能源输出总线
+tile.mmce_complement.me_mana_input_bus.name=ME机械魔力输入总线
+tile.mmce_complement.me_mana_output_bus.name=ME机械魔力输出总线
 gui.mmce_complement.max_buffer=最大缓存
+gui.mmce_complement.me_energy_input_bus.title=ME机械能源输入总线
+gui.mmce_complement.me_energy_output_bus.title=ME机械能源输出总线
+gui.mmce_complement.me_energy_bus.buffer=当前缓存能量
+gui.mmce_complement.me_mana_input_bus.title=ME机械魔力输入总线
+gui.mmce_complement.me_mana_output_bus.title=ME机械魔力输出总线
+gui.mmce_complement.me_mana_bus.buffer=当前缓存魔力
+gui.mmce_complement.me_energy_bus.channel_cost=频道占用：%s
+gui.mmce_complement.me_energy_bus.link_hint=需要接入有效的 ME 网络并占用一个空闲频道。

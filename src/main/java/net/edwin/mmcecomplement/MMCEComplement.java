@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
     modid = Tags.MOD_ID,
     name = Tags.MOD_NAME,
     version = Tags.VERSION,
-    dependencies = "required-after:fluxnetworks;required-after:modularmachinery;"
+    dependencies = "required-after:fluxnetworks;required-after:modularmachinery;after:appliedenergistics2;after:crazyae;"
 )
 public class MMCEComplement {
 
@@ -23,6 +23,14 @@ public class MMCEComplement {
     public static final int GUI_FLUX_INPUT_HATCH = 1;
     /** GUI id for the Wireless Flux Output Hatch. */
     public static final int GUI_FLUX_OUTPUT_HATCH = 2;
+    /** GUI id for the ME Mechanical Energy Input Bus. */
+    public static final int GUI_ME_ENERGY_INPUT_BUS = 3;
+    /** GUI id for the ME Mechanical Energy Output Bus. */
+    public static final int GUI_ME_ENERGY_OUTPUT_BUS = 4;
+    /** GUI id for the ME Mechanical Mana Input Bus. */
+    public static final int GUI_ME_MANA_INPUT_BUS = 5;
+    /** GUI id for the ME Mechanical Mana Output Bus. */
+    public static final int GUI_ME_MANA_OUTPUT_BUS = 6;
 
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;

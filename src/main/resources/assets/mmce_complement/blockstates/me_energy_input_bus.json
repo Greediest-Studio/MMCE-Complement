@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:me_energy_input_bus" }
+  }
+}

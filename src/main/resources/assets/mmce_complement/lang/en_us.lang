@@ -1,3 +1,15 @@
 tile.mmce_complement.flux_input_hatch.name=Wireless Flux Input Hatch
 tile.mmce_complement.flux_output_hatch.name=Wireless Flux Output Hatch
+tile.mmce_complement.me_energy_input_bus.name=ME Mechanical Energy Input Bus
+tile.mmce_complement.me_energy_output_bus.name=ME Mechanical Energy Output Bus
+tile.mmce_complement.me_mana_input_bus.name=ME Mechanical Mana Input Bus
+tile.mmce_complement.me_mana_output_bus.name=ME Mechanical Mana Output Bus
 gui.mmce_complement.max_buffer=Max Buffer
+gui.mmce_complement.me_energy_input_bus.title=ME Mechanical Energy Input Bus
+gui.mmce_complement.me_energy_output_bus.title=ME Mechanical Energy Output Bus
+gui.mmce_complement.me_energy_bus.buffer=Buffered Energy
+gui.mmce_complement.me_mana_input_bus.title=ME Mechanical Mana Input Bus
+gui.mmce_complement.me_mana_output_bus.title=ME Mechanical Mana Output Bus
+gui.mmce_complement.me_mana_bus.buffer=Buffered Mana
+gui.mmce_complement.me_energy_bus.channel_cost=Channel Cost: %s
+gui.mmce_complement.me_energy_bus.link_hint=Requires an active ME network and a free channel.

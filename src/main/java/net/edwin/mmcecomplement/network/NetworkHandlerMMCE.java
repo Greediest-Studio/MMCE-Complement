@@ -2,6 +2,9 @@ package net.edwin.mmcecomplement.network;
 
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.Tags;
+import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -202,39 +205,59 @@ public final class NetworkHandlerMMCE {
                 return;
             }
             TileEntity te = world.getTileEntity(msg.pos);
-            if (!(te instanceof TileFluxHatchBase)) {
-                return;
-            }
-            TileFluxHatchBase hatch = (TileFluxHatchBase) te;
             NBTTagCompound nbt = msg.payload;
 
-            switch (msg.fieldId) {
-                case FIELD_CUSTOM_NAME:
-                    hatch.setCustomNameRaw(clampName(nbt.getString("v")));
-                    break;
-                case FIELD_PRIORITY:
-                    hatch.setPriorityRaw(nbt.getInteger("v"));
-                    break;
-                case FIELD_LIMIT:
-                    hatch.setTransferLimitRaw(nbt.getLong("v"));
-                    break;
-                case FIELD_SURGE_MODE:
-                    hatch.setSurgeModeRaw(nbt.getBoolean("v"));
-                    break;
-                case FIELD_DISABLE_LIMIT:
-                    hatch.setDisableLimitRaw(nbt.getBoolean("v"));
-                    break;
-                case FIELD_CHUNK_LOAD:
-                    hatch.setChunkLoadingRequested(nbt.getBoolean("v"));
-                    break;
-                case FIELD_BUFFER_CAP:
-                    hatch.setBufferCapacityRaw(nbt.getLong("v"));
-                    break;
-                default:
-                    return;
+            if (te instanceof TileFluxHatchBase) {
+                TileFluxHatchBase hatch = (TileFluxHatchBase) te;
+
+                switch (msg.fieldId) {
+                    case FIELD_CUSTOM_NAME:
+                        hatch.setCustomNameRaw(clampName(nbt.getString("v")));
+                        break;
+                    case FIELD_PRIORITY:
+                        hatch.setPriorityRaw(nbt.getInteger("v"));
+                        break;
+                    case FIELD_LIMIT:
+                        hatch.setTransferLimitRaw(nbt.getLong("v"));
+                        break;
+                    case FIELD_SURGE_MODE:
+                        hatch.setSurgeModeRaw(nbt.getBoolean("v"));
+                        break;
+                    case FIELD_DISABLE_LIMIT:
+                        hatch.setDisableLimitRaw(nbt.getBoolean("v"));
+                        break;
+                    case FIELD_CHUNK_LOAD:
+                        hatch.setChunkLoadingRequested(nbt.getBoolean("v"));
+                        break;
+                    case FIELD_BUFFER_CAP:
+                        hatch.setBufferCapacityRaw(nbt.getLong("v"));
+                        break;
+                    default:
+                        return;
+                }
+                net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                return;
             }
-            net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
-            world.notifyBlockUpdate(msg.pos, state, state, 3);
+
+            if (CompatMods.isAeEnergyCompatLoaded()
+                    && te instanceof TileMEEnergyBusBase
+                    && msg.fieldId == FIELD_BUFFER_CAP) {
+                TileMEEnergyBusBase bus = (TileMEEnergyBusBase) te;
+                bus.setBufferCapacityRaw(nbt.getLong("v"));
+                net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                return;
+            }
+
+            if (CompatMods.isAeManaCompatLoaded()
+                    && te instanceof TileMEManaBusBase
+                    && msg.fieldId == FIELD_BUFFER_CAP) {
+                TileMEManaBusBase bus = (TileMEManaBusBase) te;
+                bus.setBufferCapacityRaw(nbt.getLong("v"));
+                net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+            }
         }
 
         private static String clampName(String s) {
