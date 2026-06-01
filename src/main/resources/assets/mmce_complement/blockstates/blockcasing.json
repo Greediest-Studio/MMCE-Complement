@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "casing=meta0": { "model": "mmce_complement:blockcasing_meta0" },
+    "casing=meta1": { "model": "mmce_complement:blockcasing_meta1" },
+    "casing=meta2": { "model": "mmce_complement:blockcasing_meta2" },
+    "casing=meta3": { "model": "mmce_complement:blockcasing_meta3" },
+    "casing=meta4": { "model": "mmce_complement:blockcasing_meta4" },
+    "casing=meta5": { "model": "mmce_complement:blockcasing_meta5" }
+  }
+}

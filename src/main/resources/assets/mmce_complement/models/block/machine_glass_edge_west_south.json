@@ -1,0 +1,26 @@
+﻿{
+    "parent":  "block/block",
+    "elements":  [
+                     {
+                         "faces":  {
+                                       "west":  {
+                                                    "texture": "#edge", "tintindex": 0
+                                                }
+                                   },
+                         "from":  [
+                                      0.01,
+                                      0,
+                                      15
+                                  ],
+                         "to":  [
+                                    0.01,
+                                    16,
+                                    16
+                                ]
+                     }
+                 ],
+    "textures":  {
+                     "edge":  "mmce_complement:blocks/machine_glass_frame"
+                 }
+}
+

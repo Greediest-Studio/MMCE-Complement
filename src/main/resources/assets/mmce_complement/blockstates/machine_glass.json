@@ -1,0 +1,35 @@
+{
+  "multipart": [
+    { "apply": { "model": "mmce_complement:machine_glass" } },
+
+    { "when": { "east": "true", "north": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_east_north" } },
+    { "when": { "east": "true", "south": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_east_south" } },
+    { "when": { "east": "true", "up": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_east_up" } },
+    { "when": { "east": "true", "down": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_east_down" } },
+
+    { "when": { "west": "true", "north": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_west_north" } },
+    { "when": { "west": "true", "south": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_west_south" } },
+    { "when": { "west": "true", "up": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_west_up" } },
+    { "when": { "west": "true", "down": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_west_down" } },
+
+    { "when": { "north": "true", "east": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_north_east" } },
+    { "when": { "north": "true", "west": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_north_west" } },
+    { "when": { "north": "true", "up": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_north_up" } },
+    { "when": { "north": "true", "down": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_north_down" } },
+
+    { "when": { "south": "true", "east": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_south_east" } },
+    { "when": { "south": "true", "west": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_south_west" } },
+    { "when": { "south": "true", "up": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_south_up" } },
+    { "when": { "south": "true", "down": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_south_down" } },
+
+    { "when": { "up": "true", "north": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_up_north" } },
+    { "when": { "up": "true", "south": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_up_south" } },
+    { "when": { "up": "true", "east": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_up_east" } },
+    { "when": { "up": "true", "west": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_up_west" } },
+
+    { "when": { "down": "true", "north": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_down_north" } },
+    { "when": { "down": "true", "south": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_down_south" } },
+    { "when": { "down": "true", "east": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_down_east" } },
+    { "when": { "down": "true", "west": "true" }, "apply": { "model": "mmce_complement:machine_glass_edge_down_west" } }
+  ]
+}
