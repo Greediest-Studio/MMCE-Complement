@@ -1,15 +1,19 @@
 package net.edwin.mmcecomplement.event;
 
+import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.block.BlockCasing;
 import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
 import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
+import net.edwin.mmcecomplement.block.BlockMachineControlInterface;
 import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.crafting.ComponentMachineControlInterface;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyOutputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaOutputBus;
+import net.edwin.mmcecomplement.init.ModComponentTypes;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
@@ -17,6 +21,7 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
+import net.edwin.mmcecomplement.tile.TileMachineControlInterface;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -52,6 +57,10 @@ public final class RegistryEvents {
         ModBlocks.FLUX_OUTPUT_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "flux_output_hatch"));
         event.getRegistry().register(ModBlocks.FLUX_OUTPUT_HATCH);
 
+        ModBlocks.MACHINE_CONTROL_INTERFACE = new BlockMachineControlInterface();
+        ModBlocks.MACHINE_CONTROL_INTERFACE.setRegistryName(new ResourceLocation(Tags.MOD_ID, "machine_control_interface"));
+        event.getRegistry().register(ModBlocks.MACHINE_CONTROL_INTERFACE);
+
         ModBlocks.BLOCK_CASING = new BlockCasing();
         ModBlocks.BLOCK_CASING.setRegistryName(new ResourceLocation(Tags.MOD_ID, "blockcasing"));
         event.getRegistry().register(ModBlocks.BLOCK_CASING);
@@ -64,6 +73,8 @@ public final class RegistryEvents {
                 new ResourceLocation(Tags.MOD_ID, "flux_input_hatch"));
         GameRegistry.registerTileEntity(TileFluxOutputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "flux_output_hatch"));
+        GameRegistry.registerTileEntity(TileMachineControlInterface.class,
+            new ResourceLocation(Tags.MOD_ID, "machine_control_interface"));
 
         if (CompatMods.isAeEnergyCompatLoaded()) {
             ModBlocks.ME_ENERGY_INPUT_BUS = new BlockMEEnergyInputBus();
@@ -108,6 +119,11 @@ public final class RegistryEvents {
         outItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
         event.getRegistry().register(outItem);
 
+        ItemBlockMachineComponent controlItem = new ItemBlockMachineComponent(ModBlocks.MACHINE_CONTROL_INTERFACE);
+        controlItem.setRegistryName(ModBlocks.MACHINE_CONTROL_INTERFACE.getRegistryName());
+        controlItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+        event.getRegistry().register(controlItem);
+
         ItemBlockMachineComponentCustomName blockCasingItem =
             new ItemBlockMachineComponentCustomName(ModBlocks.BLOCK_CASING);
         blockCasingItem.setRegistryName(ModBlocks.BLOCK_CASING.getRegistryName());
@@ -145,10 +161,18 @@ public final class RegistryEvents {
     }
 
     @SubscribeEvent
+    public static void onComponentTypeRegister(RegistryEvent.Register<ComponentType> event) {
+        ModComponentTypes.MACHINE_CONTROL_INTERFACE = new ComponentMachineControlInterface();
+        ModComponentTypes.MACHINE_CONTROL_INTERFACE.setRegistryName(ModComponentTypes.KEY_COMPONENT_MACHINE_CONTROL_INTERFACE);
+        event.getRegistry().register(ModComponentTypes.MACHINE_CONTROL_INTERFACE);
+    }
+
+    @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelRegister(ModelRegistryEvent event) {
         registerBlockItemModel(ModBlocks.FLUX_INPUT_HATCH);
         registerBlockItemModel(ModBlocks.FLUX_OUTPUT_HATCH);
+        registerBlockItemModel(ModBlocks.MACHINE_CONTROL_INTERFACE);
         registerBlockItemModel(ModBlocks.MACHINE_GLASS);
         registerBlockCasingItemModels();
         if (CompatMods.isAeEnergyCompatLoaded()) {

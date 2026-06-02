@@ -1,5 +1,7 @@
 tile.mmce_complement.flux_input_hatch.name=Wireless Flux Input Hatch
 tile.mmce_complement.flux_output_hatch.name=Wireless Flux Output Hatch
+tile.mmce_complement.machine_control_interface.name=Mechanical Control Interface
+error.mmce_complement.machine_control_interface.powered=Machine paused: Mechanical Control Interface is powered by redstone
 tile.mmce_complement.me_energy_input_bus.name=ME Mechanical Energy Input Bus
 tile.mmce_complement.me_energy_output_bus.name=ME Mechanical Energy Output Bus
 tile.mmce_complement.me_mana_input_bus.name=ME Mechanical Mana Input Bus

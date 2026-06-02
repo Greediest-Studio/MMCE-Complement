@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "mmce_complement:machine_control_interface_idle" },
+    "powered=true": { "model": "mmce_complement:machine_control_interface_powered" }
+  }
+}
