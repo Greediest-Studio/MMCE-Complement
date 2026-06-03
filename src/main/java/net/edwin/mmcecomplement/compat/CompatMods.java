@@ -4,14 +4,27 @@ import net.minecraftforge.fml.common.Loader;
 
 public final class CompatMods {
 
+    public static final String MODID_FLUX_NETWORKS = "fluxnetworks";
     public static final String MODID_AE2 = "appliedenergistics2";
     public static final String MODID_CRAZY_AE = "crazyae";
 
+    private static Boolean fluxCompatLoaded;
     private static Boolean aeEnergyCompatLoaded;
     private static Boolean aeManaCompatLoaded;
     private static Boolean guguManaCompatLoaded;
 
     private CompatMods() {}
+
+    public static boolean isFluxCompatLoaded() {
+        if (fluxCompatLoaded == null) {
+            fluxCompatLoaded = Loader.isModLoaded(MODID_FLUX_NETWORKS)
+                    && classExists("sonar.fluxnetworks.api.tiles.IFluxConnector")
+                    && classExists("sonar.fluxnetworks.api.tiles.IFluxPoint")
+                    && classExists("sonar.fluxnetworks.api.tiles.IFluxPlug")
+                    && classExists("sonar.fluxnetworks.common.connection.FluxNetworkCache");
+        }
+        return fluxCompatLoaded;
+    }
 
     public static boolean isAeEnergyCompatLoaded() {
         if (aeEnergyCompatLoaded == null) {

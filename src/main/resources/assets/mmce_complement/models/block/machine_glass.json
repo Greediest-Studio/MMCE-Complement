@@ -1,0 +1,7 @@
+{
+  "parent": "modularmachinery:block/blockmodel_overlay_all",
+  "textures": {
+    "bg_all": "mmce_complement:blocks/casing_glass",
+    "ov_all": "mmce_complement:blocks/overlay_machine_glass_transparent"
+  }
+}

@@ -2,6 +2,7 @@ package net.edwin.mmcecomplement.event;
 
 import hellfirepvp.modularmachinery.common.block.BlockDynamicColor;
 import net.edwin.mmcecomplement.Tags;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -28,8 +29,12 @@ public final class ClientColorEvents {
 
     @SubscribeEvent
     public static void onBlockColors(ColorHandlerEvent.Block event) {
-        registerBlock(event, ModBlocks.FLUX_INPUT_HATCH);
-        registerBlock(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        if (CompatMods.isFluxCompatLoaded()) {
+            registerBlock(event, ModBlocks.FLUX_INPUT_HATCH);
+            registerBlock(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        }
+        registerBlock(event, ModBlocks.MACHINE_GLASS);
+        registerBlock(event, ModBlocks.BLOCK_CASING);
         registerBlock(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerBlock(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerBlock(event, ModBlocks.ME_MANA_INPUT_BUS);
@@ -38,8 +43,12 @@ public final class ClientColorEvents {
 
     @SubscribeEvent
     public static void onItemColors(ColorHandlerEvent.Item event) {
-        registerItem(event, ModBlocks.FLUX_INPUT_HATCH);
-        registerItem(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        if (CompatMods.isFluxCompatLoaded()) {
+            registerItem(event, ModBlocks.FLUX_INPUT_HATCH);
+            registerItem(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        }
+        registerItem(event, ModBlocks.MACHINE_GLASS);
+        registerItem(event, ModBlocks.BLOCK_CASING);
         registerItem(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerItem(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerItem(event, ModBlocks.ME_MANA_INPUT_BUS);

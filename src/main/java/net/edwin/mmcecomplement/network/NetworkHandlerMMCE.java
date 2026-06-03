@@ -42,8 +42,10 @@ public final class NetworkHandlerMMCE {
     private NetworkHandlerMMCE() {}
 
     public static void register() {
-        CHANNEL.registerMessage(SetHatchNetworkHandler.class,
+        if (CompatMods.isFluxCompatLoaded()) {
+            CHANNEL.registerMessage(SetHatchNetworkHandler.class,
                 SetHatchNetworkMessage.class, 0, Side.SERVER);
+        }
         CHANNEL.registerMessage(SetHatchFieldHandler.class,
                 SetHatchFieldMessage.class, 1, Side.SERVER);
     }
@@ -207,7 +209,7 @@ public final class NetworkHandlerMMCE {
             TileEntity te = world.getTileEntity(msg.pos);
             NBTTagCompound nbt = msg.payload;
 
-            if (te instanceof TileFluxHatchBase) {
+            if (CompatMods.isFluxCompatLoaded() && te instanceof TileFluxHatchBase) {
                 TileFluxHatchBase hatch = (TileFluxHatchBase) te;
 
                 switch (msg.fieldId) {

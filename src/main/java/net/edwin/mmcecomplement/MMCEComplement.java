@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
     modid = Tags.MOD_ID,
     name = Tags.MOD_NAME,
     version = Tags.VERSION,
-    dependencies = "required-after:fluxnetworks;required-after:modularmachinery;after:appliedenergistics2;after:crazyae;"
+    dependencies = "required-after:modularmachinery;after:fluxnetworks;after:appliedenergistics2;after:crazyae;"
 )
 public class MMCEComplement {
 

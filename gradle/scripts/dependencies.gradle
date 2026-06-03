@@ -35,7 +35,7 @@ dependencies {
     runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
 
     // Required mod dependencies (deobfuscated for the 1.12.2 development environment)
-    implementation rfg.deobf('curse.maven:flux-networks-248020:3178199')
+    compileOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     implementation rfg.deobf('curse.maven:modularmachinery-community-edition-817377:7372951')
     compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
     compileOnly rfg.deobf('curse.maven:crazyae-1111042:6840104')
