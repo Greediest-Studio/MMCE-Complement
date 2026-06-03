@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "mmce_complement:blocks/machine_glass_fill"
-  }
-}
