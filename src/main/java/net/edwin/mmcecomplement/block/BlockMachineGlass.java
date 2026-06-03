@@ -85,12 +85,12 @@ public class BlockMachineGlass extends Block implements ITileEntityProvider, Blo
     @Override
     @Nonnull
     public BlockRenderLayer getRenderLayer() {
-        return BlockRenderLayer.CUTOUT;
+        return BlockRenderLayer.TRANSLUCENT;
     }
 
     @Override
     public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
-        return layer == BlockRenderLayer.CUTOUT;
+        return layer == BlockRenderLayer.TRANSLUCENT;
     }
 
     @Override
