@@ -15,6 +15,8 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
 import net.edwin.mmcecomplement.init.ModBlocks;
+import net.edwin.mmcecomplement.init.ModItems;
+import net.edwin.mmcecomplement.item.ItemAttachmentConstructTool;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.minecraft.block.Block;
@@ -101,57 +103,74 @@ public final class RegistryEvents {
 
     @SubscribeEvent
     public static void onItemRegister(RegistryEvent.Register<Item> event) {
+        ModItems.ATTACHMENT_CONSTRUCT_TOOL = new ItemAttachmentConstructTool();
+        ModItems.ATTACHMENT_CONSTRUCT_TOOL.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "attachment_construct_tool"));
+        ModItems.ATTACHMENT_CONSTRUCT_TOOL.setTranslationKey(
+            "mmce_complement.attachment_construct_tool");
+        event.getRegistry().register(ModItems.ATTACHMENT_CONSTRUCT_TOOL);
+
         if (CompatMods.isFluxCompatLoaded()) {
             ItemBlockMachineComponent inItem = new ItemBlockMachineComponent(ModBlocks.FLUX_INPUT_HATCH);
             inItem.setRegistryName(ModBlocks.FLUX_INPUT_HATCH.getRegistryName());
-            inItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(inItem);
             event.getRegistry().register(inItem);
 
             ItemBlockMachineComponent outItem = new ItemBlockMachineComponent(ModBlocks.FLUX_OUTPUT_HATCH);
             outItem.setRegistryName(ModBlocks.FLUX_OUTPUT_HATCH.getRegistryName());
-            outItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(outItem);
             event.getRegistry().register(outItem);
         }
 
         ItemBlockMachineComponentCustomName blockCasingItem =
             new ItemBlockMachineComponentCustomName(ModBlocks.BLOCK_CASING);
         blockCasingItem.setRegistryName(ModBlocks.BLOCK_CASING.getRegistryName());
-        blockCasingItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+        setMachineCreativeTab(blockCasingItem);
         event.getRegistry().register(blockCasingItem);
 
         ItemBlockMachineComponent machineGlassItem = new ItemBlockMachineComponent(ModBlocks.MACHINE_GLASS);
         machineGlassItem.setRegistryName(ModBlocks.MACHINE_GLASS.getRegistryName());
-        machineGlassItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+        setMachineCreativeTab(machineGlassItem);
         event.getRegistry().register(machineGlassItem);
 
         if (CompatMods.isAeEnergyCompatLoaded()) {
             ItemBlockMEMachineComponent inBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_ENERGY_INPUT_BUS);
             inBusItem.setRegistryName(ModBlocks.ME_ENERGY_INPUT_BUS.getRegistryName());
-            inBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(inBusItem);
             event.getRegistry().register(inBusItem);
 
             ItemBlockMEMachineComponent outBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_ENERGY_OUTPUT_BUS);
             outBusItem.setRegistryName(ModBlocks.ME_ENERGY_OUTPUT_BUS.getRegistryName());
-            outBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(outBusItem);
             event.getRegistry().register(outBusItem);
         }
 
         if (CompatMods.isAeManaCompatLoaded()) {
             ItemBlockMEMachineComponent inBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_MANA_INPUT_BUS);
             inBusItem.setRegistryName(ModBlocks.ME_MANA_INPUT_BUS.getRegistryName());
-            inBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(inBusItem);
             event.getRegistry().register(inBusItem);
 
             ItemBlockMEMachineComponent outBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_MANA_OUTPUT_BUS);
             outBusItem.setRegistryName(ModBlocks.ME_MANA_OUTPUT_BUS.getRegistryName());
-            outBusItem.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+            setMachineCreativeTab(outBusItem);
             event.getRegistry().register(outBusItem);
         }
+    }
+
+    /**
+     * Keep the invocation owner as Minecraft's Item class so the production
+     * reobfuscation maps setCreativeTab even for MMCE ItemBlock subclasses.
+     */
+    private static void setMachineCreativeTab(Item item) {
+        item.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
     }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelRegister(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL, 0,
+            new ModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL.getRegistryName(), "inventory"));
         if (CompatMods.isFluxCompatLoaded()) {
             registerBlockItemModel(ModBlocks.FLUX_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.FLUX_OUTPUT_HATCH);

@@ -316,6 +316,66 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+// SpecialSource cannot infer every Minecraft method inherited through MMCE's
+// dependency classes. Supply mappings for this add-on's affected overrides and
+// the protected BlockMachineComponent invocation explicitly, otherwise MCP names
+// such as setHardness/onBlockActivated leak into the production jar.
+def inheritedMinecraftMethodMappings = [
+        ['hellfirepvp/modularmachinery/common/block/BlockMachineComponent', 'setSoundType', 'func_149672_a', '(Lnet/minecraft/block/SoundType;)Lnet/minecraft/block/Block;'],
+
+        // Calls whose bytecode owner is a Minecraft subclass while the mapped
+        // declaration lives on one of its parents/interfaces.
+        ['net/minecraft/entity/player/EntityPlayer', 'isSneaking', 'func_70093_af', '()Z'],
+        ['net/minecraft/entity/player/EntityPlayer', 'sendMessage', 'func_145747_a', '(Lnet/minecraft/util/text/ITextComponent;)V'],
+        ['net/minecraft/entity/player/EntityPlayer', 'getUniqueID', 'func_110124_au', '()Ljava/util/UUID;'],
+        ['net/minecraft/entity/player/EntityPlayer', 'getHeldItem', 'func_184586_b', '(Lnet/minecraft/util/EnumHand;)Lnet/minecraft/item/ItemStack;'],
+        ['net/minecraft/entity/player/EntityPlayer', 'getDistanceSq', 'func_174818_b', '(Lnet/minecraft/util/math/BlockPos;)D'],
+        ['net/minecraft/entity/player/EntityPlayerMP', 'getDistanceSq', 'func_174818_b', '(Lnet/minecraft/util/math/BlockPos;)D'],
+        ['net/minecraft/entity/player/EntityPlayerMP', 'getName', 'func_70005_c_', '()Ljava/lang/String;'],
+        ['net/minecraft/util/math/BlockPos', 'getX', 'func_177958_n', '()I'],
+        ['net/minecraft/util/math/BlockPos', 'getY', 'func_177956_o', '()I'],
+        ['net/minecraft/util/math/BlockPos', 'getZ', 'func_177952_p', '()I'],
+        ['net/minecraft/world/WorldServer', 'getBlockState', 'func_180495_p', '(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/state/IBlockState;'],
+        ['net/minecraft/world/WorldServer', 'getTileEntity', 'func_175625_s', '(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/tileentity/TileEntity;'],
+        ['net/minecraft/world/WorldServer', 'notifyBlockUpdate', 'func_184138_a', '(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/block/state/IBlockState;I)V'],
+
+        ['net/edwin/mmcecomplement/block/BlockFluxInputHatch', 'onBlockActivated', 'func_180639_a', '(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/util/EnumHand;Lnet/minecraft/util/EnumFacing;FFF)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxInputHatch', 'getRenderLayer', 'func_180664_k', '()Lnet/minecraft/util/BlockRenderLayer;'],
+        ['net/edwin/mmcecomplement/block/BlockFluxInputHatch', 'isOpaqueCube', 'func_149662_c', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxInputHatch', 'isFullCube', 'func_149686_d', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxInputHatch', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+
+        ['net/edwin/mmcecomplement/block/BlockFluxOutputHatch', 'onBlockActivated', 'func_180639_a', '(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/util/EnumHand;Lnet/minecraft/util/EnumFacing;FFF)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxOutputHatch', 'getRenderLayer', 'func_180664_k', '()Lnet/minecraft/util/BlockRenderLayer;'],
+        ['net/edwin/mmcecomplement/block/BlockFluxOutputHatch', 'isOpaqueCube', 'func_149662_c', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxOutputHatch', 'isFullCube', 'func_149686_d', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockFluxOutputHatch', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+
+        ['net/edwin/mmcecomplement/block/BlockMachineGlass', 'getRenderLayer', 'func_180664_k', '()Lnet/minecraft/util/BlockRenderLayer;'],
+        ['net/edwin/mmcecomplement/block/BlockMachineGlass', 'isOpaqueCube', 'func_149662_c', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockMachineGlass', 'isFullCube', 'func_149686_d', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockMachineGlass', 'isTranslucent', 'func_149751_l', '(Lnet/minecraft/block/state/IBlockState;)Z'],
+        ['net/edwin/mmcecomplement/block/BlockMachineGlass', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+
+        ['net/edwin/mmcecomplement/block/BlockCasing', 'getSubBlocks', 'func_149666_a', '(Lnet/minecraft/creativetab/CreativeTabs;Lnet/minecraft/util/NonNullList;)V'],
+        ['net/edwin/mmcecomplement/block/BlockCasing', 'damageDropped', 'func_180651_a', '(Lnet/minecraft/block/state/IBlockState;)I'],
+        ['net/edwin/mmcecomplement/block/BlockCasing', 'getMetaFromState', 'func_176201_c', '(Lnet/minecraft/block/state/IBlockState;)I'],
+        ['net/edwin/mmcecomplement/block/BlockCasing', 'getStateFromMeta', 'func_176203_a', '(I)Lnet/minecraft/block/state/IBlockState;'],
+        ['net/edwin/mmcecomplement/block/BlockCasing', 'createBlockState', 'func_180661_e', '()Lnet/minecraft/block/state/BlockStateContainer;'],
+
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockMEEnergyBusBase', 'onBlockActivated', 'func_180639_a', '(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/util/EnumHand;Lnet/minecraft/util/EnumFacing;FFF)Z'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockMEEnergyInputBus', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockMEEnergyOutputBus', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockMEManaInputBus', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockMEManaOutputBus', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;']
+]
+
+tasks.named('reobfJar').configure {
+    extraSrgEntries.addAll(inheritedMinecraftMethodMappings.collect { owner, mcpName, srgName, descriptor ->
+        "MD: ${owner}/${mcpName} ${descriptor} ${owner}/${srgName} ${descriptor}"
+    })
+}
+
 tasks.register('cleanroomAfterSync') {
     group 'cleanroom helpers'
     dependsOn 'injectTags', 'generateMixinJson'

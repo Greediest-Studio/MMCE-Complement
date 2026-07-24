@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
+import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -26,13 +27,14 @@ public class BlockMachineGlass extends BlockMachineComponent implements BlockDyn
 
     public BlockMachineGlass() {
         super(Material.GLASS);
-        setHardness(2.0F);
-        setResistance(10.0F);
-        setSoundType(SoundType.GLASS);
-        setHarvestLevel("pickaxe", 1);
-        setLightOpacity(0);
-        setTranslationKey("mmce_complement.machine_glass");
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        Block block = this;
+        block.setHardness(2.0F);
+        block.setResistance(10.0F);
+        super.setSoundType(SoundType.GLASS);
+        block.setHarvestLevel("pickaxe", 1);
+        block.setLightOpacity(0);
+        block.setTranslationKey("mmce_complement.machine_glass");
+        block.setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
     @Override

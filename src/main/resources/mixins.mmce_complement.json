@@ -1,11 +1,22 @@
 {
-	"package": "",
+	"package": "net.edwin.mmcecomplement.mixin",
 	"required": true,
 	"refmap": "${mixin_refmap}",
 	"target": "@env(DEFAULT)",
 	"minVersion": "0.8.5",
 	"compatibilityLevel": "JAVA_8",
-	"mixins": [],
+	"mixins": [
+		"AccessorPlayerStructureSelectionHelper",
+		"MixinActiveMachineRecipe",
+		"MixinDynamicMachine",
+		"MixinDynamicMachineDeserializer",
+		"MixinMachineRecipe",
+		"MixinRecipePrimer",
+		"MixinTileMultiblockMachineController"
+	],
 	"server": [],
-	"client": []
+	"client": [
+		"MixinMachineStructurePreviewPanel",
+		"MixinWorldSceneRendererWidget"
+	]
 }

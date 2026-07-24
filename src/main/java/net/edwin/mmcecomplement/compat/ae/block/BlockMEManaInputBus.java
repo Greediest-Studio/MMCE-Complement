@@ -2,6 +2,7 @@ package net.edwin.mmcecomplement.compat.ae.block;
 
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -13,7 +14,7 @@ import javax.annotation.Nullable;
 public class BlockMEManaInputBus extends BlockMEEnergyBusBase {
 
     public BlockMEManaInputBus() {
-        setTranslationKey("mmce_complement.me_mana_input_bus");
+        ((Block) this).setTranslationKey("mmce_complement.me_mana_input_bus");
     }
 
     @Nullable

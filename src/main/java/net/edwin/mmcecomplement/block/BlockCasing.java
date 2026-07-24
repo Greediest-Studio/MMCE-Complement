@@ -4,6 +4,7 @@ import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockCustomName;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
+import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
@@ -29,13 +30,15 @@ public class BlockCasing extends BlockMachineComponent implements BlockCustomNam
 
     public BlockCasing() {
         super(Material.IRON);
-        setHardness(2.0F);
-        setResistance(10.0F);
-        setSoundType(SoundType.METAL);
-        setHarvestLevel("pickaxe", 1);
-        setTranslationKey("mmce_complement.blockcasing");
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
-        setDefaultState(getBlockState().getBaseState().withProperty(CASING, CasingType.META0));
+        Block block = this;
+        block.setHardness(2.0F);
+        block.setResistance(10.0F);
+        super.setSoundType(SoundType.METAL);
+        block.setHarvestLevel("pickaxe", 1);
+        block.setTranslationKey("mmce_complement.blockcasing");
+        block.setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        // META0 is already the base state's first allowed enum value. Avoid an
+        // unnecessary protected inherited call whose owner RFG cannot remap here.
     }
 
     @Override
@@ -58,7 +61,7 @@ public class BlockCasing extends BlockMachineComponent implements BlockCustomNam
     @Override
     public IBlockState getStateFromMeta(int meta) {
         CasingType[] values = CasingType.values();
-        return getDefaultState().withProperty(CASING, values[MathHelper.clamp(meta, 0, values.length - 1)]);
+        return ((Block) this).getDefaultState().withProperty(CASING, values[MathHelper.clamp(meta, 0, values.length - 1)]);
     }
 
     @Override
@@ -76,7 +79,7 @@ public class BlockCasing extends BlockMachineComponent implements BlockCustomNam
     public Iterable<IBlockState> getValidStates() {
         List<IBlockState> ret = new LinkedList<>();
         for (CasingType type : CasingType.values()) {
-            ret.add(getDefaultState().withProperty(CASING, type));
+            ret.add(((Block) this).getDefaultState().withProperty(CASING, type));
         }
         return ret;
     }

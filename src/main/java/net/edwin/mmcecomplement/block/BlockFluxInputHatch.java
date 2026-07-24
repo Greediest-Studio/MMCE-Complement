@@ -2,6 +2,7 @@ package net.edwin.mmcecomplement.block;
 
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
+import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -28,12 +29,16 @@ public class BlockFluxInputHatch extends BlockMachineComponent {
 
     public BlockFluxInputHatch() {
         super(Material.IRON);
-        setHardness(2.0F);
-        setResistance(10.0F);
-        setSoundType(SoundType.METAL);
-        setHarvestLevel("pickaxe", 1);
-        setTranslationKey("mmce_complement.flux_input_hatch");
-        setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+        // Keep the invocation owner as Minecraft's Block class. RFG cannot reliably
+        // resolve these inherited calls through MMCE's BlockMachineComponent while
+        // reobfuscating, which otherwise leaves MCP method names in the release jar.
+        Block block = this;
+        block.setHardness(2.0F);
+        block.setResistance(10.0F);
+        super.setSoundType(SoundType.METAL);
+        block.setHarvestLevel("pickaxe", 1);
+        block.setTranslationKey("mmce_complement.flux_input_hatch");
+        block.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
     }
 
     @Override

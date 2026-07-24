@@ -2,6 +2,7 @@ package net.edwin.mmcecomplement.block;
 
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
+import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -28,12 +29,13 @@ public class BlockFluxOutputHatch extends BlockMachineComponent {
 
     public BlockFluxOutputHatch() {
         super(Material.IRON);
-        setHardness(2.0F);
-        setResistance(10.0F);
-        setSoundType(SoundType.METAL);
-        setHarvestLevel("pickaxe", 1);
-        setTranslationKey("mmce_complement.flux_output_hatch");
-        setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
+        Block block = this;
+        block.setHardness(2.0F);
+        block.setResistance(10.0F);
+        super.setSoundType(SoundType.METAL);
+        block.setHarvestLevel("pickaxe", 1);
+        block.setTranslationKey("mmce_complement.flux_output_hatch");
+        block.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
     }
 
     @Override
