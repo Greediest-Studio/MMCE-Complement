@@ -38,6 +38,9 @@ dependencies {
     compileOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     runtimeOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     implementation rfg.deobf('curse.maven:modularmachinery-community-edition-817377:7372951')
+    // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
+    // API only when Mekanism is installed, matching MMCE's native fluid hatches.
+    compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
     // MMCE exposes GeckoLib interfaces in its public controller hierarchy, but
     // CurseMaven does not provide MMCE's transitive dependency metadata.
     compileOnly rfg.deobf('curse.maven:geckolib-388172:4020277')

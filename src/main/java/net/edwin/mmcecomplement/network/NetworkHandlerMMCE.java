@@ -6,11 +6,15 @@ import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
+import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.gui.ContainerQuadFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -19,6 +23,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fluids.FluidUtil;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 
@@ -48,6 +53,8 @@ public final class NetworkHandlerMMCE {
         }
         CHANNEL.registerMessage(SetHatchFieldHandler.class,
                 SetHatchFieldMessage.class, 1, Side.SERVER);
+        CHANNEL.registerMessage(InteractQuadFluidTankHandler.class,
+                InteractQuadFluidTankMessage.class, 2, Side.SERVER);
     }
 
     // -- Field IDs ------------------------------------------------------
@@ -59,6 +66,76 @@ public final class NetworkHandlerMMCE {
     public static final int FIELD_DISABLE_LIMIT = 5;
     public static final int FIELD_CHUNK_LOAD    = 6;
     public static final int FIELD_BUFFER_CAP    = 7;
+    public static final int FIELD_BATCH_MAX_TIME = 8;
+
+    // -- Quad fluid tank interaction -----------------------------------
+
+    public static final class InteractQuadFluidTankMessage implements IMessage {
+        public BlockPos pos;
+        public int dim;
+        public int tank;
+
+        public InteractQuadFluidTankMessage() {}
+
+        public InteractQuadFluidTankMessage(BlockPos pos, int dim, int tank) {
+            this.pos = pos;
+            this.dim = dim;
+            this.tank = tank;
+        }
+
+        @Override
+        public void fromBytes(ByteBuf buf) {
+            PacketBuffer pb = new PacketBuffer(buf);
+            this.pos = pb.readBlockPos();
+            this.dim = pb.readInt();
+            this.tank = pb.readByte();
+        }
+
+        @Override
+        public void toBytes(ByteBuf buf) {
+            PacketBuffer pb = new PacketBuffer(buf);
+            pb.writeBlockPos(pos);
+            pb.writeInt(dim);
+            pb.writeByte(tank);
+        }
+    }
+
+    public static final class InteractQuadFluidTankHandler
+        implements IMessageHandler<InteractQuadFluidTankMessage, IMessage> {
+
+        @Override
+        public IMessage onMessage(InteractQuadFluidTankMessage msg, MessageContext ctx) {
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player != null) {
+                player.getServerWorld().addScheduledTask(() -> apply(player, msg));
+            }
+            return null;
+        }
+
+        private static void apply(EntityPlayerMP player, InteractQuadFluidTankMessage msg) {
+            if (msg.tank < 0 || msg.tank >= TileQuadFluidInputHatch.TANK_COUNT
+                || player.dimension != msg.dim
+                || player.getDistanceSq(msg.pos) > 64.0D
+                || !(player.openContainer instanceof ContainerQuadFluidInputHatch)) {
+                return;
+            }
+            WorldServer world = player.getServerWorld();
+            TileEntity tile = world.getTileEntity(msg.pos);
+            ContainerQuadFluidInputHatch container =
+                (ContainerQuadFluidInputHatch) player.openContainer;
+            if (!(tile instanceof TileQuadFluidInputHatch)
+                || container.getTile() != tile) {
+                return;
+            }
+            TileQuadFluidInputHatch hatch = (TileQuadFluidInputHatch) tile;
+            if (FluidUtil.interactWithFluidHandler(
+                player, EnumHand.MAIN_HAND, hatch.getTankInteractionHandler(msg.tank))) {
+                hatch.markNoUpdateSync();
+                player.inventoryContainer.detectAndSendChanges();
+                container.detectAndSendChanges();
+            }
+        }
+    }
 
     // -- Packet ---------------------------------------------------------
 
@@ -208,6 +285,15 @@ public final class NetworkHandlerMMCE {
             }
             TileEntity te = world.getTileEntity(msg.pos);
             NBTTagCompound nbt = msg.payload;
+
+            if (te instanceof TileBatchHatch
+                    && msg.fieldId == FIELD_BATCH_MAX_TIME) {
+                TileBatchHatch hatch = (TileBatchHatch) te;
+                hatch.setMaxBatchTime(nbt.getInteger("v"));
+                net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                return;
+            }
 
             if (CompatMods.isFluxCompatLoaded() && te instanceof TileFluxHatchBase) {
                 TileFluxHatchBase hatch = (TileFluxHatchBase) te;

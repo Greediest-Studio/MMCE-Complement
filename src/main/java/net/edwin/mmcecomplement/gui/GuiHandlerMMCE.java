@@ -15,6 +15,9 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
+import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -53,6 +56,17 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && te instanceof TileMEManaBusBase) {
             return new ContainerMEManaBus(player, (TileMEManaBusBase) te);
         }
+        if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
+            return new ContainerBatchHatch(player, (TileBatchHatch) te);
+        }
+        if (id == MMCEComplement.GUI_QUAD_FLUID_INPUT_HATCH
+                && te instanceof TileQuadFluidInputHatch) {
+            return new ContainerQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_QUAD_FLUID_OUTPUT_HATCH
+                && te instanceof TileQuadFluidOutputHatch) {
+            return new ContainerQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
+        }
         return null;
     }
 
@@ -79,6 +93,17 @@ public class GuiHandlerMMCE implements IGuiHandler {
             if (id == MMCEComplement.GUI_ME_MANA_OUTPUT_BUS && te instanceof TileMEManaOutputBus) {
                 return new GuiMEManaBus(player, (TileMEManaBusBase) te);
             }
+        }
+        if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
+            return new GuiBatchHatch(player, (TileBatchHatch) te);
+        }
+        if (id == MMCEComplement.GUI_QUAD_FLUID_INPUT_HATCH
+                && te instanceof TileQuadFluidInputHatch) {
+            return new GuiQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_QUAD_FLUID_OUTPUT_HATCH
+                && te instanceof TileQuadFluidOutputHatch) {
+            return new GuiQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
         }
         return null;
     }

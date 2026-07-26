@@ -23,7 +23,7 @@ public class ContainerMEManaBus extends Container {
     public boolean canInteractWith(EntityPlayer playerIn) {
         return tile != null
                 && !tile.isInvalid()
-                && tile.getWorld() == playerIn.world
+                && tile.getWorld() == playerIn.getEntityWorld()
                 && playerIn.getDistanceSq(tile.getPos()) <= 64.0D;
     }
 

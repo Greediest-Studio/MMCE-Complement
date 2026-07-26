@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
     version = Tags.VERSION,
     dependencies = "required-after:modularmachinery;required-after:geckolib3;"
         + "after:fluxnetworks;after:appliedenergistics2;after:crazyae;"
+        + "after:mekanism;"
 )
 public class MMCEComplement {
 
@@ -32,6 +33,12 @@ public class MMCEComplement {
     public static final int GUI_ME_MANA_INPUT_BUS = 5;
     /** GUI id for the ME Mechanical Mana Output Bus. */
     public static final int GUI_ME_MANA_OUTPUT_BUS = 6;
+    /** GUI id for the Batch Hatch. */
+    public static final int GUI_BATCH_HATCH = 7;
+    /** GUI id for the Tiny Quadruple Fluid Input Hatch. */
+    public static final int GUI_QUAD_FLUID_INPUT_HATCH = 8;
+    /** GUI id for the Tiny Quadruple Fluid Output Hatch. */
+    public static final int GUI_QUAD_FLUID_OUTPUT_HATCH = 9;
 
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;

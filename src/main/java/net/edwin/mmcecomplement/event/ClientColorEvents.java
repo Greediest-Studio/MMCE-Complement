@@ -35,6 +35,12 @@ public final class ClientColorEvents {
         }
         registerBlock(event, ModBlocks.MACHINE_GLASS);
         registerBlock(event, ModBlocks.BLOCK_CASING);
+        registerBlock(event, ModBlocks.THREAD_HATCH);
+        registerBlock(event, ModBlocks.OVERCLOCK_HATCH);
+        registerBlock(event, ModBlocks.ACCELERATOR_HATCH);
+        registerBlock(event, ModBlocks.BATCH_HATCH);
+        registerBlock(event, ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
+        registerBlock(event, ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
         registerBlock(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerBlock(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerBlock(event, ModBlocks.ME_MANA_INPUT_BUS);
@@ -49,6 +55,12 @@ public final class ClientColorEvents {
         }
         registerItem(event, ModBlocks.MACHINE_GLASS);
         registerItem(event, ModBlocks.BLOCK_CASING);
+        registerItem(event, ModBlocks.THREAD_HATCH);
+        registerItem(event, ModBlocks.OVERCLOCK_HATCH);
+        registerItem(event, ModBlocks.ACCELERATOR_HATCH);
+        registerItem(event, ModBlocks.BATCH_HATCH);
+        registerItem(event, ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
+        registerItem(event, ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
         registerItem(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerItem(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerItem(event, ModBlocks.ME_MANA_INPUT_BUS);

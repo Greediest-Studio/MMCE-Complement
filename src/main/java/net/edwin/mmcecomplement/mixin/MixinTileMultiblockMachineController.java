@@ -4,17 +4,31 @@ import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.edwin.mmcecomplement.attachment.AttachmentController;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentModule;
 import net.edwin.mmcecomplement.attachment.AttachmentPatternResolver;
 import net.edwin.mmcecomplement.attachment.AttachmentResolver;
+import net.edwin.mmcecomplement.accelerator.AcceleratorHatchLogic;
+import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
+import net.edwin.mmcecomplement.block.BlockOverclockHatch;
+import net.edwin.mmcecomplement.batch.BatchController;
+import net.edwin.mmcecomplement.config.ModConfig;
+import net.edwin.mmcecomplement.init.ModBlocks;
+import net.edwin.mmcecomplement.overclock.OverclockHatchLogic;
+import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,10 +47,22 @@ import java.util.Map;
 import java.util.Set;
 
 @Mixin(value = TileMultiblockMachineController.class, remap = false)
-public abstract class MixinTileMultiblockMachineController implements AttachmentController {
+public abstract class MixinTileMultiblockMachineController implements AttachmentController, BatchController {
 
     @Unique
     private static final String mmceComplement$NBT_MODULES = "mmceComplementModules";
+
+    @Unique
+    private static final String mmceComplement$OVERCLOCK_ENERGY_MODIFIER =
+        "mmce_complement:overclock_hatch_energy";
+
+    @Unique
+    private static final String mmceComplement$OVERCLOCK_DURATION_MODIFIER =
+        "mmce_complement:overclock_hatch_duration";
+
+    @Unique
+    private static final String mmceComplement$ACCELERATOR_DURATION_MODIFIER =
+        "mmce_complement:accelerator_hatch_duration";
 
     @Shadow
     protected DynamicMachine foundMachine;
@@ -71,6 +97,9 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
     @Unique
     private int mmceComplement$previousStructureCheckTick = -1;
 
+    @Unique
+    private volatile int mmceComplement$maxBatchTime;
+
     @Override
     public Set<String> mmceComplement$getActiveAttachmentModules() {
         return Collections.unmodifiableSet(new LinkedHashSet<>(mmceComplement$activeModules));
@@ -79,6 +108,11 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
     @Override
     public boolean mmceComplement$isAttachmentModuleActive(String id) {
         return mmceComplement$activeModules.contains(id);
+    }
+
+    @Override
+    public int mmceComplement$getMaxBatchTime() {
+        return mmceComplement$maxBatchTime;
     }
 
     @Inject(method = "checkStructure", at = @At("HEAD"))
@@ -109,6 +143,12 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
     @Inject(method = "updateComponents", at = @At("RETURN"))
     private void mmceComplement$finishAttachmentComponents(CallbackInfo ci) {
         mmceComplement$rebuildSyntheticUpgrades();
+        mmceComplement$refreshOverclockHatches(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$refreshAcceleratorHatches(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$refreshBatchHatches(
+            (TileMultiblockMachineController) (Object) this);
     }
 
     @Inject(method = "resetMachine", at = @At("RETURN"))
@@ -116,6 +156,11 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
         mmceComplement$mainPattern = null;
         mmceComplement$combinedPattern = null;
         mmceComplement$replaceActiveModules(Collections.emptySet(), true);
+        mmceComplement$clearOverclockModifiers(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$clearAcceleratorModifier(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$maxBatchTime = 0;
     }
 
     @Inject(method = "hasMachineUpgrade", at = @At("RETURN"), cancellable = true)
@@ -298,5 +343,137 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
             }
         }
         mmceComplement$moduleUpgrades.clear();
+    }
+
+    @Unique
+    private void mmceComplement$refreshOverclockHatches(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (foundPattern == null || world == null) {
+            mmceComplement$clearOverclockModifiers(controller);
+            return;
+        }
+
+        int[] counts = new int[BlockOverclockHatch.OverclockHatchType.values().length];
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : foundPattern.getPattern().keySet()) {
+            IBlockState state = world.getBlockState(controllerPos.add(relativePos));
+            if (state.getBlock() == ModBlocks.OVERCLOCK_HATCH) {
+                counts[BlockOverclockHatch.getTier(state) - 1]++;
+            }
+        }
+
+        OverclockHatchLogic.Result result = OverclockHatchLogic.getEffectiveMultipliers(
+            counts,
+            ModConfig.overclockHatch.getEnergyMultipliers(),
+            ModConfig.overclockHatch.getDurationMultipliers(),
+            ModConfig.overclockHatch.allowStacking);
+        mmceComplement$syncPerformanceModifier(controller,
+            mmceComplement$OVERCLOCK_ENERGY_MODIFIER,
+            RequirementTypesMM.REQUIREMENT_ENERGY,
+            IOType.INPUT,
+            result.getEnergyMultiplier());
+        mmceComplement$syncPerformanceModifier(controller,
+            mmceComplement$OVERCLOCK_DURATION_MODIFIER,
+            RequirementTypesMM.REQUIREMENT_DURATION,
+            IOType.INPUT,
+            result.getDurationMultiplier());
+    }
+
+    @Unique
+    private void mmceComplement$syncPerformanceModifier(
+        TileMultiblockMachineController controller,
+        String key,
+        hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType<?, ?> type,
+        IOType ioType,
+        double multiplier) {
+        float expected = (float) Math.min(Math.max(0.0D, multiplier), Float.MAX_VALUE);
+        RecipeModifier current = controller.getCustomModifiers().get(key);
+        boolean neutral = Float.compare(expected, 1.0F) == 0;
+        if ((neutral && current == null)
+            || (!neutral && current != null
+                && current.getTarget() == type
+                && current.getIOTarget() == ioType
+                && current.getOperation() == RecipeModifier.OPERATION_MULTIPLY
+                && !current.affectsChance()
+                && Float.compare(current.getModifier(), expected) == 0)) {
+            return;
+        }
+        if (current != null) {
+            controller.removePermanentModifier(key);
+        }
+        if (!neutral) {
+            controller.addPermanentModifier(key,
+                new RecipeModifier(type, ioType, expected,
+                    RecipeModifier.OPERATION_MULTIPLY, false));
+        }
+    }
+
+    @Unique
+    private void mmceComplement$refreshAcceleratorHatches(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (foundPattern == null || world == null) {
+            mmceComplement$clearAcceleratorModifier(controller);
+            return;
+        }
+
+        int[] counts = new int[BlockAcceleratorHatch.AcceleratorHatchType.values().length];
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : foundPattern.getPattern().keySet()) {
+            IBlockState state = world.getBlockState(controllerPos.add(relativePos));
+            if (state.getBlock() == ModBlocks.ACCELERATOR_HATCH) {
+                counts[BlockAcceleratorHatch.getTier(state) - 1]++;
+            }
+        }
+
+        mmceComplement$syncPerformanceModifier(controller,
+            mmceComplement$ACCELERATOR_DURATION_MODIFIER,
+            RequirementTypesMM.REQUIREMENT_DURATION,
+            IOType.INPUT,
+            AcceleratorHatchLogic.getEffectiveDurationMultiplier(counts));
+    }
+
+    @Unique
+    private void mmceComplement$clearOverclockModifiers(
+        TileMultiblockMachineController controller) {
+        if (controller.getCustomModifiers().containsKey(
+            mmceComplement$OVERCLOCK_ENERGY_MODIFIER)) {
+            controller.removePermanentModifier(mmceComplement$OVERCLOCK_ENERGY_MODIFIER);
+        }
+        if (controller.getCustomModifiers().containsKey(
+            mmceComplement$OVERCLOCK_DURATION_MODIFIER)) {
+            controller.removePermanentModifier(mmceComplement$OVERCLOCK_DURATION_MODIFIER);
+        }
+    }
+
+    @Unique
+    private void mmceComplement$clearAcceleratorModifier(
+        TileMultiblockMachineController controller) {
+        if (controller.getCustomModifiers().containsKey(
+            mmceComplement$ACCELERATOR_DURATION_MODIFIER)) {
+            controller.removePermanentModifier(mmceComplement$ACCELERATOR_DURATION_MODIFIER);
+        }
+    }
+
+    @Unique
+    private void mmceComplement$refreshBatchHatches(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (foundPattern == null || world == null) {
+            mmceComplement$maxBatchTime = 0;
+            return;
+        }
+
+        int maxTime = 0;
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : foundPattern.getPattern().keySet()) {
+            net.minecraft.tileentity.TileEntity tile =
+                world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileBatchHatch) {
+                maxTime = Math.max(maxTime, ((TileBatchHatch) tile).getMaxBatchTime());
+            }
+        }
+        mmceComplement$maxBatchTime = maxTime;
     }
 }

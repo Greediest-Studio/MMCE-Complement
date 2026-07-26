@@ -12,6 +12,9 @@
 		"MixinDynamicMachineDeserializer",
 		"MixinMachineRecipe",
 		"MixinRecipePrimer",
+		"MixinRecipeModifier",
+		"MixinRecipeCraftingContext",
+		"MixinTileFactoryController",
 		"MixinTileMultiblockMachineController"
 	],
 	"server": [],

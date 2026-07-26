@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "tier=mk1": { "model": "mmce_complement:accelerator_hatch_mk1" },
+    "tier=mk2": { "model": "mmce_complement:accelerator_hatch_mk2" },
+    "tier=mk3": { "model": "mmce_complement:accelerator_hatch_mk3" },
+    "tier=mk4": { "model": "mmce_complement:accelerator_hatch_mk4" },
+    "tier=mk5": { "model": "mmce_complement:accelerator_hatch_mk5" },
+    "tier=mk6": { "model": "mmce_complement:accelerator_hatch_mk6" },
+    "tier=mk7": { "model": "mmce_complement:accelerator_hatch_mk7" },
+    "tier=mk8": { "model": "mmce_complement:accelerator_hatch_mk8" }
+  }
+}

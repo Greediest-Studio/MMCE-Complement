@@ -4,7 +4,13 @@ import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.block.BlockCasing;
 import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
 import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
+import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
+import net.edwin.mmcecomplement.block.BlockBatchHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
+import net.edwin.mmcecomplement.block.BlockOverclockHatch;
+import net.edwin.mmcecomplement.block.BlockThreadHatch;
+import net.edwin.mmcecomplement.block.BlockQuadFluidInputHatch;
+import net.edwin.mmcecomplement.block.BlockQuadFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyOutputBus;
@@ -19,6 +25,12 @@ import net.edwin.mmcecomplement.init.ModItems;
 import net.edwin.mmcecomplement.item.ItemAttachmentConstructTool;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
+import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
+import net.edwin.mmcecomplement.compat.mekanism.TileQuadFluidInputHatchMekanism;
+import net.edwin.mmcecomplement.compat.mekanism.TileQuadFluidOutputHatchMekanism;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -34,6 +46,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMEMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
+import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 
 /**
  * Handles Forge registry events for MMCE Complement.
@@ -62,6 +75,49 @@ public final class RegistryEvents {
         ModBlocks.MACHINE_GLASS = new BlockMachineGlass();
         ModBlocks.MACHINE_GLASS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "machine_glass"));
         event.getRegistry().register(ModBlocks.MACHINE_GLASS);
+
+        ModBlocks.THREAD_HATCH = new BlockThreadHatch();
+        ModBlocks.THREAD_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "thread_hatch"));
+        event.getRegistry().register(ModBlocks.THREAD_HATCH);
+
+        ModBlocks.OVERCLOCK_HATCH = new BlockOverclockHatch();
+        ModBlocks.OVERCLOCK_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "overclock_hatch"));
+        event.getRegistry().register(ModBlocks.OVERCLOCK_HATCH);
+
+        ModBlocks.ACCELERATOR_HATCH = new BlockAcceleratorHatch();
+        ModBlocks.ACCELERATOR_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "accelerator_hatch"));
+        event.getRegistry().register(ModBlocks.ACCELERATOR_HATCH);
+
+        ModBlocks.BATCH_HATCH = new BlockBatchHatch();
+        ModBlocks.BATCH_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "batch_hatch"));
+        event.getRegistry().register(ModBlocks.BATCH_HATCH);
+
+        GameRegistry.registerTileEntity(TileBatchHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "batch_hatch"));
+
+        ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY = new BlockQuadFluidInputHatch();
+        ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
+        event.getRegistry().register(ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
+        if (Mods.MEKANISM.isPresent()) {
+            GameRegistry.registerTileEntity(TileQuadFluidInputHatchMekanism.class,
+                new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
+        } else {
+            GameRegistry.registerTileEntity(TileQuadFluidInputHatch.class,
+                new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
+        }
+
+        ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY = new BlockQuadFluidOutputHatch();
+        ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
+        event.getRegistry().register(ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
+        if (Mods.MEKANISM.isPresent()) {
+            GameRegistry.registerTileEntity(TileQuadFluidOutputHatchMekanism.class,
+                new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
+        } else {
+            GameRegistry.registerTileEntity(TileQuadFluidOutputHatch.class,
+                new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
+        }
 
         if (CompatMods.isFluxCompatLoaded()) {
             GameRegistry.registerTileEntity(TileFluxInputHatch.class,
@@ -133,6 +189,44 @@ public final class RegistryEvents {
         setMachineCreativeTab(machineGlassItem);
         event.getRegistry().register(machineGlassItem);
 
+        ItemBlockMachineComponentCustomName threadHatchItem =
+            new ItemBlockMachineComponentCustomName(ModBlocks.THREAD_HATCH);
+        threadHatchItem.setRegistryName(ModBlocks.THREAD_HATCH.getRegistryName());
+        setMachineCreativeTab(threadHatchItem);
+        event.getRegistry().register(threadHatchItem);
+
+        ItemBlockMachineComponentCustomName overclockHatchItem =
+            new ItemBlockMachineComponentCustomName(ModBlocks.OVERCLOCK_HATCH);
+        overclockHatchItem.setRegistryName(ModBlocks.OVERCLOCK_HATCH.getRegistryName());
+        setMachineCreativeTab(overclockHatchItem);
+        event.getRegistry().register(overclockHatchItem);
+
+        ItemBlockMachineComponentCustomName acceleratorHatchItem =
+            new ItemBlockMachineComponentCustomName(ModBlocks.ACCELERATOR_HATCH);
+        acceleratorHatchItem.setRegistryName(ModBlocks.ACCELERATOR_HATCH.getRegistryName());
+        setMachineCreativeTab(acceleratorHatchItem);
+        event.getRegistry().register(acceleratorHatchItem);
+
+        ItemBlockMachineComponent batchHatchItem =
+            new ItemBlockMachineComponent(ModBlocks.BATCH_HATCH);
+        batchHatchItem.setRegistryName(ModBlocks.BATCH_HATCH.getRegistryName());
+        setMachineCreativeTab(batchHatchItem);
+        event.getRegistry().register(batchHatchItem);
+
+        ItemBlockMachineComponentCustomName quadFluidHatchItem =
+            new ItemBlockMachineComponentCustomName(ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
+        quadFluidHatchItem.setRegistryName(
+            ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY.getRegistryName());
+        setMachineCreativeTab(quadFluidHatchItem);
+        event.getRegistry().register(quadFluidHatchItem);
+
+        ItemBlockMachineComponentCustomName quadFluidOutputHatchItem =
+            new ItemBlockMachineComponentCustomName(ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
+        quadFluidOutputHatchItem.setRegistryName(
+            ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY.getRegistryName());
+        setMachineCreativeTab(quadFluidOutputHatchItem);
+        event.getRegistry().register(quadFluidOutputHatchItem);
+
         if (CompatMods.isAeEnergyCompatLoaded()) {
             ItemBlockMEMachineComponent inBusItem = new ItemBlockMEMachineComponent(ModBlocks.ME_ENERGY_INPUT_BUS);
             inBusItem.setRegistryName(ModBlocks.ME_ENERGY_INPUT_BUS.getRegistryName());
@@ -177,6 +271,12 @@ public final class RegistryEvents {
         }
         registerBlockItemModel(ModBlocks.MACHINE_GLASS);
         registerBlockCasingItemModels();
+        registerThreadHatchItemModels();
+        registerOverclockHatchItemModels();
+        registerAcceleratorHatchItemModels();
+        registerBlockItemModel(ModBlocks.BATCH_HATCH);
+        registerQuadFluidHatchItemModels();
+        registerQuadFluidOutputHatchItemModels();
         if (CompatMods.isAeEnergyCompatLoaded()) {
             registerBlockItemModel(ModBlocks.ME_ENERGY_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_ENERGY_OUTPUT_BUS);
@@ -205,6 +305,76 @@ public final class RegistryEvents {
             ModelLoader.setCustomModelResourceLocation(item, meta,
                     new ModelResourceLocation(ModBlocks.BLOCK_CASING.getRegistryName(),
                             "casing=" + variants[meta].getName()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerThreadHatchItemModels() {
+        Item item = Item.getItemFromBlock(ModBlocks.THREAD_HATCH);
+        if (item == null) {
+            return;
+        }
+        BlockThreadHatch.ThreadHatchType[] variants = BlockThreadHatch.ThreadHatchType.values();
+        for (int meta = 0; meta < variants.length; meta++) {
+            ModelLoader.setCustomModelResourceLocation(item, meta,
+                new ModelResourceLocation(ModBlocks.THREAD_HATCH.getRegistryName(),
+                    "tier=" + variants[meta].getName()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerOverclockHatchItemModels() {
+        Item item = Item.getItemFromBlock(ModBlocks.OVERCLOCK_HATCH);
+        if (item == null) {
+            return;
+        }
+        BlockOverclockHatch.OverclockHatchType[] variants =
+            BlockOverclockHatch.OverclockHatchType.values();
+        for (int meta = 0; meta < variants.length; meta++) {
+            ModelLoader.setCustomModelResourceLocation(item, meta,
+                new ModelResourceLocation(ModBlocks.OVERCLOCK_HATCH.getRegistryName(),
+                    "tier=" + variants[meta].getName()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerAcceleratorHatchItemModels() {
+        Item item = Item.getItemFromBlock(ModBlocks.ACCELERATOR_HATCH);
+        if (item == null) {
+            return;
+        }
+        BlockAcceleratorHatch.AcceleratorHatchType[] variants =
+            BlockAcceleratorHatch.AcceleratorHatchType.values();
+        for (int meta = 0; meta < variants.length; meta++) {
+            ModelLoader.setCustomModelResourceLocation(item, meta,
+                new ModelResourceLocation(ModBlocks.ACCELERATOR_HATCH.getRegistryName(),
+                    "tier=" + variants[meta].getName()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerQuadFluidHatchItemModels() {
+        Item item = Item.getItemFromBlock(ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
+        if (item == null) {
+            return;
+        }
+        for (FluidHatchSize size : FluidHatchSize.values()) {
+            ModelLoader.setCustomModelResourceLocation(item, size.ordinal(),
+                new ModelResourceLocation(ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY.getRegistryName(),
+                    "size=" + size.getName()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerQuadFluidOutputHatchItemModels() {
+        Item item = Item.getItemFromBlock(ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
+        if (item == null) {
+            return;
+        }
+        for (FluidHatchSize size : FluidHatchSize.values()) {
+            ModelLoader.setCustomModelResourceLocation(item, size.ordinal(),
+                new ModelResourceLocation(ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY.getRegistryName(),
+                    "size=" + size.getName()));
         }
     }
 }
