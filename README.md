@@ -1,21 +1,53 @@
-## TemplateDevEnv
-_For Kotlin see [TemplateDevEnvKt](https://github.com/CleanroomMC/TemplateDevEnvKt)_
+# MMCE Complement
 
-Template workspace for modding Minecraft 1.12.2. Licensed under MIT, it is made for public use.
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.12.2-62b47a)](https://www.minecraft.net/)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
+[![Wiki](https://img.shields.io/badge/docs-GitHub%20Wiki-8250df)](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 
-This template runs on **Java 25**, **Gradle 9.2.1** + **[RetroFuturaGradle](https://github.com/GTNewHorizons/RetroFuturaGradle) 2.0.2** + **Forge 14.23.5.2847**.
+MMCE Complement is an add-on for [Modular Machinery Community Edition](https://www.curseforge.com/minecraft/mc-mods/modular-machinery-community-edition) on Minecraft 1.12.2. It adds attachment-module multiblocks, advanced machine hatches, compact item/fluid assemblies, recipe conditions, and optional AE2, Flux Networks, Mekanism, and CrazyAE integrations.
 
-With **coremod and mixin support** that is easy to configure.
+MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作者提供附属模块结构、高阶仓室、物品/流体总成、配方条件及多种网络兼容能力。
 
-### Instructions:
+## Documentation / 文档
 
-1. Click `use this template` at the top.
-2. Clone the repository that you have created with this template to your local machine.
-3. Make sure IDEA is using Java 25 for Gradle before you sync the project. Verify this by going to IDEA's `Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM`.
-4. Open the project folder in IDEA. When prompted, click "Load Gradle Project" as it detects the `build.gradle`, if you weren't prompted, right-click the project's `build.gradle` in IDEA, select `Link Gradle Project`, after completion, hit `Refresh All` in the gradle tab on the right.
-5. Run gradle tasks such as `runClient` and `runServer` in the IDEA gradle tab, or use the auto-imported run configurations like `1. Run Client`.
+- [GitHub Wiki（完整中文文档）](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
+- [Attachment Modules — English](docs/attachment-modules-en_us.md)
+- [附属模块机制 — 中文](docs/attachment-modules-zh_cn.md)
+- [CurseForge project page](https://www.curseforge.com/minecraft/mc-mods/modularmachinery-community-edition-complement)
+- [Issue tracker](https://github.com/Greediest-Studio/MMCE-Complement/issues)
 
-### Notes:
-- Dependencies script in [gradle/scripts/dependencies.gradle](gradle/scripts/dependencies.gradle), explanations are commented in the file.
-- Publishing script in [gradle/scripts/publishing.gradle](gradle/scripts/publishing.gradle).
-- When writing Mixins on IntelliJ, it is advisable to use latest [MinecraftDev Fork for RetroFuturaGradle](https://github.com/eigenraven/MinecraftDev/releases).
+## Highlights
+
+- Attachment modules with dependencies, conflicts, JEI/HEI pages, parent-chain previews, and a structure export tool.
+- CraftTweaker module conditions and controller queries.
+- Thread, overclock, accelerator, and batch hatches.
+- Quadruple and ninefold fluid input/output hatches with optional Mekanism gas support.
+- Data input, input, output, and self-cycle assemblies.
+- ME ore-dictionary input bus with expression filters and active pulling.
+- Configurable liquid energizer and high-capacity filtered output hatches.
+- Optional Flux Networks, AE2 Extended Life, CrazyAE, and Modular Magic components.
+
+Exact registry names, capacities, configuration keys, and examples are maintained in the [Wiki](https://github.com/Greediest-Studio/MMCE-Complement/wiki).
+
+## Requirements
+
+- Minecraft 1.12.2
+- Minecraft Forge
+- Modular Machinery Community Edition
+- GeckoLib 3
+
+Network and gas integrations register only when their corresponding optional dependencies are present. See the [installation and compatibility guide](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Getting-Started) before distributing a modpack.
+
+## Building
+
+This project uses Gradle with RetroFuturaGradle. From the repository root:
+
+```powershell
+./gradlew build
+```
+
+The reobfuscated release jar is written to `build/libs/`.
+
+## License
+
+See [LICENSE](LICENSE).
