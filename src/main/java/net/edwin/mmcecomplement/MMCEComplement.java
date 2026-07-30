@@ -39,7 +39,24 @@ public class MMCEComplement {
     public static final int GUI_QUAD_FLUID_INPUT_HATCH = 8;
     /** GUI id for the Tiny Quadruple Fluid Output Hatch. */
     public static final int GUI_QUAD_FLUID_OUTPUT_HATCH = 9;
-
+    /** GUI id for the Normal-and-above Ninefold Fluid Input Hatch. */
+    public static final int GUI_NINE_FLUID_INPUT_HATCH = 10;
+    /** GUI id for the Normal-and-above Ninefold Fluid Output Hatch. */
+    public static final int GUI_NINE_FLUID_OUTPUT_HATCH = 11;
+    /** GUI id for the combined smart-data/item input hatch. */
+    public static final int GUI_DATA_INPUT_ASSEMBLY_HATCH = 12;
+    /** GUI id for the item/fluid-only input assembly hatch. */
+    public static final int GUI_INPUT_ASSEMBLY_HATCH = 13;
+    /** GUI id for the item/fluid-only output assembly hatch. */
+    public static final int GUI_OUTPUT_ASSEMBLY_HATCH = 14;
+    /** GUI id for the self-cycle input/output assembly. */
+    public static final int GUI_SELF_CYCLE_ASSEMBLY_HATCH = 15;
+    /** GUI id for the eight-tier Liquid Energizer Hatch. */
+    public static final int GUI_LIQUID_ENERGIZER_HATCH = 16;
+    /** GUI id for the int-max ghost-filtered item output hatch. */
+    public static final int GUI_FILTERED_ITEM_OUTPUT_HATCH = 17;
+    /** GUI id for the int-max ghost-filtered fluid output hatch. */
+    public static final int GUI_FILTERED_FLUID_OUTPUT_HATCH = 18;
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;
 

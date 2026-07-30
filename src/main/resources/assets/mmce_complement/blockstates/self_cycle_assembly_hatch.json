@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "tier=small": { "model": "mmce_complement:self_cycle_assembly_hatch" },
+    "tier=normal": { "model": "mmce_complement:self_cycle_assembly_hatch" },
+    "tier=big": { "model": "mmce_complement:self_cycle_assembly_hatch" },
+    "tier=huge": { "model": "mmce_complement:self_cycle_assembly_hatch" },
+    "tier=ludicrous": { "model": "mmce_complement:self_cycle_assembly_hatch" }
+  }
+}

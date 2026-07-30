@@ -29,6 +29,10 @@ public class TileQuadFluidOutputHatch extends TileQuadFluidInputHatch {
         super(hatchSize);
     }
 
+    protected TileQuadFluidOutputHatch(FluidHatchSize hatchSize, int tankCount) {
+        super(hatchSize, tankCount);
+    }
+
     @Override
     public synchronized int fill(FluidStack resource, boolean doFill) {
         if (resource == null || resource.amount <= 0 || !canInsertFluid(resource)) {

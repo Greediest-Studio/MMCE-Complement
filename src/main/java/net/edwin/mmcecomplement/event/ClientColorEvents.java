@@ -39,12 +39,22 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.OVERCLOCK_HATCH);
         registerBlock(event, ModBlocks.ACCELERATOR_HATCH);
         registerBlock(event, ModBlocks.BATCH_HATCH);
+        registerBlock(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
+        registerBlock(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
+        registerBlock(event, ModBlocks.INPUT_ASSEMBLY_HATCH);
+        registerBlock(event, ModBlocks.OUTPUT_ASSEMBLY_HATCH);
+        registerBlock(event, ModBlocks.SELF_CYCLE_ASSEMBLY_HATCH);
+        registerBlock(event, ModBlocks.FILTERED_ITEM_OUTPUT_HATCH);
+        registerBlock(event, ModBlocks.FILTERED_FLUID_OUTPUT_HATCH);
         registerBlock(event, ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
         registerBlock(event, ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
+        registerBlock(event, ModBlocks.NINE_FLUID_INPUT_HATCH_NORMAL);
+        registerBlock(event, ModBlocks.NINE_FLUID_OUTPUT_HATCH_NORMAL);
         registerBlock(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerBlock(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerBlock(event, ModBlocks.ME_MANA_INPUT_BUS);
         registerBlock(event, ModBlocks.ME_MANA_OUTPUT_BUS);
+        registerBlock(event, ModBlocks.ME_ORE_DICT_INPUT_BUS);
     }
 
     @SubscribeEvent
@@ -59,12 +69,22 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.OVERCLOCK_HATCH);
         registerItem(event, ModBlocks.ACCELERATOR_HATCH);
         registerItem(event, ModBlocks.BATCH_HATCH);
+        registerItem(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
+        registerItem(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
+        registerItem(event, ModBlocks.INPUT_ASSEMBLY_HATCH);
+        registerItem(event, ModBlocks.OUTPUT_ASSEMBLY_HATCH);
+        registerItem(event, ModBlocks.SELF_CYCLE_ASSEMBLY_HATCH);
+        registerItem(event, ModBlocks.FILTERED_ITEM_OUTPUT_HATCH);
+        registerItem(event, ModBlocks.FILTERED_FLUID_OUTPUT_HATCH);
         registerItem(event, ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
         registerItem(event, ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
+        registerItem(event, ModBlocks.NINE_FLUID_INPUT_HATCH_NORMAL);
+        registerItem(event, ModBlocks.NINE_FLUID_OUTPUT_HATCH_NORMAL);
         registerItem(event, ModBlocks.ME_ENERGY_INPUT_BUS);
         registerItem(event, ModBlocks.ME_ENERGY_OUTPUT_BUS);
         registerItem(event, ModBlocks.ME_MANA_INPUT_BUS);
         registerItem(event, ModBlocks.ME_MANA_OUTPUT_BUS);
+        registerItem(event, ModBlocks.ME_ORE_DICT_INPUT_BUS);
     }
 
     private static void registerBlock(ColorHandlerEvent.Block event, Block block) {

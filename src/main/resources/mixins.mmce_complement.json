@@ -10,15 +10,21 @@
 		"MixinActiveMachineRecipe",
 		"MixinDynamicMachine",
 		"MixinDynamicMachineDeserializer",
+		"MixinDataItemInputController",
 		"MixinMachineRecipe",
+		"MixinItemUtilsCycle",
 		"MixinRecipePrimer",
 		"MixinRecipeModifier",
+		"MixinRequirementItemCycle",
+		"MixinRequirementFluidCycle",
+		"MixinRequirementGasCycle",
 		"MixinRecipeCraftingContext",
 		"MixinTileFactoryController",
 		"MixinTileMultiblockMachineController"
 	],
 	"server": [],
 	"client": [
+		"MixinGuiMEItemInputBusTitle",
 		"MixinMachineStructurePreviewPanel",
 		"MixinWorldSceneRendererWidget"
 	]

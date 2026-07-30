@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "tier=small": { "model": "mmce_complement:output_assembly_hatch_small" },
+    "tier=normal": { "model": "mmce_complement:output_assembly_hatch_normal" },
+    "tier=big": { "model": "mmce_complement:output_assembly_hatch_big" },
+    "tier=huge": { "model": "mmce_complement:output_assembly_hatch_huge" },
+    "tier=ludicrous": { "model": "mmce_complement:output_assembly_hatch_ludicrous" }
+  }
+}

@@ -10,6 +10,7 @@ public final class CompatMods {
 
     private static Boolean fluxCompatLoaded;
     private static Boolean aeEnergyCompatLoaded;
+    private static Boolean aeItemCompatLoaded;
     private static Boolean aeManaCompatLoaded;
     private static Boolean guguManaCompatLoaded;
 
@@ -35,6 +36,16 @@ public final class CompatMods {
                     && classExists("dev.beecube31.crazyae2.core.api.storage.energy.IEnergyStorageChannel");
         }
         return aeEnergyCompatLoaded;
+    }
+
+    /** MMCE's ordinary ME item buses only require AE2, not CrazyAE. */
+    public static boolean isAeItemCompatLoaded() {
+        if (aeItemCompatLoaded == null) {
+            aeItemCompatLoaded = Loader.isModLoaded(MODID_AE2)
+                && classExists("appeng.core.AE2ELCore")
+                && classExists("github.kasuminova.mmce.common.tile.MEItemInputBus");
+        }
+        return aeItemCompatLoaded;
     }
 
     public static boolean isAeManaCompatLoaded() {

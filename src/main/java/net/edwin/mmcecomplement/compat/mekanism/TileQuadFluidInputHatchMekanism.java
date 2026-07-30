@@ -31,6 +31,10 @@ public class TileQuadFluidInputHatchMekanism extends TileQuadFluidInputHatch
         super(hatchSize);
     }
 
+    protected TileQuadFluidInputHatchMekanism(FluidHatchSize hatchSize, int tankCount) {
+        super(hatchSize, tankCount);
+    }
+
     @Override
     protected HybridTank createTank(int capacity) {
         return new HybridGasTank(capacity) {

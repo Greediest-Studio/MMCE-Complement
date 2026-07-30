@@ -43,6 +43,27 @@ public final class BatchProcessingLogic {
         return result >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result;
     }
 
+    /**
+     * Scales only the eligible part of a parallelism budget.  Factory
+     * controllers can expose extra/custom threads in the same budget, but a
+     * batch hatch must not multiply those threads.
+     */
+    public static int multiplyParallelismExcluding(int parallelism,
+                                                   int excludedParallelism,
+                                                   int factor) {
+        if (parallelism <= 0 || factor <= 0) {
+            return 1;
+        }
+        int excluded = Math.max(0, Math.min(parallelism, excludedParallelism));
+        int eligible = parallelism - excluded;
+        if (eligible == 0) {
+            return excluded;
+        }
+        int scaled = multiplyParallelismSaturated(eligible, factor);
+        long result = (long) scaled + excluded;
+        return result >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) result;
+    }
+
     /** Number of full base-parallel batches needed for the actual input set. */
     public static int factorForActualParallelism(int actualParallelism,
                                                  int baseParallelism,

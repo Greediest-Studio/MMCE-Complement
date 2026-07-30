@@ -5,11 +5,24 @@ import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
+import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
+import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
+import net.edwin.mmcecomplement.gui.ContainerDataItemInputHatch;
+import net.edwin.mmcecomplement.gui.ContainerItemOutputAssemblyHatch;
 import net.edwin.mmcecomplement.gui.ContainerQuadFluidInputHatch;
+import net.edwin.mmcecomplement.gui.ContainerLiquidEnergizerHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileLiquidEnergizerHatch;
+import net.edwin.mmcecomplement.tile.TileFilteredItemOutputHatch;
+import net.edwin.mmcecomplement.tile.TileFilteredFluidOutputHatch;
+import net.edwin.mmcecomplement.gui.ContainerFilteredItemOutputHatch;
+import net.edwin.mmcecomplement.gui.ContainerFilteredFluidOutputHatch;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -24,6 +37,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.item.ItemStack;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 
@@ -67,6 +82,12 @@ public final class NetworkHandlerMMCE {
     public static final int FIELD_CHUNK_LOAD    = 6;
     public static final int FIELD_BUFFER_CAP    = 7;
     public static final int FIELD_BATCH_MAX_TIME = 8;
+    public static final int FIELD_DATA_INPUT_ASSEMBLY_VALUE = 9;
+    public static final int FIELD_ME_ORE_DICT_WHITELIST = 10;
+    public static final int FIELD_ME_ORE_DICT_BLACKLIST = 11;
+    public static final int FIELD_ME_ORE_DICT_ACTIVE = 12;
+    public static final int FIELD_FILTERED_ITEM_OUTPUT = 13;
+    public static final int FIELD_FILTERED_FLUID_OUTPUT = 14;
 
     // -- Quad fluid tank interaction -----------------------------------
 
@@ -113,24 +134,69 @@ public final class NetworkHandlerMMCE {
         }
 
         private static void apply(EntityPlayerMP player, InteractQuadFluidTankMessage msg) {
-            if (msg.tank < 0 || msg.tank >= TileQuadFluidInputHatch.TANK_COUNT
-                || player.dimension != msg.dim
-                || player.getDistanceSq(msg.pos) > 64.0D
-                || !(player.openContainer instanceof ContainerQuadFluidInputHatch)) {
+            if (msg.tank < 0 || player.dimension != msg.dim
+                || player.getDistanceSq(msg.pos) > 64.0D) {
                 return;
             }
             WorldServer world = player.getServerWorld();
             TileEntity tile = world.getTileEntity(msg.pos);
-            ContainerQuadFluidInputHatch container =
-                (ContainerQuadFluidInputHatch) player.openContainer;
-            if (!(tile instanceof TileQuadFluidInputHatch)
-                || container.getTile() != tile) {
+            net.minecraftforge.fluids.capability.IFluidHandler handler;
+            Container container;
+            if (tile instanceof TileQuadFluidInputHatch
+                && player.openContainer instanceof ContainerQuadFluidInputHatch
+                && ((ContainerQuadFluidInputHatch) player.openContainer)
+                    .getTile() == tile) {
+                TileQuadFluidInputHatch hatch =
+                    (TileQuadFluidInputHatch) tile;
+                if (msg.tank >= hatch.getTankCount()) {
+                    return;
+                }
+                handler = hatch.getTankInteractionHandler(msg.tank);
+                container = (ContainerQuadFluidInputHatch) player.openContainer;
+            } else if (tile instanceof TileDataItemInputHatch
+                && player.openContainer instanceof ContainerDataItemInputHatch
+                && ((ContainerDataItemInputHatch) player.openContainer)
+                    .getTile() == tile) {
+                TileDataItemInputHatch hatch =
+                    (TileDataItemInputHatch) tile;
+                if (msg.tank >= hatch.getTankCount()) {
+                    return;
+                }
+                handler = hatch.getTankInteractionHandler(msg.tank);
+                container = (ContainerDataItemInputHatch) player.openContainer;
+            } else if (tile instanceof TileItemOutputAssemblyHatch
+                && player.openContainer instanceof ContainerItemOutputAssemblyHatch
+                && ((ContainerItemOutputAssemblyHatch) player.openContainer)
+                    .getTile() == tile) {
+                TileItemOutputAssemblyHatch hatch =
+                    (TileItemOutputAssemblyHatch) tile;
+                if (msg.tank >= hatch.getTankCount()) return;
+                handler = hatch.getTankInteractionHandler(msg.tank);
+                container = (ContainerItemOutputAssemblyHatch) player.openContainer;
+            } else if (msg.tank == 0
+                && tile instanceof TileLiquidEnergizerHatch
+                && player.openContainer instanceof ContainerLiquidEnergizerHatch
+                && ((ContainerLiquidEnergizerHatch) player.openContainer)
+                    .getTile() == tile) {
+                handler = (TileLiquidEnergizerHatch) tile;
+                container = (ContainerLiquidEnergizerHatch) player.openContainer;
+            } else if (msg.tank == 0
+                && tile instanceof TileFilteredFluidOutputHatch
+                && player.openContainer
+                    instanceof ContainerFilteredFluidOutputHatch
+                && ((ContainerFilteredFluidOutputHatch) player.openContainer)
+                    .getTile() == tile) {
+                handler = ((TileFilteredFluidOutputHatch) tile)
+                    .getTankInteractionHandler();
+                container = (ContainerFilteredFluidOutputHatch)
+                    player.openContainer;
+            } else {
                 return;
             }
-            TileQuadFluidInputHatch hatch = (TileQuadFluidInputHatch) tile;
             if (FluidUtil.interactWithFluidHandler(
-                player, EnumHand.MAIN_HAND, hatch.getTankInteractionHandler(msg.tank))) {
-                hatch.markNoUpdateSync();
+                player, EnumHand.MAIN_HAND, handler)) {
+                ((hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized) tile)
+                    .markForUpdateSync();
                 player.inventoryContainer.detectAndSendChanges();
                 container.detectAndSendChanges();
             }
@@ -286,11 +352,95 @@ public final class NetworkHandlerMMCE {
             TileEntity te = world.getTileEntity(msg.pos);
             NBTTagCompound nbt = msg.payload;
 
+            if (te instanceof TileFilteredItemOutputHatch
+                && msg.fieldId == FIELD_FILTERED_ITEM_OUTPUT) {
+                if (!(player.openContainer
+                    instanceof ContainerFilteredItemOutputHatch)
+                    || ((ContainerFilteredItemOutputHatch) player.openContainer)
+                        .getTile() != te) {
+                    return;
+                }
+                ItemStack filter = nbt.getKeySet().isEmpty()
+                    ? ItemStack.EMPTY : new ItemStack(nbt);
+                if (!filter.isEmpty()) filter.setCount(1);
+                ((TileFilteredItemOutputHatch) te).setFilter(filter);
+                net.minecraft.block.state.IBlockState state =
+                    world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
+            if (te instanceof TileFilteredFluidOutputHatch
+                && msg.fieldId == FIELD_FILTERED_FLUID_OUTPUT) {
+                if (!(player.openContainer
+                    instanceof ContainerFilteredFluidOutputHatch)
+                    || ((ContainerFilteredFluidOutputHatch) player.openContainer)
+                        .getTile() != te) {
+                    return;
+                }
+                FluidStack filter = nbt.getKeySet().isEmpty() ? null
+                    : FluidStack.loadFluidStackFromNBT(nbt);
+                if (filter != null) filter.amount = 1;
+                ((TileFilteredFluidOutputHatch) te).setFilter(filter);
+                net.minecraft.block.state.IBlockState state =
+                    world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
             if (te instanceof TileBatchHatch
                     && msg.fieldId == FIELD_BATCH_MAX_TIME) {
                 TileBatchHatch hatch = (TileBatchHatch) te;
                 hatch.setMaxBatchTime(nbt.getInteger("v"));
                 net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                return;
+            }
+
+            if (te instanceof TileMEOreDictInputBus
+                    && player.openContainer instanceof ContainerMEItemInputBus
+                    && ((ContainerMEItemInputBus) player.openContainer)
+                        .getOwner() == te) {
+                TileMEOreDictInputBus bus = (TileMEOreDictInputBus) te;
+                if (msg.fieldId == FIELD_ME_ORE_DICT_WHITELIST) {
+                    bus.setWhitelist(clampFilter(nbt.getString("v")));
+                } else if (msg.fieldId == FIELD_ME_ORE_DICT_BLACKLIST) {
+                    bus.setBlacklist(clampFilter(nbt.getString("v")));
+                } else if (msg.fieldId == FIELD_ME_ORE_DICT_ACTIVE) {
+                    bus.setActivePull(nbt.getBoolean("v"));
+                } else {
+                    return;
+                }
+                // Flush fake-slot changes to the currently open GUI now. A
+                // normal block update replaces the client tile's config
+                // inventory object and cannot update SlotFake instances which
+                // were bound when the container was opened.
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
+            if (te instanceof TileDataItemInputHatch
+                    && msg.fieldId == FIELD_DATA_INPUT_ASSEMBLY_VALUE) {
+                if (!(player.openContainer
+                    instanceof ContainerDataItemInputHatch)
+                    || ((ContainerDataItemInputHatch) player.openContainer)
+                        .getTile() != te) {
+                    return;
+                }
+                TileDataItemInputHatch hatch =
+                    (TileDataItemInputHatch) te;
+                BlockPos controllerPos = BlockPos.fromLong(
+                    nbt.getLong("controllerPos"));
+                float value = nbt.getFloat("value");
+                if (!Float.isFinite(value)
+                    || !hatch.getDataProvider()
+                        .setMachineValue(controllerPos, value)) {
+                    return;
+                }
+                net.minecraft.block.state.IBlockState state =
+                    world.getBlockState(msg.pos);
                 world.notifyBlockUpdate(msg.pos, state, state, 3);
                 return;
             }
@@ -351,6 +501,11 @@ public final class NetworkHandlerMMCE {
         private static String clampName(String s) {
             if (s == null) return "";
             return s.length() > 24 ? s.substring(0, 24) : s;
+        }
+
+        private static String clampFilter(String s) {
+            if (s == null) return "";
+            return s.length() > 256 ? s.substring(0, 256) : s;
         }
     }
 }

@@ -58,6 +58,7 @@ dependencies {
     compileOnly 'curse.maven:crafttweaker-239197:8051578'
     runtimeOnly 'curse.maven:crafttweaker-239197:8051578'
     // Development runtime for exercising MMCE's JEI structure preview.
+    compileOnly rfg.deobf('curse.maven:had-enough-items-557549:4543375')
     runtimeOnly rfg.deobf('curse.maven:had-enough-items-557549:4543375')
 
     // Example - Dependency descriptor:

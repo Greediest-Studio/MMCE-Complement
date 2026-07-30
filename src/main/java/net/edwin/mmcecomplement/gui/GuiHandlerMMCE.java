@@ -16,8 +16,17 @@ import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
+import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
+import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
+import net.edwin.mmcecomplement.tile.TileLiquidEnergizerHatch;
+import net.edwin.mmcecomplement.tile.TileSelfCycleAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileFilteredItemOutputHatch;
+import net.edwin.mmcecomplement.tile.TileFilteredFluidOutputHatch;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -59,12 +68,57 @@ public class GuiHandlerMMCE implements IGuiHandler {
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new ContainerBatchHatch(player, (TileBatchHatch) te);
         }
+        if (id == MMCEComplement.GUI_LIQUID_ENERGIZER_HATCH
+                && te instanceof TileLiquidEnergizerHatch) {
+            return new ContainerLiquidEnergizerHatch(
+                player, (TileLiquidEnergizerHatch) te);
+        }
+        if (id == MMCEComplement.GUI_FILTERED_ITEM_OUTPUT_HATCH
+                && te instanceof TileFilteredItemOutputHatch) {
+            return new ContainerFilteredItemOutputHatch(player,
+                (TileFilteredItemOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_FILTERED_FLUID_OUTPUT_HATCH
+                && te instanceof TileFilteredFluidOutputHatch) {
+            return new ContainerFilteredFluidOutputHatch(player,
+                (TileFilteredFluidOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_DATA_INPUT_ASSEMBLY_HATCH
+                && te instanceof TileDataItemInputHatch) {
+            return new ContainerDataItemInputHatch(
+                player, (TileDataItemInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_INPUT_ASSEMBLY_HATCH
+                && te instanceof TileItemInputAssemblyHatch) {
+            return new ContainerDataItemInputHatch(
+                player, (TileItemInputAssemblyHatch) te, 71);
+        }
+        if (id == MMCEComplement.GUI_OUTPUT_ASSEMBLY_HATCH
+                && te instanceof TileItemOutputAssemblyHatch) {
+            return new ContainerItemOutputAssemblyHatch(
+                player, (TileItemOutputAssemblyHatch) te);
+        }
+        if (id == MMCEComplement.GUI_SELF_CYCLE_ASSEMBLY_HATCH
+                && te instanceof TileSelfCycleAssemblyHatch) {
+            return new ContainerDataItemInputHatch(player,
+                (TileSelfCycleAssemblyHatch) te, 71);
+        }
         if (id == MMCEComplement.GUI_QUAD_FLUID_INPUT_HATCH
                 && te instanceof TileQuadFluidInputHatch) {
             return new ContainerQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
         }
         if (id == MMCEComplement.GUI_QUAD_FLUID_OUTPUT_HATCH
                 && te instanceof TileQuadFluidOutputHatch) {
+            return new ContainerQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_NINE_FLUID_INPUT_HATCH
+                && te instanceof TileQuadFluidInputHatch
+                && ((TileQuadFluidInputHatch) te).getTankCount() == TileNineFluidInputHatch.TANK_COUNT) {
+            return new ContainerQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_NINE_FLUID_OUTPUT_HATCH
+                && te instanceof TileQuadFluidOutputHatch
+                && ((TileQuadFluidOutputHatch) te).getTankCount() == TileNineFluidOutputHatch.TANK_COUNT) {
             return new ContainerQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
         }
         return null;
@@ -97,12 +151,57 @@ public class GuiHandlerMMCE implements IGuiHandler {
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new GuiBatchHatch(player, (TileBatchHatch) te);
         }
+        if (id == MMCEComplement.GUI_LIQUID_ENERGIZER_HATCH
+                && te instanceof TileLiquidEnergizerHatch) {
+            return new GuiLiquidEnergizerHatch(
+                player, (TileLiquidEnergizerHatch) te);
+        }
+        if (id == MMCEComplement.GUI_FILTERED_ITEM_OUTPUT_HATCH
+                && te instanceof TileFilteredItemOutputHatch) {
+            return new GuiFilteredItemOutputHatch(player,
+                (TileFilteredItemOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_FILTERED_FLUID_OUTPUT_HATCH
+                && te instanceof TileFilteredFluidOutputHatch) {
+            return new GuiFilteredFluidOutputHatch(player,
+                (TileFilteredFluidOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_DATA_INPUT_ASSEMBLY_HATCH
+                && te instanceof TileDataItemInputHatch) {
+            return new GuiDataItemInputHatch(
+                player, (TileDataItemInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_INPUT_ASSEMBLY_HATCH
+                && te instanceof TileItemInputAssemblyHatch) {
+            return new GuiItemInputAssemblyHatch(
+                player, (TileItemInputAssemblyHatch) te);
+        }
+        if (id == MMCEComplement.GUI_OUTPUT_ASSEMBLY_HATCH
+                && te instanceof TileItemOutputAssemblyHatch) {
+            return new GuiItemOutputAssemblyHatch(
+                player, (TileItemOutputAssemblyHatch) te);
+        }
+        if (id == MMCEComplement.GUI_SELF_CYCLE_ASSEMBLY_HATCH
+                && te instanceof TileSelfCycleAssemblyHatch) {
+            return new GuiItemInputAssemblyHatch(player,
+                (TileSelfCycleAssemblyHatch) te);
+        }
         if (id == MMCEComplement.GUI_QUAD_FLUID_INPUT_HATCH
                 && te instanceof TileQuadFluidInputHatch) {
             return new GuiQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
         }
         if (id == MMCEComplement.GUI_QUAD_FLUID_OUTPUT_HATCH
                 && te instanceof TileQuadFluidOutputHatch) {
+            return new GuiQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_NINE_FLUID_INPUT_HATCH
+                && te instanceof TileQuadFluidInputHatch
+                && ((TileQuadFluidInputHatch) te).getTankCount() == TileNineFluidInputHatch.TANK_COUNT) {
+            return new GuiQuadFluidInputHatch(player, (TileQuadFluidInputHatch) te);
+        }
+        if (id == MMCEComplement.GUI_NINE_FLUID_OUTPUT_HATCH
+                && te instanceof TileQuadFluidOutputHatch
+                && ((TileQuadFluidOutputHatch) te).getTankCount() == TileNineFluidOutputHatch.TANK_COUNT) {
             return new GuiQuadFluidInputHatch(player, (TileQuadFluidOutputHatch) te);
         }
         return null;

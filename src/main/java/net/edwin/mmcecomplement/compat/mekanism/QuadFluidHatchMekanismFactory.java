@@ -23,4 +23,12 @@ public final class QuadFluidHatchMekanismFactory {
     public static TileEntity createOutput(FluidHatchSize size) {
         return new TileQuadFluidOutputHatchMekanism(size);
     }
+
+    public static TileEntity createNine(FluidHatchSize size) {
+        return new TileNineFluidInputHatchMekanism(size);
+    }
+
+    public static TileEntity createNineOutput(FluidHatchSize size) {
+        return new TileNineFluidOutputHatchMekanism(size);
+    }
 }

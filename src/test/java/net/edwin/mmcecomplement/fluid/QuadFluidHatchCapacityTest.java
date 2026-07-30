@@ -1,6 +1,7 @@
 package net.edwin.mmcecomplement.fluid;
 
 import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,6 +19,14 @@ class QuadFluidHatchCapacityTest {
         assertEquals(1, TileQuadFluidInputHatch.capacityForTotal(0));
         assertEquals(536870912,
             TileQuadFluidInputHatch.capacityForTotal(Integer.MAX_VALUE));
+    }
+
+    @Test
+    void dividesNormalCapacityIntoNineTanksWithCeiling() {
+        assertEquals(112, TileNineFluidInputHatch.capacityForTotal(1000));
+        assertEquals(1, TileNineFluidInputHatch.capacityForTotal(1));
+        assertEquals(238609295,
+            TileNineFluidInputHatch.capacityForTotal(Integer.MAX_VALUE));
     }
 
     @Test

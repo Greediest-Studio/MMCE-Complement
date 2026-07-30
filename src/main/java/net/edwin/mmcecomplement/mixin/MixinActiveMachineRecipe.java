@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import net.edwin.mmcecomplement.attachment.AttachmentController;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
@@ -51,6 +52,14 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Unique
     private int mmceComplement$batchBaseMaxParallelism = 1;
 
+    /** The portion of the budget which belongs to ordinary factory threads. */
+    @Unique
+    private int mmceComplement$batchEligibleParallelism = 1;
+
+    /** Factory custom/extra threads are retained, but never multiplied. */
+    @Unique
+    private int mmceComplement$batchExcludedParallelism;
+
     @Unique
     private int mmceComplement$batchFactor = 1;
 
@@ -68,6 +77,7 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$batchBaseMaxParallelism = recipe.isParallelized()
             ? Math.max(1, maxParallelism)
             : 1;
+        mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
@@ -79,10 +89,13 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
                 compound.getInteger(mmceComplement$NBT_BATCH_FACTOR));
             mmceComplement$batchPrepared =
                 compound.getBoolean(mmceComplement$NBT_BATCH_PREPARED);
+            mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
+            mmceComplement$batchExcludedParallelism = 0;
         } else {
             mmceComplement$batchBaseMaxParallelism = recipe != null && recipe.isParallelized()
                 ? Math.max(1, maxParallelism)
                 : 1;
+            mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
         }
     }
 
@@ -101,6 +114,8 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Inject(method = "reset", at = @At("RETURN"))
     private void mmceComplement$resetBatchData(CallbackInfo ci) {
         maxParallelism = Math.max(1, mmceComplement$batchBaseMaxParallelism);
+        mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
+        mmceComplement$batchExcludedParallelism = 0;
         mmceComplement$batchFactor = 1;
         mmceComplement$batchPrepared = false;
         mmceComplement$batchCalculationActive = false;
@@ -116,9 +131,27 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             : 0;
         if (maxBatchTime <= 0) {
             mmceComplement$batchCalculationActive = false;
+            mmceComplement$batchPrepared = false;
+            mmceComplement$batchFactor = 1;
+            mmceComplement$batchExcludedParallelism = 0;
+            mmceComplement$batchEligibleParallelism =
+                mmceComplement$batchBaseMaxParallelism;
+            maxParallelism = Math.max(1, mmceComplement$batchBaseMaxParallelism);
             return;
         }
-        mmceComplement$beginBatchCalculation(mmceComplement$batchBaseMaxParallelism);
+        int baseParallelism = mmceComplement$batchBaseMaxParallelism;
+        int excludedParallelism = mmceComplement$getExcludedParallelism(controller,
+            baseParallelism);
+        mmceComplement$batchExcludedParallelism = excludedParallelism;
+        mmceComplement$batchEligibleParallelism = Math.max(1,
+            baseParallelism - excludedParallelism);
+        // Keep the original unbatched budget until the return hook.  This is
+        // important when a machine has both normal and custom threads: only
+        // the normal portion is scaled below.
+        maxParallelism = Math.max(1, baseParallelism);
+        mmceComplement$batchFactor = 1;
+        mmceComplement$batchPrepared = false;
+        mmceComplement$batchCalculationActive = true;
     }
 
     @Inject(method = "calculateExtraParallelism", at = @At("RETURN"))
@@ -127,8 +160,15 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         if (!mmceComplement$batchCalculationActive) {
             return;
         }
-        maxParallelism = BatchProcessingLogic.multiplyParallelismSaturated(
-            maxParallelism, mmceComplement$batchFactor);
+        int unbatchedFactor = BatchProcessingLogic.factorForActualParallelism(
+            maxParallelism, mmceComplement$batchBaseMaxParallelism,
+            Integer.MAX_VALUE);
+        int combinedFactor = BatchProcessingLogic.multiplyParallelismSaturated(
+            unbatchedFactor, mmceComplement$batchFactor);
+        maxParallelism = BatchProcessingLogic.multiplyParallelismExcluding(
+            mmceComplement$batchBaseMaxParallelism,
+            mmceComplement$batchExcludedParallelism,
+            combinedFactor);
         mmceComplement$finishBatchCalculation();
     }
 
@@ -198,7 +238,7 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             return mmceComplement$batchFactor;
         }
         int maxFactor = Integer.MAX_VALUE
-            / Math.max(1, mmceComplement$batchBaseMaxParallelism);
+            / Math.max(1, mmceComplement$batchEligibleParallelism);
         mmceComplement$batchFactor = BatchProcessingLogic.calculateFactor(
             theoreticalDuration, maxBatchTime, maxFactor);
         return mmceComplement$batchFactor;
@@ -207,6 +247,8 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Override
     public void mmceComplement$beginBatchCalculation(int baseMaxParallelism) {
         mmceComplement$batchBaseMaxParallelism = Math.max(1, baseMaxParallelism);
+        mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
+        mmceComplement$batchExcludedParallelism = 0;
         maxParallelism = mmceComplement$batchBaseMaxParallelism;
         mmceComplement$batchFactor = 1;
         mmceComplement$batchPrepared = false;
@@ -221,13 +263,26 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
 
     @Override
     public void mmceComplement$adjustBatchFactorToActualParallelism(int actualParallelism) {
+        int eligibleActual = Math.max(1,
+            actualParallelism - mmceComplement$batchExcludedParallelism);
         mmceComplement$batchFactor = BatchProcessingLogic.factorForActualParallelism(
-            actualParallelism, mmceComplement$batchBaseMaxParallelism,
+            eligibleActual, mmceComplement$batchEligibleParallelism,
             mmceComplement$batchFactor);
     }
 
     @Override
     public int mmceComplement$getBaseMaxParallelism() {
         return mmceComplement$batchBaseMaxParallelism;
+    }
+
+    @Unique
+    private int mmceComplement$getExcludedParallelism(
+        TileMultiblockMachineController controller, int maxParallelism) {
+        if (!(controller instanceof TileFactoryController)) {
+            return 0;
+        }
+        int extraThreads = Math.max(0,
+            ((TileFactoryController) controller).getExtraThreadCount());
+        return Math.min(Math.max(0, maxParallelism), extraThreads);
     }
 }

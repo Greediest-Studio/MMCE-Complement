@@ -69,7 +69,7 @@ public class BlockQuadFluidOutputHatch extends BlockMachineComponent
                 ItemStack held = player.getHeldItem(hand);
                 if (!held.isEmpty() && FluidUtil.getFluidHandler(held) != null) {
                     FluidUtil.interactWithFluidHandler(player, hand, hatch);
-                    hatch.markNoUpdateSync();
+                    hatch.markForUpdateSync();
                 } else {
                     player.openGui(MMCEComplement.instance,
                         MMCEComplement.GUI_QUAD_FLUID_OUTPUT_HATCH,

@@ -45,6 +45,20 @@ class BatchProcessingLogicTest {
     }
 
     @Test
+    void batchMultiplierLeavesExcludedThreadsUntouched() {
+        assertEquals(2002,
+            BatchProcessingLogic.multiplyParallelismExcluding(4, 2, 1000));
+        assertEquals(4,
+            BatchProcessingLogic.multiplyParallelismExcluding(4, 2, 1));
+    }
+
+    @Test
+    void excludedThreadsAreClampedToTheAvailableBudget() {
+        assertEquals(4,
+            BatchProcessingLogic.multiplyParallelismExcluding(4, 99, 1000));
+    }
+
+    @Test
     void partialInputBatchReducesDurationFactor() {
         assertEquals(125,
             BatchProcessingLogic.factorForActualParallelism(500, 4, 1000));

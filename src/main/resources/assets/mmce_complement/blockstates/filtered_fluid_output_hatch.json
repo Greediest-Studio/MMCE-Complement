@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:filtered_fluid_output_hatch" },
+    "inventory": { "model": "mmce_complement:filtered_fluid_output_hatch" }
+  }
+}

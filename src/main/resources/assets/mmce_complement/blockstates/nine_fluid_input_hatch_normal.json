@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "size=normal": { "model": "mmce_complement:nine_fluid_input_hatch_normal" },
+    "size=reinforced": { "model": "mmce_complement:nine_fluid_input_hatch_reinforced" },
+    "size=big": { "model": "mmce_complement:nine_fluid_input_hatch_big" },
+    "size=huge": { "model": "mmce_complement:nine_fluid_input_hatch_huge" },
+    "size=ludicrous": { "model": "mmce_complement:nine_fluid_input_hatch_ludicrous" },
+    "size=vacuum": { "model": "mmce_complement:nine_fluid_input_hatch_vacuum" }
+  }
+}

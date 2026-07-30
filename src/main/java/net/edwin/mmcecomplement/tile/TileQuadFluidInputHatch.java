@@ -32,7 +32,7 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
     public static final int TANK_COUNT = 4;
     private static final String TAG_TANK_PREFIX = "tank";
 
-    protected final HybridTank[] tanks = new HybridTank[TANK_COUNT];
+    protected final HybridTank[] tanks;
     private final FluidHatchSize hatchSize;
     private final int perTankCapacity;
 
@@ -41,8 +41,17 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
     }
 
     public TileQuadFluidInputHatch(FluidHatchSize hatchSize) {
+        this(hatchSize, TANK_COUNT);
+    }
+
+    /** Constructor used by larger multi-tank variants. */
+    protected TileQuadFluidInputHatch(FluidHatchSize hatchSize, int tankCount) {
         this.hatchSize = hatchSize == null ? FluidHatchSize.TINY : hatchSize;
-        this.perTankCapacity = capacityForTotal(this.hatchSize.getSize());
+        if (tankCount <= 0) {
+            throw new IllegalArgumentException("tankCount must be positive");
+        }
+        this.tanks = new HybridTank[tankCount];
+        this.perTankCapacity = capacityForTankCount(this.hatchSize.getSize(), tankCount);
         for (int i = 0; i < tanks.length; i++) {
             tanks[i] = createTank(perTankCapacity);
             tanks[i].setCanFill(true);
@@ -52,7 +61,15 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
 
     /** Returns ceil(total / 4), with a defensive lower bound for bad configs. */
     public static int capacityForTotal(int totalCapacity) {
-        return (int) Math.max(1L, ((long) totalCapacity + TANK_COUNT - 1L) / TANK_COUNT);
+        return capacityForTankCount(totalCapacity, TANK_COUNT);
+    }
+
+    public static int capacityForTankCount(int totalCapacity, int tankCount) {
+        if (tankCount <= 0) {
+            throw new IllegalArgumentException("tankCount must be positive");
+        }
+        return (int) Math.max(1L,
+            ((long) totalCapacity + tankCount - 1L) / tankCount);
     }
 
     protected HybridTank createTank(int capacity) {
@@ -65,11 +82,18 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
     }
 
     protected void onTankContentsChanged() {
-        markNoUpdateSync();
+        // Tank contents are part of the client GUI state. markNoUpdateSync()
+        // only dirties the chunk and does not send an SPacketUpdateTileEntity,
+        // so an already-open GUI would keep displaying stale zero amounts.
+        markForUpdateSync();
     }
 
     public int getPerTankCapacity() {
         return perTankCapacity;
+    }
+
+    public int getTankCount() {
+        return tanks.length;
     }
 
     public FluidHatchSize getHatchSize() {

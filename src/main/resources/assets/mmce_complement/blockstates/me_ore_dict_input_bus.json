@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:me_ore_dict_input_bus" },
+    "inventory": { "model": "mmce_complement:me_ore_dict_input_bus" }
+  }
+}

@@ -3,6 +3,8 @@ package net.edwin.mmcecomplement.gui;
 import net.edwin.mmcecomplement.network.NetworkHandlerMMCE;
 import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -20,12 +22,19 @@ import java.util.List;
 /** Four-column tank display and per-tank container interaction GUI. */
 public class GuiQuadFluidInputHatch extends GuiContainer {
 
-    private static final ResourceLocation BACKGROUND =
-        new ResourceLocation("modularmachinery", "textures/gui/guibar.png");
+    private static final ResourceLocation QUAD_BACKGROUND =
+        new ResourceLocation("mmce_complement", "textures/gui/quad_fluid_hatch_gui.png");
+    private static final ResourceLocation NINE_BACKGROUND =
+        new ResourceLocation("mmce_complement", "textures/gui/nine_fluid_hatch_gui.png");
     private static final int TANK_Y = 10;
     private static final int TANK_WIDTH = 20;
     private static final int TANK_HEIGHT = 61;
-    private static final int[] TANK_X = {15, 50, 85, 120};
+    // Four 20px wells with the original 35px spacing occupy 125px, centered
+    // in the 176px MMCE background with 26px left and 25px right margins.
+    private static final int[] QUAD_TANK_X = {26, 61, 96, 131};
+    // Nine 20px wells with a one-pixel overlap occupy 172px, so these are
+    // centered in the 176px MMCE background (2px on either side).
+    private static final int[] NINE_TANK_X = {2, 21, 40, 59, 78, 97, 116, 135, 154};
     private static final int TANK_BASE_U = 15;
     private static final int TANK_BASE_V = 10;
     private static final int TANK_OVERLAY_U = 176;
@@ -59,9 +68,17 @@ public class GuiQuadFluidInputHatch extends GuiContainer {
         int tank = tankAt(mouseX, mouseY);
         if (tank >= 0) {
             List<String> tooltip = new ArrayList<>();
-            String keyPrefix = tile instanceof TileQuadFluidOutputHatch
-                ? "gui.mmce_complement.quad_fluid_output_hatch."
-                : "gui.mmce_complement.quad_fluid_input_hatch.";
+            boolean nine = tile.getTankCount() != TileQuadFluidInputHatch.TANK_COUNT;
+            String keyPrefix;
+            if (nine) {
+                keyPrefix = tile instanceof TileQuadFluidOutputHatch
+                    ? "gui.mmce_complement.nine_fluid_output_hatch."
+                    : "gui.mmce_complement.nine_fluid_input_hatch.";
+            } else {
+                keyPrefix = tile instanceof TileQuadFluidOutputHatch
+                    ? "gui.mmce_complement.quad_fluid_output_hatch."
+                    : "gui.mmce_complement.quad_fluid_input_hatch.";
+            }
             String name = tile.getStoredDisplayName(tank);
             if (name == null) {
                 tooltip.add(I18n.format(keyPrefix + "empty"));
@@ -91,21 +108,22 @@ public class GuiQuadFluidInputHatch extends GuiContainer {
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1F, 1F, 1F, 1F);
-        mc.getTextureManager().bindTexture(BACKGROUND);
+        ResourceLocation background = background();
+        mc.getTextureManager().bindTexture(background);
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, xSize, ySize);
 
-        for (int i = 0; i < TileQuadFluidInputHatch.TANK_COUNT; i++) {
-            int x = guiLeft + TANK_X[i];
+        for (int i = 0; i < tile.getTankCount(); i++) {
+            int x = guiLeft + tankX()[i];
             int y = guiTop + TANK_Y;
 
             // MMCE's original tank well from guibar.png.
-            mc.getTextureManager().bindTexture(BACKGROUND);
+            mc.getTextureManager().bindTexture(background);
             drawTexturedModalRect(x, y, TANK_BASE_U, TANK_BASE_V,
                 TANK_WIDTH, TANK_HEIGHT);
             drawTankContents(i, x, y);
 
             // MMCE draws this tick-mark overlay after the fluid/gas texture.
-            mc.getTextureManager().bindTexture(BACKGROUND);
+            mc.getTextureManager().bindTexture(background);
             drawTexturedModalRect(x, y, TANK_OVERLAY_U, TANK_OVERLAY_V,
                 TANK_WIDTH, TANK_HEIGHT);
         }
@@ -144,11 +162,22 @@ public class GuiQuadFluidInputHatch extends GuiContainer {
         if (relativeY < TANK_Y || relativeY >= TANK_Y + TANK_HEIGHT) {
             return -1;
         }
-        for (int i = 0; i < TANK_X.length; i++) {
-            if (relativeX >= TANK_X[i] && relativeX < TANK_X[i] + TANK_WIDTH) {
+        int[] tankX = tankX();
+        for (int i = 0; i < tile.getTankCount() && i < tankX.length; i++) {
+            if (relativeX >= tankX[i] && relativeX < tankX[i] + TANK_WIDTH) {
                 return i;
             }
         }
         return -1;
+    }
+
+    private int[] tankX() {
+        return tile.getTankCount() == TileQuadFluidInputHatch.TANK_COUNT
+            ? QUAD_TANK_X : NINE_TANK_X;
+    }
+
+    private ResourceLocation background() {
+        return tile.getTankCount() == TileQuadFluidInputHatch.TANK_COUNT
+            ? QUAD_BACKGROUND : NINE_BACKGROUND;
     }
 }
