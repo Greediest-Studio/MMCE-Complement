@@ -63,6 +63,21 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Unique
     private int mmceComplement$batchFactor = 1;
 
+    /** Last maxParallelism value written after applying the Batch Hatch. */
+    @Unique
+    private int mmceComplement$batchOutputMaxParallelism = 1;
+
+    /** Whether the previous calculation actually changed maxParallelism. */
+    @Unique
+    private boolean mmceComplement$batchParallelismApplied;
+
+    /**
+     * Set when MMCE, ZenScript, a parallel controller, or another addon uses
+     * ActiveMachineRecipe#setMaxParallelism between batch calculations.
+     */
+    @Unique
+    private boolean mmceComplement$maxParallelismExplicitlyUpdated;
+
     @Unique
     private boolean mmceComplement$batchPrepared;
 
@@ -74,10 +89,13 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     private void mmceComplement$initializeBatchData(MachineRecipe recipe,
                                                     int maxParallelism,
                                                     CallbackInfo ci) {
-        mmceComplement$batchBaseMaxParallelism = recipe.isParallelized()
-            ? Math.max(1, maxParallelism)
-            : 1;
+        // The constructor argument already contains MMCE's machine/controller
+        // budget. Do not collapse non-parallel recipes to one here: a Batch
+        // Hatch can opt them into parallel checks, and integrations may still
+        // replace the value through setMaxParallelism before the check starts.
+        mmceComplement$batchBaseMaxParallelism = Math.max(1, maxParallelism);
         mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
+        mmceComplement$batchOutputMaxParallelism = this.maxParallelism;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
@@ -92,11 +110,15 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
             mmceComplement$batchExcludedParallelism = 0;
         } else {
-            mmceComplement$batchBaseMaxParallelism = recipe != null && recipe.isParallelized()
-                ? Math.max(1, maxParallelism)
-                : 1;
+            mmceComplement$batchBaseMaxParallelism = Math.max(1, maxParallelism);
             mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
         }
+        mmceComplement$batchOutputMaxParallelism = Math.max(1, maxParallelism);
+        mmceComplement$batchParallelismApplied = mmceComplement$batchPrepared
+            && mmceComplement$batchFactor > 1
+            && mmceComplement$batchOutputMaxParallelism
+                != mmceComplement$batchBaseMaxParallelism;
+        mmceComplement$maxParallelismExplicitlyUpdated = false;
     }
 
     @Inject(method = "serialize", at = @At("RETURN"))
@@ -113,17 +135,41 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
 
     @Inject(method = "reset", at = @At("RETURN"))
     private void mmceComplement$resetBatchData(CallbackInfo ci) {
-        maxParallelism = Math.max(1, mmceComplement$batchBaseMaxParallelism);
+        // ActiveMachineRecipe.reset() intentionally resets maxParallelism to
+        // one. Its owner then supplies the current machine/factory budget via
+        // setMaxParallelism. Restoring a constructor-time cache here used to
+        // overwrite runtime parallel controllers and script changes.
+        mmceComplement$batchBaseMaxParallelism = Math.max(1, maxParallelism);
         mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
         mmceComplement$batchExcludedParallelism = 0;
         mmceComplement$batchFactor = 1;
+        mmceComplement$batchOutputMaxParallelism = Math.max(1, maxParallelism);
+        mmceComplement$batchParallelismApplied = false;
+        mmceComplement$maxParallelismExplicitlyUpdated = false;
         mmceComplement$batchPrepared = false;
         mmceComplement$batchCalculationActive = false;
+    }
+
+    @Inject(method = "setMaxParallelism", at = @At("RETURN"))
+    private void mmceComplement$observeParallelismOverride(
+        int maxParallelism, CallbackInfo ci) {
+        mmceComplement$maxParallelismExplicitlyUpdated = true;
     }
 
     @Inject(method = "calculateExtraParallelism", at = @At("HEAD"))
     private void mmceComplement$beginBatchCalculation(
         RecipeCraftingContext context, CallbackInfo ci) {
+        int runtimeBase = BatchProcessingLogic.restoreUnbatchedParallelism(
+            maxParallelism,
+            mmceComplement$batchBaseMaxParallelism,
+            mmceComplement$batchOutputMaxParallelism,
+            mmceComplement$batchParallelismApplied,
+            mmceComplement$maxParallelismExplicitlyUpdated);
+        maxParallelism = runtimeBase;
+        mmceComplement$batchBaseMaxParallelism = runtimeBase;
+        mmceComplement$maxParallelismExplicitlyUpdated = false;
+        mmceComplement$batchParallelismApplied = false;
+
         TileMultiblockMachineController controller = context.getMachineController();
         int maxBatchTime = controller instanceof net.edwin.mmcecomplement.batch.BatchController
             ? ((net.edwin.mmcecomplement.batch.BatchController) controller)
@@ -134,21 +180,16 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             mmceComplement$batchPrepared = false;
             mmceComplement$batchFactor = 1;
             mmceComplement$batchExcludedParallelism = 0;
-            mmceComplement$batchEligibleParallelism =
-                mmceComplement$batchBaseMaxParallelism;
-            maxParallelism = Math.max(1, mmceComplement$batchBaseMaxParallelism);
+            mmceComplement$batchEligibleParallelism = runtimeBase;
+            mmceComplement$batchOutputMaxParallelism = runtimeBase;
             return;
         }
-        int baseParallelism = mmceComplement$batchBaseMaxParallelism;
+        int baseParallelism = runtimeBase;
         int excludedParallelism = mmceComplement$getExcludedParallelism(controller,
             baseParallelism);
         mmceComplement$batchExcludedParallelism = excludedParallelism;
-        mmceComplement$batchEligibleParallelism = Math.max(1,
+        mmceComplement$batchEligibleParallelism = Math.max(0,
             baseParallelism - excludedParallelism);
-        // Keep the original unbatched budget until the return hook.  This is
-        // important when a machine has both normal and custom threads: only
-        // the normal portion is scaled below.
-        maxParallelism = Math.max(1, baseParallelism);
         mmceComplement$batchFactor = 1;
         mmceComplement$batchPrepared = false;
         mmceComplement$batchCalculationActive = true;
@@ -160,15 +201,20 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         if (!mmceComplement$batchCalculationActive) {
             return;
         }
-        int unbatchedFactor = BatchProcessingLogic.factorForActualParallelism(
-            maxParallelism, mmceComplement$batchBaseMaxParallelism,
-            Integer.MAX_VALUE);
-        int combinedFactor = BatchProcessingLogic.multiplyParallelismSaturated(
-            unbatchedFactor, mmceComplement$batchFactor);
-        maxParallelism = BatchProcessingLogic.multiplyParallelismExcluding(
-            mmceComplement$batchBaseMaxParallelism,
-            mmceComplement$batchExcludedParallelism,
-            combinedFactor);
+        // Treat the value produced by MMCE and every other mixin as
+        // authoritative. Batch processing only adds its own factor on top;
+        // it must never reconstruct the value from the constructor argument.
+        int unbatchedRuntimeParallelism = Math.max(1, maxParallelism);
+        int batchedRuntimeParallelism = mmceComplement$batchFactor <= 1
+            ? unbatchedRuntimeParallelism
+            : BatchProcessingLogic.multiplyParallelismExcluding(
+                unbatchedRuntimeParallelism,
+                mmceComplement$batchExcludedParallelism,
+                mmceComplement$batchFactor);
+        maxParallelism = batchedRuntimeParallelism;
+        mmceComplement$batchOutputMaxParallelism = batchedRuntimeParallelism;
+        mmceComplement$batchParallelismApplied =
+            batchedRuntimeParallelism != unbatchedRuntimeParallelism;
         mmceComplement$finishBatchCalculation();
     }
 
@@ -237,8 +283,12 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         if (mmceComplement$batchPrepared) {
             return mmceComplement$batchFactor;
         }
+        if (mmceComplement$batchEligibleParallelism <= 0) {
+            mmceComplement$batchFactor = 1;
+            return 1;
+        }
         int maxFactor = Integer.MAX_VALUE
-            / Math.max(1, mmceComplement$batchEligibleParallelism);
+            / mmceComplement$batchEligibleParallelism;
         mmceComplement$batchFactor = BatchProcessingLogic.calculateFactor(
             theoreticalDuration, maxBatchTime, maxFactor);
         return mmceComplement$batchFactor;
@@ -251,6 +301,9 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$batchExcludedParallelism = 0;
         maxParallelism = mmceComplement$batchBaseMaxParallelism;
         mmceComplement$batchFactor = 1;
+        mmceComplement$batchOutputMaxParallelism = maxParallelism;
+        mmceComplement$batchParallelismApplied = false;
+        mmceComplement$maxParallelismExplicitlyUpdated = false;
         mmceComplement$batchPrepared = false;
         mmceComplement$batchCalculationActive = true;
     }

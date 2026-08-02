@@ -53,6 +53,30 @@ class BatchProcessingLogicTest {
     }
 
     @Test
+    void restoresOnlyAnUnchangedPreviousBatchResult() {
+        assertEquals(8, BatchProcessingLogic.restoreUnbatchedParallelism(
+            62, 8, 62, true, false));
+
+        // A direct field change by another mixin is authoritative even when
+        // it did not pass through ActiveMachineRecipe#setMaxParallelism.
+        assertEquals(37, BatchProcessingLogic.restoreUnbatchedParallelism(
+            37, 8, 62, true, false));
+
+        // An explicit setter call is authoritative even if it happens to set
+        // the same integer as the previous batch result.
+        assertEquals(62, BatchProcessingLogic.restoreUnbatchedParallelism(
+            62, 8, 62, true, true));
+    }
+
+    @Test
+    void batchScalingUsesTheRuntimeOverrideAsItsBase() {
+        int runtimeOverride = BatchProcessingLogic.restoreUnbatchedParallelism(
+            37, 8, 62, true, true);
+        assertEquals(352, BatchProcessingLogic.multiplyParallelismExcluding(
+            runtimeOverride, 2, 10));
+    }
+
+    @Test
     void excludedThreadsAreClampedToTheAvailableBudget() {
         assertEquals(4,
             BatchProcessingLogic.multiplyParallelismExcluding(4, 99, 1000));

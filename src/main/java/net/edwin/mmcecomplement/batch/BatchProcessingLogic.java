@@ -44,6 +44,32 @@ public final class BatchProcessingLogic {
     }
 
     /**
+     * Removes the contribution written by the previous batch calculation,
+     * but only when nobody else has changed the active recipe's parallelism
+     * budget in the meantime.
+     *
+     * <p>MMCE deliberately exposes {@code ActiveMachineRecipe#setMaxParallelism}
+     * to recipe-check events and integrations.  A cached constructor value is
+     * therefore not an authoritative base: ZenScript, parallel controllers,
+     * and other addons may replace it before every check.  The last batch
+     * result is safe to unwrap only when the field still contains that exact
+     * result and no explicit setter call has occurred.</p>
+     */
+    public static int restoreUnbatchedParallelism(int currentParallelism,
+                                                   int previousBaseParallelism,
+                                                   int previousBatchResult,
+                                                   boolean previousBatchApplied,
+                                                   boolean explicitlyUpdated) {
+        int current = Math.max(1, currentParallelism);
+        if (previousBatchApplied
+            && !explicitlyUpdated
+            && current == Math.max(1, previousBatchResult)) {
+            return Math.max(1, previousBaseParallelism);
+        }
+        return current;
+    }
+
+    /**
      * Scales only the eligible part of a parallelism budget.  Factory
      * controllers can expose extra/custom threads in the same budget, but a
      * batch hatch must not multiply those threads.
