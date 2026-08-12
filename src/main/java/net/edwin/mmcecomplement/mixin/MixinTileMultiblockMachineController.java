@@ -431,7 +431,8 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
             mmceComplement$ACCELERATOR_DURATION_MODIFIER,
             RequirementTypesMM.REQUIREMENT_DURATION,
             IOType.INPUT,
-            AcceleratorHatchLogic.getEffectiveDurationMultiplier(counts));
+            AcceleratorHatchLogic.getEffectiveDurationMultiplier(
+                counts, ModConfig.acceleratorHatch.getDurationMultipliers()));
     }
 
     @Unique

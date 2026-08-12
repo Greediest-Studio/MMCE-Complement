@@ -4,6 +4,7 @@ import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockCustomName;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
+import net.edwin.mmcecomplement.config.ModConfig;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -51,9 +52,10 @@ public class BlockAcceleratorHatch extends BlockMachineComponent implements Bloc
     public void addInformation(@Nonnull ItemStack stack, @Nullable World world,
                                @Nonnull List<String> tooltip, @Nonnull ITooltipFlag flag) {
         super.addInformation(stack, world, tooltip, flag);
-        int tier = MathHelper.clamp(stack.getMetadata(), 0,
-            AcceleratorHatchType.values().length - 1) + 1;
-        String multiplier = BigDecimal.valueOf(0.6D).pow(tier)
+        int meta = MathHelper.clamp(stack.getMetadata(), 0,
+            AcceleratorHatchType.values().length - 1);
+        String multiplier = BigDecimal.valueOf(
+            ModConfig.acceleratorHatch.getDurationMultipliers()[meta])
             .stripTrailingZeros().toPlainString();
         tooltip.add(I18n.format("tile.mmce_complement.accelerator_hatch.tip.duration",
             multiplier));

@@ -18,6 +18,10 @@ public final class ModConfig {
     @Config.Comment("Overclock Hatch settings.")
     public static OverclockHatchConfig overclockHatch = new OverclockHatchConfig();
 
+    @Config.Name("accelerator_hatch")
+    @Config.Comment("Accelerator Hatch settings.")
+    public static AcceleratorHatchConfig acceleratorHatch = new AcceleratorHatchConfig();
+
     @Config.Name("data_input_assembly")
     @Config.Comment("Fluid capacity settings for Data Input Assemblies.")
     public static DataInputAssemblyConfig dataInputAssembly =
@@ -365,6 +369,62 @@ public final class ModConfig {
                 mk4DurationMultiplier,
                 mk5DurationMultiplier,
                 mk6DurationMultiplier
+            };
+        }
+    }
+
+    public static final class AcceleratorHatchConfig {
+
+        @Config.Name("mk1_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK I Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk1DurationMultiplier = 0.6D;
+
+        @Config.Name("mk2_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK II Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk2DurationMultiplier = 0.36D;
+
+        @Config.Name("mk3_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK III Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk3DurationMultiplier = 0.216D;
+
+        @Config.Name("mk4_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK IV Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk4DurationMultiplier = 0.1296D;
+
+        @Config.Name("mk5_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK V Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk5DurationMultiplier = 0.07776D;
+
+        @Config.Name("mk6_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK VI Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk6DurationMultiplier = 0.046656D;
+
+        @Config.Name("mk7_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK VII Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk7DurationMultiplier = 0.0279936D;
+
+        @Config.Name("mk8_duration_multiplier")
+        @Config.Comment("Recipe-duration multiplier supplied by a MK VIII Accelerator Hatch.")
+        @Config.RangeDouble(min = 0.0D, max = 1000000.0D)
+        public double mk8DurationMultiplier = 0.01679616D;
+
+        public double[] getDurationMultipliers() {
+            return new double[] {
+                mk1DurationMultiplier,
+                mk2DurationMultiplier,
+                mk3DurationMultiplier,
+                mk4DurationMultiplier,
+                mk5DurationMultiplier,
+                mk6DurationMultiplier,
+                mk7DurationMultiplier,
+                mk8DurationMultiplier
             };
         }
     }

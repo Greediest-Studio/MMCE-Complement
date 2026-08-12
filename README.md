@@ -1,7 +1,7 @@
 # MMCE Complement
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.12.2-62b47a)](https://www.minecraft.net/)
-[![Version](https://img.shields.io/badge/version-1.3.1-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
+[![Version](https://img.shields.io/badge/version-1.3.2-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
 [![Wiki](https://img.shields.io/badge/docs-GitHub%20Wiki-8250df)](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 
 MMCE Complement is an add-on for [Modular Machinery Community Edition](https://www.curseforge.com/minecraft/mc-mods/modular-machinery-community-edition) on Minecraft 1.12.2. It adds attachment-module multiblocks, advanced machine hatches, compact item/fluid assemblies, recipe conditions, and optional AE2, Flux Networks, Mekanism, and CrazyAE integrations.
