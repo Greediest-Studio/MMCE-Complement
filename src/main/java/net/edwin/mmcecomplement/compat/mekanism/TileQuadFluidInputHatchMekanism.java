@@ -204,11 +204,8 @@ public class TileQuadFluidInputHatchMekanism extends TileQuadFluidInputHatch
     }
 
     @Override
-    public void readCustomNBT(NBTTagCompound compound) {
-        super.readCustomNBT(compound);
-        for (int i = 0; i < tanks.length; i++) {
-            gasTank(i).readGasFromNBT(compound.getCompoundTag("tank" + i));
-        }
+    protected void readExtraTankNBT(int index, NBTTagCompound tankTag) {
+        gasTank(index).readGasFromNBT(tankTag);
     }
 
     @Override

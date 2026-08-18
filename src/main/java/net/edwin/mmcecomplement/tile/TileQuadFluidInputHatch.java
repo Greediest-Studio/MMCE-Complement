@@ -8,8 +8,10 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineCompon
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import net.edwin.mmcecomplement.fluid.QuadTankRouting;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -31,10 +33,12 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
 
     public static final int TANK_COUNT = 4;
     private static final String TAG_TANK_PREFIX = "tank";
+    private static final String TAG_HATCH_SIZE = "hatchSize";
 
     protected final HybridTank[] tanks;
-    private final FluidHatchSize hatchSize;
-    private final int perTankCapacity;
+    private FluidHatchSize hatchSize;
+    private int perTankCapacity;
+    private boolean recoverHatchSizeFromBlock;
 
     public TileQuadFluidInputHatch() {
         this(FluidHatchSize.TINY);
@@ -46,17 +50,44 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
 
     /** Constructor used by larger multi-tank variants. */
     protected TileQuadFluidInputHatch(FluidHatchSize hatchSize, int tankCount) {
-        this.hatchSize = hatchSize == null ? FluidHatchSize.TINY : hatchSize;
         if (tankCount <= 0) {
             throw new IllegalArgumentException("tankCount must be positive");
         }
         this.tanks = new HybridTank[tankCount];
-        this.perTankCapacity = capacityForTankCount(this.hatchSize.getSize(), tankCount);
-        for (int i = 0; i < tanks.length; i++) {
-            tanks[i] = createTank(perTankCapacity);
-            tanks[i].setCanFill(true);
-            tanks[i].setCanDrain(true);
+        configureHatchSize(hatchSize);
+    }
+
+    private void configureHatchSize(FluidHatchSize hatchSize) {
+        FluidHatchSize resolved = hatchSize == null ? FluidHatchSize.TINY : hatchSize;
+        int resolvedCapacity = capacityForTankCount(resolved.getSize(), tanks.length);
+        if (this.hatchSize == resolved && perTankCapacity == resolvedCapacity
+                && tanks[0] != null) {
+            return;
         }
+
+        this.hatchSize = resolved;
+        this.perTankCapacity = resolvedCapacity;
+        for (int i = 0; i < tanks.length; i++) {
+            if (tanks[i] == null) {
+                tanks[i] = createTank(perTankCapacity);
+                tanks[i].setCanFill(true);
+                tanks[i].setCanDrain(true);
+            } else if (tanks[i].getCapacity() != perTankCapacity) {
+                resizeTank(i, perTankCapacity);
+            }
+        }
+    }
+
+    private void resizeTank(int index, int capacity) {
+        NBTTagCompound tankTag = new NBTTagCompound();
+        tanks[index].writeToNBT(tankTag);
+        writeExtraTankNBT(index, tankTag);
+
+        tanks[index] = createTank(capacity);
+        tanks[index].setCanFill(true);
+        tanks[index].setCanDrain(true);
+        tanks[index].readFromNBT(tankTag);
+        readExtraTankNBT(index, tankTag);
     }
 
     /** Returns ceil(total / 4), with a defensive lower bound for bad configs. */
@@ -280,14 +311,29 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        if (compound.hasKey(TAG_HATCH_SIZE)) {
+            configureHatchSize(hatchSizeForOrdinal(
+                compound.getInteger(TAG_HATCH_SIZE), hatchSize));
+            recoverHatchSizeFromBlock = false;
+        } else if (world != null) {
+            configureHatchSize(readHatchSizeFromBlock(world));
+            recoverHatchSizeFromBlock = false;
+        } else {
+            // During chunk deserialization Forge calls readFromNBT before it
+            // injects the world. Recover the tier later in setWorld.
+            recoverHatchSizeFromBlock = true;
+        }
         for (int i = 0; i < tanks.length; i++) {
-            tanks[i].readFromNBT(compound.getCompoundTag(TAG_TANK_PREFIX + i));
+            NBTTagCompound tankTag = compound.getCompoundTag(TAG_TANK_PREFIX + i);
+            tanks[i].readFromNBT(tankTag);
+            readExtraTankNBT(i, tankTag);
         }
     }
 
     @Override
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
+        compound.setInteger(TAG_HATCH_SIZE, hatchSize.ordinal());
         for (int i = 0; i < tanks.length; i++) {
             NBTTagCompound tankTag = new NBTTagCompound();
             tanks[i].writeToNBT(tankTag);
@@ -298,6 +344,32 @@ public class TileQuadFluidInputHatch extends TileColorableMachineComponent
 
     protected void writeExtraTankNBT(int index, NBTTagCompound tankTag) {
         // Mekanism subclass stores the gas half of each hybrid tank here.
+    }
+
+    protected void readExtraTankNBT(int index, NBTTagCompound tankTag) {
+        // Mekanism subclass restores the gas half of each hybrid tank here.
+    }
+
+    @Override
+    public void setWorld(World world) {
+        super.setWorld(world);
+        if (recoverHatchSizeFromBlock && world != null) {
+            configureHatchSize(readHatchSizeFromBlock(world));
+            recoverHatchSizeFromBlock = false;
+        }
+    }
+
+    private FluidHatchSize readHatchSizeFromBlock(World world) {
+        IBlockState state = world.getBlockState(pos);
+        int metadata = state.getBlock().getMetaFromState(state);
+        return hatchSizeForOrdinal(metadata, hatchSize);
+    }
+
+    static FluidHatchSize hatchSizeForOrdinal(int ordinal, FluidHatchSize fallback) {
+        FluidHatchSize[] values = FluidHatchSize.values();
+        return ordinal >= 0 && ordinal < values.length
+            ? values[ordinal]
+            : fallback;
     }
 
     /** Neutral display API, keeping the client GUI independent from Mekanism. */

@@ -446,6 +446,7 @@ def inheritedMinecraftMethodMappings = [
         ['net/edwin/mmcecomplement/block/BlockQuadFluidInputHatch', 'getMetaFromState', 'func_176201_c', '(Lnet/minecraft/block/state/IBlockState;)I'],
         ['net/edwin/mmcecomplement/block/BlockQuadFluidInputHatch', 'getStateFromMeta', 'func_176203_a', '(I)Lnet/minecraft/block/state/IBlockState;'],
         ['net/edwin/mmcecomplement/block/BlockQuadFluidInputHatch', 'createBlockState', 'func_180661_e', '()Lnet/minecraft/block/state/BlockStateContainer;'],
+        ['net/edwin/mmcecomplement/tile/TileQuadFluidInputHatch', 'setWorld', 'func_145834_a', '(Lnet/minecraft/world/World;)V'],
 
         ['net/edwin/mmcecomplement/compat/ae/block/BlockMEEnergyBusBase', 'onBlockActivated', 'func_180639_a', '(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/util/EnumHand;Lnet/minecraft/util/EnumFacing;FFF)Z'],
         ['net/edwin/mmcecomplement/compat/ae/block/BlockMEEnergyInputBus', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],

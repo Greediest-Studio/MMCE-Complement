@@ -2,6 +2,10 @@ package net.edwin.mmcecomplement.fluid;
 
 import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
+import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
+import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
+import net.minecraft.nbt.NBTTagCompound;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -27,6 +31,26 @@ class QuadFluidHatchCapacityTest {
         assertEquals(1, TileNineFluidInputHatch.capacityForTotal(1));
         assertEquals(238609295,
             TileNineFluidInputHatch.capacityForTotal(Integer.MAX_VALUE));
+    }
+
+    @Test
+    void retainsQuadInputAndOutputCapacityAfterNbtReload() {
+        assertCapacitySurvivesReload(
+            new TileQuadFluidInputHatch(FluidHatchSize.BIG),
+            new TileQuadFluidInputHatch(), FluidHatchSize.BIG);
+        assertCapacitySurvivesReload(
+            new TileQuadFluidOutputHatch(FluidHatchSize.VACUUM),
+            new TileQuadFluidOutputHatch(), FluidHatchSize.VACUUM);
+    }
+
+    @Test
+    void retainsNinefoldInputAndOutputCapacityAfterNbtReload() {
+        assertCapacitySurvivesReload(
+            new TileNineFluidInputHatch(FluidHatchSize.REINFORCED),
+            new TileNineFluidInputHatch(), FluidHatchSize.REINFORCED);
+        assertCapacitySurvivesReload(
+            new TileNineFluidOutputHatch(FluidHatchSize.LUDICROUS),
+            new TileNineFluidOutputHatch(), FluidHatchSize.LUDICROUS);
     }
 
     @Test
@@ -67,5 +91,24 @@ class QuadFluidHatchCapacityTest {
         boolean[] hasRoom = {false, false, true, true};
         assertEquals(2,
             QuadTankRouting.findOutputFillTarget(occupied, matching, hasRoom));
+    }
+
+    private static void assertCapacitySurvivesReload(
+        TileQuadFluidInputHatch source,
+        TileQuadFluidInputHatch restored,
+        FluidHatchSize expectedSize) {
+
+        NBTTagCompound compound = new NBTTagCompound();
+        source.writeCustomNBT(compound);
+        restored.readCustomNBT(compound);
+
+        assertEquals(expectedSize, restored.getHatchSize());
+        assertEquals(TileQuadFluidInputHatch.capacityForTankCount(
+            expectedSize.getSize(), restored.getTankCount()),
+            restored.getPerTankCapacity());
+        for (int i = 0; i < restored.getTankCount(); i++) {
+            assertEquals(restored.getPerTankCapacity(),
+                restored.getTank(i).getCapacity());
+        }
     }
 }

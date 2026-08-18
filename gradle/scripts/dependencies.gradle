@@ -41,6 +41,9 @@ dependencies {
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
     // API only when Mekanism is installed, matching MMCE's native fluid hatches.
     compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
+    // MMCE's public fluid-component hierarchy references Mekanism API types,
+    // so tests that instantiate a fluid hatch need the optional API at runtime.
+    testRuntimeOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
     // MMCE exposes GeckoLib interfaces in its public controller hierarchy, but
     // CurseMaven does not provide MMCE's transitive dependency metadata.
     compileOnly rfg.deobf('curse.maven:geckolib-388172:4020277')
