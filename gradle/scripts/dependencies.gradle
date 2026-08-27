@@ -36,11 +36,14 @@ dependencies {
 
     // Required mod dependencies (deobfuscated for the 1.12.2 development environment)
     compileOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
+    testCompileOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     runtimeOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     implementation rfg.deobf('curse.maven:modularmachinery-community-edition-817377:7372951')
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
     // API only when Mekanism is installed, matching MMCE's native fluid hatches.
     compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
+    // Optional gas storage channel used by MMCE's ME gas input bus.
+    compileOnly rfg.deobf('curse.maven:mekanism-energistics-1027681:5408319')
     // MMCE's public fluid-component hierarchy references Mekanism API types,
     // so tests that instantiate a fluid hatch need the optional API at runtime.
     testRuntimeOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
@@ -49,6 +52,9 @@ dependencies {
     compileOnly rfg.deobf('curse.maven:geckolib-388172:4020277')
     runtimeOnly rfg.deobf('curse.maven:geckolib-388172:4020277')
     compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
+    // MMCE's pattern provider recognizes AE2 Fluid Crafting Rework fake
+    // fluid/gas ingredients. Provider II mirrors that optional behavior.
+    compileOnly rfg.deobf('curse.maven:ae2-fluid-crafting-rework-623955:5751930')
     compileOnly rfg.deobf('curse.maven:crazyae-1111042:6840104')
     compileOnly rfg.deobf('curse.maven:baubles-227083:2518667')
     compileOnly rfg.deobf('curse.maven:botania-225643:3330934')

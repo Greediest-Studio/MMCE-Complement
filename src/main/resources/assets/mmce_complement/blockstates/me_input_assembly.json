@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:me_input_assembly" },
+    "inventory": { "model": "mmce_complement:me_input_assembly" }
+  }
+}

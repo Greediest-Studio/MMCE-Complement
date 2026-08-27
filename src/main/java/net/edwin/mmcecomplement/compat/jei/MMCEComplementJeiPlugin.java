@@ -4,6 +4,10 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
 import mezz.jei.api.JEIPlugin;
 import mezz.jei.api.gui.IGhostIngredientHandler;
+import mezz.jei.api.ingredients.IModIngredientRegistration;
+import net.edwin.mmcecomplement.compat.jei.mechannel.MEChannelIngredient;
+import net.edwin.mmcecomplement.compat.jei.mechannel.MEChannelIngredientHelper;
+import net.edwin.mmcecomplement.compat.jei.mechannel.MEChannelIngredientRenderer;
 import net.edwin.mmcecomplement.gui.GuiFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.gui.GuiFilteredItemOutputHatch;
 import net.minecraft.item.ItemStack;
@@ -16,6 +20,13 @@ import java.util.List;
 /** JEI/HEI ghost targets for the two filtered output configuration slots. */
 @JEIPlugin
 public class MMCEComplementJeiPlugin implements IModPlugin {
+
+    @Override
+    public void registerIngredients(IModIngredientRegistration registry) {
+        registry.register(() -> MEChannelIngredient.class,
+            Collections.emptyList(), MEChannelIngredientHelper.INSTANCE,
+            MEChannelIngredientRenderer.INSTANCE);
+    }
 
     @Override
     public void register(IModRegistry registry) {

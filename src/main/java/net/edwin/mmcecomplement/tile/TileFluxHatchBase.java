@@ -33,6 +33,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         implements IFluxConnector, MachineComponentTile, IEnergyHandlerAsync, ITickable {
 
+    /** Default internal energy buffer for both wireless Flux hatches. */
+    public static final long DEFAULT_BUFFER_CAPACITY = 10_000L;
+    /** Default Flux Networks transfer limit for both wireless Flux hatches. */
+    public static final long DEFAULT_TRANSFER_LIMIT = 800_000L;
+
     protected final AtomicLong buffer = new AtomicLong(0L);
     protected long transferChange = 0L;
     protected long lastCycleChange = 0L;
@@ -43,13 +48,13 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     protected UUID playerUUID = null;
     protected String customName = "";
     protected int priority = 0;
-    protected long transferLimit = Long.MAX_VALUE;
+    protected long transferLimit = DEFAULT_TRANSFER_LIMIT;
     protected boolean disableLimit = true;
     protected boolean surgeMode = false;
     protected int folderID = -1;
 
     protected EnergyHatchData tier = EnergyHatchData.LUDICROUS;
-    protected long bufferCapacity = tier.maxEnergy;
+    protected long bufferCapacity = DEFAULT_BUFFER_CAPACITY;
 
     protected boolean chunkLoaded = true;
     protected boolean chunkLoadingRequested = false;
@@ -124,8 +129,8 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     private void readFluxNBT(NBTTagCompound nbt) {
         networkID = nbt.getInteger("networkID");
         priority = nbt.getInteger("priority");
-        transferLimit = nbt.hasKey("limit") ? nbt.getLong("limit") : Long.MAX_VALUE;
-        bufferCapacity = nbt.hasKey("bufferCapacity") ? nbt.getLong("bufferCapacity") : tier.maxEnergy;
+        transferLimit = nbt.hasKey("limit") ? nbt.getLong("limit") : DEFAULT_TRANSFER_LIMIT;
+        bufferCapacity = nbt.hasKey("bufferCapacity") ? nbt.getLong("bufferCapacity") : DEFAULT_BUFFER_CAPACITY;
         lastCycleChange = nbt.hasKey("fnChange") ? nbt.getLong("fnChange") : 0L;
         disableLimit = !nbt.hasKey("disableLimit") || nbt.getBoolean("disableLimit");
         surgeMode = nbt.getBoolean("surgeMode");

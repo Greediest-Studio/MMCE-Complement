@@ -10,11 +10,23 @@ import net.edwin.mmcecomplement.block.BlockSelfCycleAssemblyHatch;
 import net.edwin.mmcecomplement.block.BlockFilteredItemOutputHatch;
 import net.edwin.mmcecomplement.block.BlockFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOreDictInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEItemInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEFluidInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEGasInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEInventoryInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEChannelInputHatch;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
 import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
 import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockBatchHatch;
+import net.edwin.mmcecomplement.block.BlockRedstoneControlHatch;
+import net.edwin.mmcecomplement.block.BlockRedstoneSignalInputHatch;
+import net.edwin.mmcecomplement.block.BlockRedstoneSignalOutputHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
 import net.edwin.mmcecomplement.block.BlockThreadHatch;
@@ -37,6 +49,9 @@ import net.edwin.mmcecomplement.item.ItemAttachmentConstructTool;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneSignalOutputHatch;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
@@ -57,6 +72,18 @@ import net.edwin.mmcecomplement.compat.mekanism.TileItemInputAssemblyHatchMekani
 import net.edwin.mmcecomplement.compat.mekanism.TileItemOutputAssemblyHatchMekanism;
 import net.edwin.mmcecomplement.compat.mekanism.TileSelfCycleAssemblyHatchMekanism;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEItemInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEFluidInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEGasInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEInventoryInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEChannelInputHatch;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
+import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
+import hellfirepvp.modularmachinery.common.crafting.ComponentType;
+import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -82,6 +109,20 @@ import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 public final class RegistryEvents {
 
     private RegistryEvents() {}
+
+    @SubscribeEvent
+    public static void onComponentTypeRegister(
+        RegistryEvent.Register<ComponentType> event) {
+        event.getRegistry().register(ModMEChannelTypes.COMPONENT);
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void onRequirementTypeRegister(RegistryEvent.Register event) {
+        if (event.getGenericType() == RequirementType.class) {
+            event.getRegistry().register(ModMEChannelTypes.REQUIREMENT);
+        }
+    }
 
     @SubscribeEvent
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
@@ -121,6 +162,29 @@ public final class RegistryEvents {
 
         GameRegistry.registerTileEntity(TileBatchHatch.class,
             new ResourceLocation(Tags.MOD_ID, "batch_hatch"));
+
+        ModBlocks.REDSTONE_CONTROL_HATCH = new BlockRedstoneControlHatch();
+        ModBlocks.REDSTONE_CONTROL_HATCH.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "redstone_control_hatch"));
+        event.getRegistry().register(ModBlocks.REDSTONE_CONTROL_HATCH);
+        GameRegistry.registerTileEntity(TileRedstoneControlHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "redstone_control_hatch"));
+
+        ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH =
+            new BlockRedstoneSignalInputHatch();
+        ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "redstone_signal_input_hatch"));
+        event.getRegistry().register(ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
+        GameRegistry.registerTileEntity(TileRedstoneSignalInputHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "redstone_signal_input_hatch"));
+
+        ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH =
+            new BlockRedstoneSignalOutputHatch();
+        ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "redstone_signal_output_hatch"));
+        event.getRegistry().register(ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
+        GameRegistry.registerTileEntity(TileRedstoneSignalOutputHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "redstone_signal_output_hatch"));
 
         ModBlocks.LIQUID_ENERGIZER_HATCH =
             new BlockLiquidEnergizerHatch();
@@ -288,12 +352,104 @@ public final class RegistryEvents {
         }
 
         if (CompatMods.isAeItemCompatLoaded()) {
+            ModBlocks.ME_PATTERN_PROVIDER_II =
+                new BlockMEPatternProviderII();
+            ModBlocks.ME_PATTERN_PROVIDER_II.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_pattern_provider_ii"));
+            event.getRegistry().register(ModBlocks.ME_PATTERN_PROVIDER_II);
+            GameRegistry.registerTileEntity(TileMEPatternProviderII.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_pattern_provider_ii"));
+
+            ModBlocks.ME_CHANNEL_INPUT_HATCH =
+                new BlockMEChannelInputHatch();
+            ModBlocks.ME_CHANNEL_INPUT_HATCH.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_channel_input_hatch"));
+            event.getRegistry().register(ModBlocks.ME_CHANNEL_INPUT_HATCH);
+            GameRegistry.registerTileEntity(TileMEChannelInputHatch.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_channel_input_hatch"));
+
             ModBlocks.ME_ORE_DICT_INPUT_BUS = new BlockMEOreDictInputBus();
             ModBlocks.ME_ORE_DICT_INPUT_BUS.setRegistryName(
                 new ResourceLocation(Tags.MOD_ID, "me_ore_dict_input_bus"));
             event.getRegistry().register(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             GameRegistry.registerTileEntity(TileMEOreDictInputBus.class,
                 new ResourceLocation(Tags.MOD_ID, "me_ore_dict_input_bus"));
+
+            ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS =
+                new BlockMEItemInventoryInputBus();
+            ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_item_inventory_input_bus"));
+            event.getRegistry().register(
+                ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
+            GameRegistry.registerTileEntity(
+                TileMEItemInventoryInputBus.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_item_inventory_input_bus"));
+
+            ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS =
+                new BlockMEFluidInventoryInputBus();
+            ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_fluid_inventory_input_bus"));
+            event.getRegistry().register(
+                ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
+            GameRegistry.registerTileEntity(
+                TileMEFluidInventoryInputBus.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_fluid_inventory_input_bus"));
+        }
+
+        if (CompatMods.isAeGasCompatLoaded()) {
+            ModBlocks.ME_GAS_INVENTORY_INPUT_BUS =
+                new BlockMEGasInventoryInputBus();
+            ModBlocks.ME_GAS_INVENTORY_INPUT_BUS.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_gas_inventory_input_bus"));
+            event.getRegistry().register(
+                ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
+            GameRegistry.registerTileEntity(
+                TileMEGasInventoryInputBus.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_gas_inventory_input_bus"));
+
+            ModBlocks.ME_INPUT_ASSEMBLY = new BlockMEInputAssembly();
+            ModBlocks.ME_INPUT_ASSEMBLY.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID, "me_input_assembly"));
+            event.getRegistry().register(ModBlocks.ME_INPUT_ASSEMBLY);
+            GameRegistry.registerTileEntity(TileMEInputAssembly.class,
+                new ResourceLocation(Tags.MOD_ID, "me_input_assembly"));
+
+            ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY =
+                new BlockMEInventoryInputAssembly();
+            ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_inventory_input_assembly"));
+            event.getRegistry().register(ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
+            GameRegistry.registerTileEntity(TileMEInventoryInputAssembly.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_inventory_input_assembly"));
+
+            ModBlocks.ME_OUTPUT_ASSEMBLY = new BlockMEOutputAssembly();
+            ModBlocks.ME_OUTPUT_ASSEMBLY.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID, "me_output_assembly"));
+            event.getRegistry().register(ModBlocks.ME_OUTPUT_ASSEMBLY);
+            GameRegistry.registerTileEntity(TileMEOutputAssembly.class,
+                new ResourceLocation(Tags.MOD_ID, "me_output_assembly"));
+
+            ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY =
+                new BlockMEFullExposureAssembly();
+            ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_full_exposure_assembly"));
+            event.getRegistry().register(ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
+            GameRegistry.registerTileEntity(TileMEFullExposureAssembly.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_full_exposure_assembly"));
         }
     }
 
@@ -352,6 +508,27 @@ public final class RegistryEvents {
         batchHatchItem.setRegistryName(ModBlocks.BATCH_HATCH.getRegistryName());
         setMachineCreativeTab(batchHatchItem);
         event.getRegistry().register(batchHatchItem);
+
+        ItemBlockMachineComponent redstoneControlHatchItem =
+            new ItemBlockMachineComponent(ModBlocks.REDSTONE_CONTROL_HATCH);
+        redstoneControlHatchItem.setRegistryName(
+            ModBlocks.REDSTONE_CONTROL_HATCH.getRegistryName());
+        setMachineCreativeTab(redstoneControlHatchItem);
+        event.getRegistry().register(redstoneControlHatchItem);
+
+        ItemBlockMachineComponent redstoneSignalInputHatchItem =
+            new ItemBlockMachineComponent(ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
+        redstoneSignalInputHatchItem.setRegistryName(
+            ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH.getRegistryName());
+        setMachineCreativeTab(redstoneSignalInputHatchItem);
+        event.getRegistry().register(redstoneSignalInputHatchItem);
+
+        ItemBlockMachineComponent redstoneSignalOutputHatchItem =
+            new ItemBlockMachineComponent(ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
+        redstoneSignalOutputHatchItem.setRegistryName(
+            ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH.getRegistryName());
+        setMachineCreativeTab(redstoneSignalOutputHatchItem);
+        event.getRegistry().register(redstoneSignalOutputHatchItem);
 
         ItemBlockMachineComponentCustomName liquidEnergizerHatchItem =
             new ItemBlockMachineComponentCustomName(
@@ -458,13 +635,39 @@ public final class RegistryEvents {
 
         if (CompatMods.isAeItemCompatLoaded()
             && ModBlocks.ME_ORE_DICT_INPUT_BUS != null) {
+            registerMEItemBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
+            registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
             ItemBlockMEMachineComponent mineralItem =
                 new ItemBlockMEMachineComponent(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             mineralItem.setRegistryName(
                 ModBlocks.ME_ORE_DICT_INPUT_BUS.getRegistryName());
             setMachineCreativeTab(mineralItem);
             event.getRegistry().register(mineralItem);
+
+            registerMEItemBlock(event,
+                ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
+            registerMEItemBlock(event,
+                ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
         }
+
+        if (CompatMods.isAeGasCompatLoaded()
+            && ModBlocks.ME_GAS_INVENTORY_INPUT_BUS != null) {
+            registerMEItemBlock(event,
+                ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
+            registerMEItemBlock(event, ModBlocks.ME_INPUT_ASSEMBLY);
+            registerMEItemBlock(event, ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
+            registerMEItemBlock(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
+            registerMEItemBlock(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
+        }
+    }
+
+    private static void registerMEItemBlock(RegistryEvent.Register<Item> event,
+                                            Block block) {
+        ItemBlockMEMachineComponent item =
+            new ItemBlockMEMachineComponent(block);
+        item.setRegistryName(block.getRegistryName());
+        setMachineCreativeTab(item);
+        event.getRegistry().register(item);
     }
 
     /**
@@ -490,6 +693,9 @@ public final class RegistryEvents {
         registerOverclockHatchItemModels();
         registerAcceleratorHatchItemModels();
         registerBlockItemModel(ModBlocks.BATCH_HATCH);
+        registerBlockItemModel(ModBlocks.REDSTONE_CONTROL_HATCH);
+        registerBlockItemModel(ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
+        registerBlockItemModel(ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
         registerLiquidEnergizerHatchItemModels();
         registerBlockItemModel(ModBlocks.FILTERED_ITEM_OUTPUT_HATCH);
         registerBlockItemModel(ModBlocks.FILTERED_FLUID_OUTPUT_HATCH);
@@ -506,7 +712,18 @@ public final class RegistryEvents {
             registerBlockItemModel(ModBlocks.ME_ENERGY_OUTPUT_BUS);
         }
         if (CompatMods.isAeItemCompatLoaded()) {
+            registerBlockItemModel(ModBlocks.ME_PATTERN_PROVIDER_II);
+            registerBlockItemModel(ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.ME_ORE_DICT_INPUT_BUS);
+            registerBlockItemModel(ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
+            registerBlockItemModel(ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
+        }
+        if (CompatMods.isAeGasCompatLoaded()) {
+            registerBlockItemModel(ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
+            registerBlockItemModel(ModBlocks.ME_INPUT_ASSEMBLY);
+            registerBlockItemModel(ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
+            registerBlockItemModel(ModBlocks.ME_OUTPUT_ASSEMBLY);
+            registerBlockItemModel(ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         }
         if (CompatMods.isAeManaCompatLoaded()) {
             registerBlockItemModel(ModBlocks.ME_MANA_INPUT_BUS);

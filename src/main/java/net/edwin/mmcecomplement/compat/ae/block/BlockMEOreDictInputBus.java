@@ -1,11 +1,14 @@
 package net.edwin.mmcecomplement.compat.ae.block;
 
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.MEInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -48,10 +51,29 @@ public class BlockMEOreDictInputBus extends BlockMEItemInputBus {
                 tag.setString("oreDictWhitelist", bus.getWhitelist());
                 tag.setString("oreDictBlacklist", bus.getBlacklist());
                 tag.setBoolean("oreDictActivePull", bus.isActivePull());
+                tag.setLong(MEInventoryInputBus.TAG_PERMANENT_RESERVE,
+                    bus.getPermanentReserve());
                 drop.setTagCompound(tag);
             }
             spawnAsEntity(world, pos, drop);
         }
         world.removeTileEntity(pos);
+    }
+
+    @Override
+    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
+                                @Nullable EntityLivingBase placer,
+                                ItemStack stack) {
+        super.onBlockPlacedBy(world, pos, state, placer, stack);
+        NBTTagCompound tag = stack.getTagCompound();
+        TileEntity tile = world.getTileEntity(pos);
+        if (tag != null && tile instanceof TileMEOreDictInputBus) {
+            TileMEOreDictInputBus bus = (TileMEOreDictInputBus) tile;
+            bus.setWhitelist(tag.getString("oreDictWhitelist"));
+            bus.setBlacklist(tag.getString("oreDictBlacklist"));
+            bus.setActivePull(tag.getBoolean("oreDictActivePull"));
+            bus.setPermanentReserve(
+                tag.getLong(MEInventoryInputBus.TAG_PERMANENT_RESERVE));
+        }
     }
 }

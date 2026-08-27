@@ -3,6 +3,7 @@ package net.edwin.mmcecomplement.mixin;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
+import github.kasuminova.mmce.common.event.Phase;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
@@ -21,11 +22,20 @@ import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.config.ModConfig;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.overclock.OverclockHatchLogic;
+import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
+import net.edwin.mmcecomplement.redstoneinterface.RedstoneInterfaceRegistry;
+import net.edwin.mmcecomplement.redstoneinterface.RedstoneSignalLogic;
+import net.edwin.mmcecomplement.redstoneinterface.RedstoneValueDefinition;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneSignalOutputHatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -45,9 +55,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(value = TileMultiblockMachineController.class, remap = false)
-public abstract class MixinTileMultiblockMachineController implements AttachmentController, BatchController {
+public abstract class MixinTileMultiblockMachineController
+    implements AttachmentController, BatchController, RedstoneDataController {
 
     @Unique
     private static final String mmceComplement$NBT_MODULES = "mmceComplementModules";
@@ -100,6 +112,65 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
     @Unique
     private volatile int mmceComplement$maxBatchTime;
 
+    @Unique
+    private final List<BlockPos> mmceComplement$redstoneControlHatches =
+        new ArrayList<>();
+
+    @Unique
+    private boolean mmceComplement$redstoneControlHatchesInitialized;
+
+    @Unique
+    private final List<BlockPos> mmceComplement$redstoneInputHatches =
+        new ArrayList<>();
+
+    @Unique
+    private final List<BlockPos> mmceComplement$redstoneOutputHatches =
+        new ArrayList<>();
+
+    @Unique
+    private final Map<String, Integer> mmceComplement$pendingRedstoneOutputs =
+        new ConcurrentHashMap<>();
+
+    @Unique
+    private volatile boolean mmceComplement$redstoneEventTick;
+
+    /**
+     * Treat an active control hatch in the formed structure exactly like
+     * redstone power applied directly to the controller.
+     */
+    @Inject(method = "getStrongPower", at = @At("RETURN"), cancellable = true)
+    private void mmceComplement$appendControlHatchPower(
+        CallbackInfoReturnable<Integer> cir) {
+        if (cir.getReturnValue() > 0) {
+            return;
+        }
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        if (!mmceComplement$redstoneControlHatchesInitialized
+            && foundPattern != null) {
+            mmceComplement$refreshRedstoneControlHatches(controller);
+        }
+        if (mmceComplement$redstoneControlHatches.isEmpty()) {
+            return;
+        }
+        World world = controller.getWorld();
+        if (world == null) {
+            return;
+        }
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : mmceComplement$redstoneControlHatches) {
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileRedstoneControlHatch) {
+                int shutdownPower = ((TileRedstoneControlHatch) tile)
+                    .getShutdownPower();
+                if (shutdownPower > 0) {
+                    cir.setReturnValue(shutdownPower);
+                    return;
+                }
+            }
+        }
+    }
+
     @Override
     public Set<String> mmceComplement$getActiveAttachmentModules() {
         return Collections.unmodifiableSet(new LinkedHashSet<>(mmceComplement$activeModules));
@@ -113,6 +184,67 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
     @Override
     public int mmceComplement$getMaxBatchTime() {
         return mmceComplement$maxBatchTime;
+    }
+
+    @Override
+    public int mmceComplement$getRedstone(String name) {
+        if (foundMachine == null || name == null || name.isEmpty()) {
+            return 0;
+        }
+        RedstoneValueDefinition definition = RedstoneInterfaceRegistry.get(
+            foundMachine.getRegistryName(), name);
+        if (definition == null) {
+            return 0;
+        }
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        World world = controller.getWorld();
+        if (world == null) {
+            return 0;
+        }
+        List<Integer> signals = new ArrayList<>();
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : mmceComplement$redstoneInputHatches) {
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileRedstoneSignalInputHatch
+                && name.equals(((TileRedstoneSignalInputHatch) tile)
+                    .getSelectedName())) {
+                signals.add(((TileRedstoneSignalInputHatch) tile)
+                    .getReceivedSignalStrength());
+            }
+        }
+        return RedstoneSignalLogic.aggregate(signals, definition.getOperator());
+    }
+
+    @Override
+    public void mmceComplement$setRedstone(String name, int value) {
+        if (!mmceComplement$redstoneEventTick || foundMachine == null
+            || name == null || name.isEmpty()
+            || RedstoneInterfaceRegistry.get(foundMachine.getRegistryName(), name) == null) {
+            return;
+        }
+        mmceComplement$pendingRedstoneOutputs.put(name,
+            RedstoneSignalLogic.clampOutput(value));
+    }
+
+    @Inject(method = "onMachineTick", at = @At("HEAD"))
+    private void mmceComplement$beginRedstoneEventTick(Phase phase,
+                                                       CallbackInfo ci) {
+        if (phase == Phase.START) {
+            mmceComplement$pendingRedstoneOutputs.clear();
+            mmceComplement$redstoneEventTick = true;
+        }
+    }
+
+    @Inject(method = "onMachineTick", at = @At("RETURN"))
+    private void mmceComplement$finishRedstoneEventTick(Phase phase,
+                                                        CallbackInfo ci) {
+        if (phase != Phase.END) {
+            return;
+        }
+        mmceComplement$redstoneEventTick = false;
+        mmceComplement$commitRedstoneOutputs(
+            (TileMultiblockMachineController) (Object) this);
     }
 
     @Inject(method = "checkStructure", at = @At("HEAD"))
@@ -149,6 +281,10 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$refreshBatchHatches(
             (TileMultiblockMachineController) (Object) this);
+        mmceComplement$refreshRedstoneControlHatches(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$refreshRedstoneInterfaceHatches(
+            (TileMultiblockMachineController) (Object) this);
     }
 
     @Inject(method = "resetMachine", at = @At("RETURN"))
@@ -161,6 +297,14 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
         mmceComplement$clearAcceleratorModifier(
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$maxBatchTime = 0;
+        mmceComplement$redstoneControlHatches.clear();
+        mmceComplement$redstoneControlHatchesInitialized = false;
+        mmceComplement$unbindRedstoneInterfaceHatches(
+            (TileMultiblockMachineController) (Object) this);
+        mmceComplement$redstoneInputHatches.clear();
+        mmceComplement$redstoneOutputHatches.clear();
+        mmceComplement$pendingRedstoneOutputs.clear();
+        mmceComplement$redstoneEventTick = false;
     }
 
     @Inject(method = "hasMachineUpgrade", at = @At("RETURN"), cancellable = true)
@@ -433,6 +577,112 @@ public abstract class MixinTileMultiblockMachineController implements Attachment
             IOType.INPUT,
             AcceleratorHatchLogic.getEffectiveDurationMultiplier(
                 counts, ModConfig.acceleratorHatch.getDurationMultipliers()));
+    }
+
+    @Unique
+    private void mmceComplement$refreshRedstoneControlHatches(
+        TileMultiblockMachineController controller) {
+        mmceComplement$redstoneControlHatches.clear();
+        World world = controller.getWorld();
+        if (foundPattern == null || world == null) {
+            mmceComplement$redstoneControlHatchesInitialized = false;
+            return;
+        }
+        mmceComplement$redstoneControlHatchesInitialized = true;
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : foundPattern.getPattern().keySet()) {
+            if (world.getTileEntity(controllerPos.add(relativePos))
+                instanceof TileRedstoneControlHatch) {
+                mmceComplement$redstoneControlHatches.add(relativePos);
+            }
+        }
+    }
+
+    @Unique
+    private void mmceComplement$refreshRedstoneInterfaceHatches(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (foundPattern == null || foundMachine == null || world == null) {
+            mmceComplement$unbindRedstoneInterfaceHatches(controller);
+            mmceComplement$redstoneInputHatches.clear();
+            mmceComplement$redstoneOutputHatches.clear();
+            return;
+        }
+
+        List<BlockPos> oldPositions = new ArrayList<>(
+            mmceComplement$redstoneInputHatches.size()
+                + mmceComplement$redstoneOutputHatches.size());
+        oldPositions.addAll(mmceComplement$redstoneInputHatches);
+        oldPositions.addAll(mmceComplement$redstoneOutputHatches);
+        List<BlockPos> newInputs = new ArrayList<>();
+        List<BlockPos> newOutputs = new ArrayList<>();
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : foundPattern.getPattern().keySet()) {
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileRedstoneSignalInputHatch) {
+                newInputs.add(relativePos);
+                ((TileRedstoneSignalInputHatch) tile).bindToController(controller);
+            } else if (tile instanceof TileRedstoneSignalOutputHatch) {
+                newOutputs.add(relativePos);
+                ((TileRedstoneSignalOutputHatch) tile).bindToController(controller);
+            }
+        }
+        for (BlockPos relativePos : oldPositions) {
+            if (newInputs.contains(relativePos) || newOutputs.contains(relativePos)) {
+                continue;
+            }
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileRedstoneInterfaceHatch) {
+                ((TileRedstoneInterfaceHatch) tile)
+                    .unbindFromController(controllerPos);
+            }
+        }
+        mmceComplement$redstoneInputHatches.clear();
+        mmceComplement$redstoneInputHatches.addAll(newInputs);
+        mmceComplement$redstoneOutputHatches.clear();
+        mmceComplement$redstoneOutputHatches.addAll(newOutputs);
+    }
+
+    @Unique
+    private void mmceComplement$unbindRedstoneInterfaceHatches(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (world == null) {
+            return;
+        }
+        BlockPos controllerPos = controller.getPos();
+        List<BlockPos> positions = new ArrayList<>(
+            mmceComplement$redstoneInputHatches.size()
+                + mmceComplement$redstoneOutputHatches.size());
+        positions.addAll(mmceComplement$redstoneInputHatches);
+        positions.addAll(mmceComplement$redstoneOutputHatches);
+        for (BlockPos relativePos : positions) {
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (tile instanceof TileRedstoneInterfaceHatch) {
+                ((TileRedstoneInterfaceHatch) tile)
+                    .unbindFromController(controllerPos);
+            }
+        }
+    }
+
+    @Unique
+    private void mmceComplement$commitRedstoneOutputs(
+        TileMultiblockMachineController controller) {
+        World world = controller.getWorld();
+        if (world == null) {
+            return;
+        }
+        BlockPos controllerPos = controller.getPos();
+        for (BlockPos relativePos : mmceComplement$redstoneOutputHatches) {
+            TileEntity tile = world.getTileEntity(controllerPos.add(relativePos));
+            if (!(tile instanceof TileRedstoneSignalOutputHatch)) {
+                continue;
+            }
+            TileRedstoneSignalOutputHatch output =
+                (TileRedstoneSignalOutputHatch) tile;
+            output.setOutputSignal(mmceComplement$pendingRedstoneOutputs
+                .getOrDefault(output.getSelectedName(), 0));
+        }
     }
 
     @Unique

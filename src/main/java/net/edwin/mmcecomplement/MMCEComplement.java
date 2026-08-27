@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Logger;
     version = Tags.VERSION,
     dependencies = "required-after:modularmachinery;required-after:geckolib3;"
         + "after:fluxnetworks;after:appliedenergistics2;after:crazyae;"
-        + "after:mekanism;"
+        + "after:mekanism;after:mekeng;"
 )
 public class MMCEComplement {
 
@@ -57,6 +57,20 @@ public class MMCEComplement {
     public static final int GUI_FILTERED_ITEM_OUTPUT_HATCH = 17;
     /** GUI id for the int-max ghost-filtered fluid output hatch. */
     public static final int GUI_FILTERED_FLUID_OUTPUT_HATCH = 18;
+    /** GUI id for the sixteen-channel item/fluid/gas ME input assembly. */
+    public static final int GUI_ME_INPUT_ASSEMBLY = 19;
+    /** GUI id for the mixed inventory input assembly. */
+    public static final int GUI_ME_INVENTORY_INPUT_ASSEMBLY = 20;
+    /** GUI id for the mixed ME output assembly. */
+    public static final int GUI_ME_OUTPUT_ASSEMBLY = 21;
+    /** GUI id for the unfiltered full-exposure assembly. */
+    public static final int GUI_ME_FULL_EXPOSURE_ASSEMBLY = 22;
+    /** GUI id for the named redstone signal input hatch. */
+    public static final int GUI_REDSTONE_SIGNAL_INPUT_HATCH = 23;
+    /** GUI id for the named redstone signal output hatch. */
+    public static final int GUI_REDSTONE_SIGNAL_OUTPUT_HATCH = 24;
+    /** GUI id for the expanded 144-slot ME pattern provider. */
+    public static final int GUI_ME_PATTERN_PROVIDER_II = 25;
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;
 

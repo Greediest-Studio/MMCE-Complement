@@ -6,16 +6,28 @@ import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEEnergyBus;
 import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEManaBus;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEEnergyBus;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEManaBus;
+import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEInventoryInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
 import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
@@ -65,8 +77,39 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && te instanceof TileMEManaBusBase) {
             return new ContainerMEManaBus(player, (TileMEManaBusBase) te);
         }
+        if (CompatMods.isAeGasCompatLoaded()
+                && id == MMCEComplement.GUI_ME_INPUT_ASSEMBLY
+                && te instanceof TileMEInputAssembly) {
+            return new ContainerMEInputAssembly(
+                (TileMEInputAssembly) te, player);
+        }
+        if (CompatMods.isAeGasCompatLoaded()
+                && (id == MMCEComplement.GUI_ME_INVENTORY_INPUT_ASSEMBLY
+                    || id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY)
+                && te instanceof TileMEInputAssembly) {
+            return new ContainerMEInputAssembly(
+                (TileMEInputAssembly) te, player);
+        }
+        if (CompatMods.isAeGasCompatLoaded()
+                && id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
+                && te instanceof TileMEOutputAssembly) {
+            return new ContainerMEOutputAssembly(
+                (TileMEOutputAssembly) te, player);
+        }
+        if (CompatMods.isAeItemCompatLoaded()
+                && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
+                && te instanceof TileMEPatternProviderII) {
+            return new ContainerMEPatternProviderII(
+                (TileMEPatternProviderII) te, player);
+        }
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new ContainerBatchHatch(player, (TileBatchHatch) te);
+        }
+        if ((id == MMCEComplement.GUI_REDSTONE_SIGNAL_INPUT_HATCH
+                || id == MMCEComplement.GUI_REDSTONE_SIGNAL_OUTPUT_HATCH)
+                && te instanceof TileRedstoneInterfaceHatch) {
+            return new ContainerRedstoneInterfaceHatch(player,
+                (TileRedstoneInterfaceHatch) te);
         }
         if (id == MMCEComplement.GUI_LIQUID_ENERGIZER_HATCH
                 && te instanceof TileLiquidEnergizerHatch) {
@@ -148,8 +191,36 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 return new GuiMEManaBus(player, (TileMEManaBusBase) te);
             }
         }
+        if (CompatMods.isAeGasCompatLoaded()
+                && id == MMCEComplement.GUI_ME_INPUT_ASSEMBLY
+                && te instanceof TileMEInputAssembly) {
+            return new GuiMEInputAssembly((TileMEInputAssembly) te, player);
+        }
+        if (CompatMods.isAeGasCompatLoaded()
+                && (id == MMCEComplement.GUI_ME_INVENTORY_INPUT_ASSEMBLY
+                    || id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY)
+                && te instanceof TileMEInputAssembly) {
+            return new GuiMEInputAssembly((TileMEInputAssembly) te, player);
+        }
+        if (CompatMods.isAeGasCompatLoaded()
+                && id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
+                && te instanceof TileMEOutputAssembly) {
+            return new GuiMEOutputAssembly((TileMEOutputAssembly) te, player);
+        }
+        if (CompatMods.isAeItemCompatLoaded()
+                && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
+                && te instanceof TileMEPatternProviderII) {
+            return new GuiMEPatternProviderII(
+                (TileMEPatternProviderII) te, player);
+        }
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new GuiBatchHatch(player, (TileBatchHatch) te);
+        }
+        if ((id == MMCEComplement.GUI_REDSTONE_SIGNAL_INPUT_HATCH
+                || id == MMCEComplement.GUI_REDSTONE_SIGNAL_OUTPUT_HATCH)
+                && te instanceof TileRedstoneInterfaceHatch) {
+            return new GuiRedstoneInterfaceHatch(player,
+                (TileRedstoneInterfaceHatch) te);
         }
         if (id == MMCEComplement.GUI_LIQUID_ENERGIZER_HATCH
                 && te instanceof TileLiquidEnergizerHatch) {

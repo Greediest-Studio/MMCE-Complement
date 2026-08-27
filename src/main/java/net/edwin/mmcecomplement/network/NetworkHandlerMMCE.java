@@ -6,9 +6,15 @@ import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.MEInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
+import net.edwin.mmcecomplement.compat.ae.tile.MixedMEInputMarker;
+import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEInputAssembly;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
 import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
+import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
+import net.edwin.mmcecomplement.gui.ContainerRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
 import net.edwin.mmcecomplement.gui.ContainerDataItemInputHatch;
@@ -88,6 +94,10 @@ public final class NetworkHandlerMMCE {
     public static final int FIELD_ME_ORE_DICT_ACTIVE = 12;
     public static final int FIELD_FILTERED_ITEM_OUTPUT = 13;
     public static final int FIELD_FILTERED_FLUID_OUTPUT = 14;
+    public static final int FIELD_ME_INVENTORY_ACTIVE = 15;
+    public static final int FIELD_ME_INVENTORY_RESERVE = 16;
+    public static final int FIELD_ME_INPUT_ASSEMBLY_MARKER = 17;
+    public static final int FIELD_REDSTONE_INTERFACE_NAME = 18;
 
     // -- Quad fluid tank interaction -----------------------------------
 
@@ -410,6 +420,8 @@ public final class NetworkHandlerMMCE {
                     bus.setBlacklist(clampFilter(nbt.getString("v")));
                 } else if (msg.fieldId == FIELD_ME_ORE_DICT_ACTIVE) {
                     bus.setActivePull(nbt.getBoolean("v"));
+                } else if (msg.fieldId == FIELD_ME_INVENTORY_RESERVE) {
+                    bus.setPermanentReserve(nbt.getLong("v"));
                 } else {
                     return;
                 }
@@ -417,6 +429,61 @@ public final class NetworkHandlerMMCE {
                 // normal block update replaces the client tile's config
                 // inventory object and cannot update SlotFake instances which
                 // were bound when the container was opened.
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
+            if (te instanceof TileRedstoneInterfaceHatch
+                && msg.fieldId == FIELD_REDSTONE_INTERFACE_NAME) {
+                if (!(player.openContainer
+                    instanceof ContainerRedstoneInterfaceHatch)
+                    || ((ContainerRedstoneInterfaceHatch) player.openContainer)
+                        .getTile() != te) {
+                    return;
+                }
+                if (((TileRedstoneInterfaceHatch) te)
+                    .setSelectedName(nbt.getString("v"))) {
+                    net.minecraft.block.state.IBlockState state =
+                        world.getBlockState(msg.pos);
+                    world.notifyBlockUpdate(msg.pos, state, state, 3);
+                    player.openContainer.detectAndSendChanges();
+                }
+                return;
+            }
+
+            if (te instanceof MEInventoryInputBus
+                && (msg.fieldId == FIELD_ME_INVENTORY_ACTIVE
+                    || msg.fieldId == FIELD_ME_INVENTORY_RESERVE)) {
+                if (getContainerOwner(player.openContainer) != te) return;
+                MEInventoryInputBus bus = (MEInventoryInputBus) te;
+                if (msg.fieldId == FIELD_ME_INVENTORY_ACTIVE) {
+                    bus.setActivePull(nbt.getBoolean("v"));
+                } else {
+                    bus.setPermanentReserve(nbt.getLong("v"));
+                }
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
+            if (te instanceof TileMEInputAssembly
+                && msg.fieldId == FIELD_ME_INPUT_ASSEMBLY_MARKER) {
+                if (!(player.openContainer instanceof ContainerMEInputAssembly)
+                    || ((ContainerMEInputAssembly) player.openContainer)
+                        .getOwner() != te) {
+                    return;
+                }
+                int slot = nbt.getInteger("slot");
+                if (slot < 0 || slot >= TileMEInputAssembly.SLOT_COUNT) {
+                    return;
+                }
+                ItemStack marker = nbt.hasKey("marker", 10)
+                    ? new ItemStack(nbt.getCompoundTag("marker"))
+                    : ItemStack.EMPTY;
+                if (!marker.isEmpty() && nbt.hasKey("amount", 99)) {
+                    marker = MixedMEInputMarker.withAmount(marker,
+                        nbt.getLong("amount"));
+                }
+                ((TileMEInputAssembly) te).setMarker(slot, marker);
                 player.openContainer.detectAndSendChanges();
                 return;
             }
@@ -506,6 +573,16 @@ public final class NetworkHandlerMMCE {
         private static String clampFilter(String s) {
             if (s == null) return "";
             return s.length() > 256 ? s.substring(0, 256) : s;
+        }
+
+        private static Object getContainerOwner(Container container) {
+            if (container == null) return null;
+            try {
+                return container.getClass().getMethod("getOwner")
+                    .invoke(container);
+            } catch (ReflectiveOperationException ignored) {
+                return null;
+            }
         }
     }
 }

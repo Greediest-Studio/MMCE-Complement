@@ -32,6 +32,8 @@ public final class ClientOreDictGuiEvents {
     private static final String MMCE_INPUT_GUI =
             "github.kasuminova.mmce.client.gui.GuiMEItemInputBus";
     private static final int ACTIVE_BUTTON_ID = 0x4D44;
+    private static final int PANEL_WIDTH = 156;
+    private static final int PANEL_GAP = 8;
     private static final Map<GuiScreen, PanelState> PANELS = new WeakHashMap<>();
 
     private ClientOreDictGuiEvents() {}
@@ -44,22 +46,31 @@ public final class ClientOreDictGuiEvents {
         }
         GuiScreen gui = event.getGui();
         Minecraft mc = Minecraft.getMinecraft();
-        int guiLeft = (gui.width - 176) / 2;
-        int guiTop = (gui.height - 204) / 2;
-        int left = guiLeft - 164;
+        int guiLeft = getGuiCoordinate(gui, "guiLeft", "field_147003_i",
+                (gui.width - 176) / 2);
+        int guiTop = getGuiCoordinate(gui, "guiTop", "field_147009_r",
+                (gui.height - 204) / 2);
+        int left = guiLeft - PANEL_GAP - PANEL_WIDTH;
 
         GuiTextField whitelist = new GuiTextField(0, mc.fontRenderer,
-                left, guiTop + 42, 156, 18);
+                left + 1, guiTop + 42, PANEL_WIDTH - 2, 18);
         whitelist.setMaxStringLength(256);
         whitelist.setText(tile.getWhitelist());
         GuiTextField blacklist = new GuiTextField(1, mc.fontRenderer,
-                left, guiTop + 81, 156, 18);
+                left + 1, guiTop + 81, PANEL_WIDTH - 2, 18);
         blacklist.setMaxStringLength(256);
         blacklist.setText(tile.getBlacklist());
         GuiButton active = new GuiButton(ACTIVE_BUTTON_ID, left,
-                guiTop + 111, 156, 20, activeText(tile.isActivePull()));
+                guiTop + 111, PANEL_WIDTH, 20,
+                activeText(tile.isActivePull()));
+        GuiTextField reserve = new GuiTextField(2, mc.fontRenderer,
+                left + 1, guiTop + 153, PANEL_WIDTH - 2, 18);
+        reserve.setMaxStringLength(19);
+        reserve.setValidator(ClientOreDictGuiEvents::isValidReserveText);
+        reserve.setText(Long.toString(tile.getPermanentReserve()));
         event.getButtonList().add(active);
-        PANELS.put(gui, new PanelState(tile, whitelist, blacklist, active));
+        PANELS.put(gui, new PanelState(tile, whitelist, blacklist, reserve,
+                active));
         Keyboard.enableRepeatEvents(true);
     }
 
@@ -71,6 +82,7 @@ public final class ClientOreDictGuiEvents {
         }
         state.whitelist.updateCursorCounter();
         state.blacklist.updateCursorCounter();
+        state.reserve.updateCursorCounter();
         if (!state.whitelist.isFocused()
                 && !state.whitelist.getText().equals(state.tile.getWhitelist())) {
             state.whitelist.setText(state.tile.getWhitelist());
@@ -78,6 +90,12 @@ public final class ClientOreDictGuiEvents {
         if (!state.blacklist.isFocused()
                 && !state.blacklist.getText().equals(state.tile.getBlacklist())) {
             state.blacklist.setText(state.tile.getBlacklist());
+        }
+        if (!state.reserve.isFocused()) {
+            String actual = Long.toString(state.tile.getPermanentReserve());
+            if (!actual.equals(state.reserve.getText())) {
+                state.reserve.setText(actual);
+            }
         }
         state.active.displayString = activeText(state.tile.isActivePull());
 
@@ -93,8 +111,12 @@ public final class ClientOreDictGuiEvents {
         mc.fontRenderer.drawStringWithShadow(I18n.format(
                 "gui.mmce_complement.me_ore_dict.blacklist"), left,
                 top + 69, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow(I18n.format(
+                "gui.mmce_complement.me_inventory.reserve"), left,
+                state.reserve.y - 13, 0xFFFFFF);
         state.whitelist.drawTextBox();
         state.blacklist.drawTextBox();
+        state.reserve.drawTextBox();
     }
 
     @SubscribeEvent
@@ -110,9 +132,11 @@ public final class ClientOreDictGuiEvents {
                 - Mouse.getEventY() * event.getGui().height / mc.displayHeight - 1;
         int button = Mouse.getEventButton();
         boolean overField = isInside(state.whitelist, mouseX, mouseY)
-                || isInside(state.blacklist, mouseX, mouseY);
+                || isInside(state.blacklist, mouseX, mouseY)
+                || isInside(state.reserve, mouseX, mouseY);
         state.whitelist.mouseClicked(mouseX, mouseY, button);
         state.blacklist.mouseClicked(mouseX, mouseY, button);
+        state.reserve.mouseClicked(mouseX, mouseY, button);
         if (overField) {
             event.setCanceled(true);
         }
@@ -127,10 +151,20 @@ public final class ClientOreDictGuiEvents {
         char typed = Keyboard.getEventCharacter();
         int key = Keyboard.getEventKey();
         if (key == Keyboard.KEY_TAB
-                && (state.whitelist.isFocused() || state.blacklist.isFocused())) {
-            boolean first = state.whitelist.isFocused();
-            state.whitelist.setFocused(!first);
-            state.blacklist.setFocused(first);
+                && (state.whitelist.isFocused() || state.blacklist.isFocused()
+                    || state.reserve.isFocused())) {
+            boolean whitelistFocused = state.whitelist.isFocused();
+            boolean blacklistFocused = state.blacklist.isFocused();
+            state.whitelist.setFocused(state.reserve.isFocused());
+            state.blacklist.setFocused(whitelistFocused);
+            state.reserve.setFocused(blacklistFocused);
+            event.setCanceled(true);
+            return;
+        }
+        if ((key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER)
+                && state.reserve.isFocused()) {
+            state.reserve.setFocused(false);
+            normalizeAndSendReserve(state);
             event.setCanceled(true);
             return;
         }
@@ -143,6 +177,10 @@ public final class ClientOreDictGuiEvents {
                 && state.blacklist.textboxKeyTyped(typed, key)) {
             sendString(state.tile, NetworkHandlerMMCE.FIELD_ME_ORE_DICT_BLACKLIST,
                     state.blacklist.getText());
+            event.setCanceled(true);
+        } else if (state.reserve.isFocused()
+                && state.reserve.textboxKeyTyped(typed, key)) {
+            sendReserve(state, parseReserve(state.reserve.getText()));
             event.setCanceled(true);
         }
     }
@@ -182,6 +220,7 @@ public final class ClientOreDictGuiEvents {
                 state.whitelist.getText());
         sendString(state.tile, NetworkHandlerMMCE.FIELD_ME_ORE_DICT_BLACKLIST,
                 state.blacklist.getText());
+        normalizeAndSendReserve(state);
         Keyboard.enableRepeatEvents(false);
     }
 
@@ -195,6 +234,49 @@ public final class ClientOreDictGuiEvents {
     private static boolean isInside(GuiTextField field, int x, int y) {
         return x >= field.x && x < field.x + field.width
                 && y >= field.y && y < field.y + field.height;
+    }
+
+    private static int getGuiCoordinate(GuiScreen gui, String name,
+                                        String mappedName, int fallback) {
+        try {
+            java.lang.reflect.Field field = ReflectionHelper.findField(
+                    GuiContainer.class, name, mappedName);
+            field.setAccessible(true);
+            return field.getInt(gui);
+        } catch (ReflectiveOperationException ignored) {
+            return fallback;
+        }
+    }
+
+    private static boolean isValidReserveText(String value) {
+        if (value == null || value.isEmpty()) return true;
+        try {
+            return Long.parseLong(value) >= 0L;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
+    private static long parseReserve(String value) {
+        if (value == null || value.isEmpty()) return 0L;
+        try {
+            return Math.max(0L, Long.parseLong(value));
+        } catch (NumberFormatException ignored) {
+            return 0L;
+        }
+    }
+
+    private static void normalizeAndSendReserve(PanelState state) {
+        long value = parseReserve(state.reserve.getText());
+        state.reserve.setText(Long.toString(value));
+        sendReserve(state, value);
+    }
+
+    private static void sendReserve(PanelState state, long value) {
+        state.tile.setClientPermanentReserve(value);
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setLong("v", value);
+        send(state.tile, NetworkHandlerMMCE.FIELD_ME_INVENTORY_RESERVE, tag);
     }
 
     private static void sendString(TileMEOreDictInputBus tile,
@@ -263,14 +345,16 @@ public final class ClientOreDictGuiEvents {
         private final TileMEOreDictInputBus tile;
         private final GuiTextField whitelist;
         private final GuiTextField blacklist;
+        private final GuiTextField reserve;
         private final GuiButton active;
 
         private PanelState(TileMEOreDictInputBus tile,
                            GuiTextField whitelist, GuiTextField blacklist,
-                           GuiButton active) {
+                           GuiTextField reserve, GuiButton active) {
             this.tile = tile;
             this.whitelist = whitelist;
             this.blacklist = blacklist;
+            this.reserve = reserve;
             this.active = active;
         }
     }

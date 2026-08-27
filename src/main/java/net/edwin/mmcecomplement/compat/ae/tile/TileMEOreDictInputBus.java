@@ -37,6 +37,12 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
     private String whitelist = "";
     private String blacklist = "";
     private boolean activePull;
+    private long permanentReserve;
+
+    @Override
+    public IOInventory buildConfigInventory() {
+        return InventoryMarkerUtil.buildItemMarkers(this);
+    }
 
     @Override
     public ItemStack getVisualItemStack() {
@@ -48,6 +54,7 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
     public String getWhitelist() { return whitelist; }
     public String getBlacklist() { return blacklist; }
     public boolean isActivePull() { return activePull; }
+    public long getPermanentReserve() { return permanentReserve; }
 
     public void setWhitelist(String value) {
         String updated = clamp(value);
@@ -74,6 +81,14 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
         wakeGridTicking();
     }
 
+    public void setPermanentReserve(long value) {
+        long updated = InventoryReserveUtil.clamp(value);
+        if (permanentReserve == updated) return;
+        permanentReserve = updated;
+        markNoUpdate();
+        wakeGridTicking();
+    }
+
     /** Applies the optimistic client-side button state while the server packet
      * is in flight; the server remains authoritative and persists the value. */
     public void setClientActivePull(boolean value) {
@@ -88,6 +103,12 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
 
     public void setClientBlacklist(String value) {
         if (getWorld() != null && getWorld().isRemote) blacklist = clamp(value);
+    }
+
+    public void setClientPermanentReserve(long value) {
+        if (getWorld() != null && getWorld().isRemote) {
+            permanentReserve = InventoryReserveUtil.clamp(value);
+        }
     }
 
     /**
@@ -119,10 +140,10 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
             IMEMonitor<IAEItemStack> monitor = storage.getInventory(channel);
             if (activePull) {
                 updateActiveConfiguration(monitor);
-                // Let MMCE's original ME input bus perform the actual
-                // config-to-buffer transfer (including its locking, power
-                // handling and changed-slot bookkeeping).
-                return super.tickingRequest(node, ticksSinceLastCall);
+                // Marker counts are deliberately fixed at one. Use the
+                // inventory transfer path so the marker amount never limits
+                // how much of the selected type is pulled.
+                syncConfiguredItems(monitor);
             } else {
                 syncConfiguredItems(monitor);
             }
@@ -232,8 +253,7 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
     private static void setConfiguration(IOInventory config, int slot,
                                          ActiveCandidate candidate) {
         ItemStack current = config.getStackInSlot(slot);
-        int configuredAmount = (int) Math.min(Integer.MAX_VALUE,
-            candidate.amount);
+        int configuredAmount = 1;
         if (sameType(current, candidate.stack)
                 && current.getCount() == configuredAmount) return;
         ItemStack marker = candidate.stack.copy();
@@ -289,7 +309,14 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
         if (room <= 0) return;
         IAEItemStack request = channel.createStack(type);
         if (request == null) return;
-        request.setStackSize(room);
+        IAEItemStack available = monitor.getStorageList()
+            .findPrecise(request);
+        long networkAmount = available == null ? 0L
+            : available.getStackSize();
+        long amount = InventoryReserveUtil.extractable(networkAmount,
+            permanentReserve, room);
+        if (amount <= 0L) return;
+        request.setStackSize(amount);
         IAEItemStack extracted = monitor.extractItems(request, Actionable.MODULATE, source);
         if (extracted == null) return;
         ItemStack result = extracted.createItemStack();
@@ -346,6 +373,7 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        InventoryMarkerUtil.normalizeItemMarkers(getConfigInventory());
         whitelist = compound.hasKey(TAG_WHITELIST)
             ? compound.getString(TAG_WHITELIST)
             : compound.getString(LEGACY_TAG_WHITELIST);
@@ -355,6 +383,8 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
         activePull = compound.hasKey(TAG_ACTIVE)
             ? compound.getBoolean(TAG_ACTIVE)
             : compound.getBoolean(LEGACY_TAG_ACTIVE);
+        permanentReserve = InventoryReserveUtil.clamp(
+            compound.getLong(MEInventoryInputBus.TAG_PERMANENT_RESERVE));
     }
     @Override
     public void writeCustomNBT(NBTTagCompound compound) {
@@ -362,6 +392,8 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
         compound.setString(TAG_WHITELIST, whitelist);
         compound.setString(TAG_BLACKLIST, blacklist);
         compound.setBoolean(TAG_ACTIVE, activePull);
+        compound.setLong(MEInventoryInputBus.TAG_PERMANENT_RESERVE,
+            permanentReserve);
     }
 
     private static final class ActiveCandidate {

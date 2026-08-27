@@ -4,6 +4,7 @@ import crafttweaker.annotations.ZenRegister;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipePrimer;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
+import net.edwin.mmcecomplement.mechannel.RequirementMEChannel;
 import stanhebben.zenscript.annotations.ZenExpansion;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -13,6 +14,14 @@ import stanhebben.zenscript.annotations.ZenMethod;
 public final class RecipePrimerExpansion {
 
     private RecipePrimerExpansion() {
+    }
+
+    /** Adds a positive, whole-number ME channel input to the recipe. */
+    @ZenMethod
+    public static RecipePrimer addMEChannelInput(RecipePrimer primer,
+                                                  int amount) {
+        primer.appendComponent(new RequirementMEChannel(amount));
+        return primer;
     }
 
     @ZenMethod

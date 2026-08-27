@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.cycle.CycleComponentHandler;
 import net.edwin.mmcecomplement.cycle.CycleRuntime;
+import net.edwin.mmcecomplement.mechannel.MEChannelReservationLifecycle;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
@@ -48,17 +49,23 @@ public abstract class MixinRecipeCraftingContext {
     @Inject(method = "finishCrafting(J)V", at = @At("RETURN"))
     private void mmceComplement$clearSelfCycle(long seed, CallbackInfo ci) {
         CycleRuntime.clear((RecipeCraftingContext) (Object) this);
+        MEChannelReservationLifecycle.release(
+            (RecipeCraftingContext) (Object) this);
     }
 
     @Inject(method = {"reset", "resetAll"}, at = @At("HEAD"))
     private void mmceComplement$clearResetSelfCycle(
         CallbackInfoReturnable<RecipeCraftingContext> cir) {
         CycleRuntime.clear((RecipeCraftingContext) (Object) this);
+        MEChannelReservationLifecycle.release(
+            (RecipeCraftingContext) (Object) this);
     }
 
     @Inject(method = "destroy", at = @At("HEAD"))
     private void mmceComplement$clearDestroyedSelfCycle(CallbackInfo ci) {
         CycleRuntime.clear((RecipeCraftingContext) (Object) this);
+        MEChannelReservationLifecycle.release(
+            (RecipeCraftingContext) (Object) this);
     }
 
     @Redirect(

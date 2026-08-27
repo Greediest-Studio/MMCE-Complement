@@ -7,10 +7,13 @@ public final class CompatMods {
     public static final String MODID_FLUX_NETWORKS = "fluxnetworks";
     public static final String MODID_AE2 = "appliedenergistics2";
     public static final String MODID_CRAZY_AE = "crazyae";
+    public static final String MODID_MEKANISM = "mekanism";
+    public static final String MODID_MEKENG = "mekeng";
 
     private static Boolean fluxCompatLoaded;
     private static Boolean aeEnergyCompatLoaded;
     private static Boolean aeItemCompatLoaded;
+    private static Boolean aeGasCompatLoaded;
     private static Boolean aeManaCompatLoaded;
     private static Boolean guguManaCompatLoaded;
 
@@ -46,6 +49,18 @@ public final class CompatMods {
                 && classExists("github.kasuminova.mmce.common.tile.MEItemInputBus");
         }
         return aeItemCompatLoaded;
+    }
+
+    /** The gas bus additionally requires Mekanism Energistics' storage channel. */
+    public static boolean isAeGasCompatLoaded() {
+        if (aeGasCompatLoaded == null) {
+            aeGasCompatLoaded = isAeItemCompatLoaded()
+                && Loader.isModLoaded(MODID_MEKANISM)
+                && Loader.isModLoaded(MODID_MEKENG)
+                && classExists("com.mekeng.github.common.me.storage.IGasStorageChannel")
+                && classExists("github.kasuminova.mmce.common.tile.MEGasInputBus");
+        }
+        return aeGasCompatLoaded;
     }
 
     public static boolean isAeManaCompatLoaded() {

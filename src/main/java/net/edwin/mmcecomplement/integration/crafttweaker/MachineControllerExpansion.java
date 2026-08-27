@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.edwin.mmcecomplement.attachment.AttachmentController;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
+import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
 import stanhebben.zenscript.annotations.ZenExpansion;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -43,5 +44,33 @@ public final class MachineControllerExpansion {
         }
         return ((AttachmentMachine) (Object) machine).mmceComplement$getAttachmentModules()
             .keySet().toArray(new String[0]);
+    }
+
+    /** Reads one registered value from all matching input hatches. */
+    @ZenMethod
+    public static int getRedstone(IMachineController controller, String name) {
+        if (controller == null || controller.getController() == null
+            || name == null) {
+            return 0;
+        }
+        TileMultiblockMachineController tile = controller.getController();
+        return tile instanceof RedstoneDataController
+            ? ((RedstoneDataController) tile).mmceComplement$getRedstone(name.trim())
+            : 0;
+    }
+
+    /** Sets one registered output value for the current controller event tick. */
+    @ZenMethod
+    public static void setRedstone(IMachineController controller, String name,
+                                   int value) {
+        if (controller == null || controller.getController() == null
+            || name == null) {
+            return;
+        }
+        TileMultiblockMachineController tile = controller.getController();
+        if (tile instanceof RedstoneDataController) {
+            ((RedstoneDataController) tile)
+                .mmceComplement$setRedstone(name.trim(), value);
+        }
     }
 }

@@ -1,11 +1,13 @@
 package net.edwin.mmcecomplement.mixin;
 
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import net.edwin.mmcecomplement.block.BlockThreadHatch;
 import net.edwin.mmcecomplement.config.ModConfig;
 import net.edwin.mmcecomplement.init.ModBlocks;
+import net.edwin.mmcecomplement.mechannel.MEChannelReservationLifecycle;
 import net.edwin.mmcecomplement.thread.ThreadHatchLogic;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -79,6 +81,25 @@ public abstract class MixinTileFactoryController {
     @Inject(method = "resetMachine", at = @At("RETURN"))
     private void mmceComplement$resetThreadHatchTier(boolean clearData, CallbackInfo ci) {
         java.util.Arrays.fill(mmceComplement$threadHatchCounts, 0);
+    }
+
+    /**
+     * MMCE's factory reset clears both thread collections directly instead of
+     * returning their crafting contexts to the pool.  Release dynamic ME
+     * channel reservations before those contexts become unreachable.
+     */
+    @Inject(method = "resetRecipe", at = @At("HEAD"))
+    private void mmceComplement$releaseFactoryMEChannels(CallbackInfo ci) {
+        TileFactoryController controller =
+            (TileFactoryController) (Object) this;
+        for (FactoryRecipeThread thread
+            : controller.getFactoryRecipeThreadList()) {
+            MEChannelReservationLifecycle.release(thread.getContext());
+        }
+        for (FactoryRecipeThread thread
+            : controller.getCoreRecipeThreads().values()) {
+            MEChannelReservationLifecycle.release(thread.getContext());
+        }
     }
 
     @Inject(method = "writeCustomNBT", at = @At("RETURN"))

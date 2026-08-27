@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:me_full_exposure_assembly" },
+    "inventory": { "model": "mmce_complement:me_full_exposure_assembly" }
+  }
+}

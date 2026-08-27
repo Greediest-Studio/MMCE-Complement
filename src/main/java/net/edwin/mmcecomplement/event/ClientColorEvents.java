@@ -39,6 +39,9 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.OVERCLOCK_HATCH);
         registerBlock(event, ModBlocks.ACCELERATOR_HATCH);
         registerBlock(event, ModBlocks.BATCH_HATCH);
+        registerBlock(event, ModBlocks.REDSTONE_CONTROL_HATCH);
+        registerBlock(event, ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
+        registerBlock(event, ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
         registerBlock(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
         registerBlock(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
         registerBlock(event, ModBlocks.INPUT_ASSEMBLY_HATCH);
@@ -55,6 +58,15 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.ME_MANA_INPUT_BUS);
         registerBlock(event, ModBlocks.ME_MANA_OUTPUT_BUS);
         registerBlock(event, ModBlocks.ME_ORE_DICT_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
+        registerBlock(event, ModBlocks.ME_INPUT_ASSEMBLY);
+        registerBlock(event, ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
+        registerBlock(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
+        registerBlock(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
+        registerBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
+        registerBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
     }
 
     @SubscribeEvent
@@ -69,6 +81,9 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.OVERCLOCK_HATCH);
         registerItem(event, ModBlocks.ACCELERATOR_HATCH);
         registerItem(event, ModBlocks.BATCH_HATCH);
+        registerItem(event, ModBlocks.REDSTONE_CONTROL_HATCH);
+        registerItem(event, ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
+        registerItem(event, ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
         registerItem(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
         registerItem(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
         registerItem(event, ModBlocks.INPUT_ASSEMBLY_HATCH);
@@ -85,6 +100,15 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.ME_MANA_INPUT_BUS);
         registerItem(event, ModBlocks.ME_MANA_OUTPUT_BUS);
         registerItem(event, ModBlocks.ME_ORE_DICT_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
+        registerItem(event, ModBlocks.ME_INPUT_ASSEMBLY);
+        registerItem(event, ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
+        registerItem(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
+        registerItem(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
+        registerItem(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
+        registerItem(event, ModBlocks.ME_PATTERN_PROVIDER_II);
     }
 
     private static void registerBlock(ColorHandlerEvent.Block event, Block block) {

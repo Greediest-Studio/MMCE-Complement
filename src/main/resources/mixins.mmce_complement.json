@@ -19,12 +19,16 @@
 		"MixinRequirementFluidCycle",
 		"MixinRequirementGasCycle",
 		"MixinRecipeCraftingContext",
+		"MixinInfusionRecipeRegistryCompile",
 		"MixinTileFactoryController",
 		"MixinTileMultiblockMachineController"
 	],
 	"server": [],
 	"client": [
 		"MixinGuiMEItemInputBusTitle",
+		"MixinGuiMEItemBusMarkerCount",
+		"MixinGuiMEFluidInputBusTitle",
+		"MixinGuiMEGasInputBusTitle",
 		"MixinMachineStructurePreviewPanel",
 		"MixinWorldSceneRendererWidget"
 	]

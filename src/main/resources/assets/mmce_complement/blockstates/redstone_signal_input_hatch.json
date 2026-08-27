@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:redstone_signal_input_hatch" },
+    "inventory": { "model": "mmce_complement:redstone_signal_input_hatch" }
+  }
+}
