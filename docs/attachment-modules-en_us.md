@@ -145,6 +145,8 @@ Declaring a conflict on one side is sufficient to make it bidirectional, althoug
 
 When module state changes, the controller requests a new recipe search and updates its structural components. Hatches, buses, and other MMCE modular blocks from active modules join the machine and are removed again when their module becomes inactive.
 
+Attachment matching is change-aware. After a successful check, the expensive module pattern matches are cached while the attachment area is unchanged. A block or chunk update in that area invalidates the cache immediately; a periodic fallback check (100 ticks by default) catches changes made outside the event-listener window. This keeps idle machines from re-matching every attachment on every MMCE structure-check interval without delaying normal build/break updates. If an attachment area is unloaded, the last valid active state is retained until the area can be checked again.
+
 ## Modules as MMCE upgrades
 
 `as-upgrade` defaults to `true`. While a module is active, the controller supplies a synthetic MMCE upgrade whose name is the module ID, allowing existing upgrade queries and recipe logic to reuse that ID.

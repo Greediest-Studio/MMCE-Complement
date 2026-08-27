@@ -204,6 +204,8 @@ val modules = controller.moduleList;
 
 `addMEChannelInput(int)`、`RedstoneInterface.newRedstone(...).build()`、`controller.getRedstone(...)` 和 `controller.setRedstone(...)` 只在相应集成可用时才有实际效果。
 
+附属模块结构检查采用变化感知缓存：机器完成一次检查后，只有附属区域发生方块/区块更新，或到达默认 100 tick 的定期兜底检查时，才会重新匹配模块。这能避免待机机器反复扫描未变化的模块，同时保留正常搭建和拆除检测。
+
 ## 1.4.0 更新摘要
 
 - 新增 ME 物品/流体/气体/矿辞库存输入总线的统一标记、主动拉取和永久保留库存功能。

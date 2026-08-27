@@ -204,6 +204,8 @@ val modules = controller.moduleList;
 
 `addMEChannelInput(int)`, `RedstoneInterface.newRedstone(...).build()`, `controller.getRedstone(...)`, and `controller.setRedstone(...)` have an effect only when the corresponding integration is available.
 
+Attachment structure checks use a change-aware cache. Once a machine has been checked, module patterns are re-matched only after a block/chunk update in the attachment area or a periodic 100-tick fallback check. This avoids repeatedly scanning unchanged modules on idle machines while retaining normal build and break detection.
+
 ## 1.4.0 summary
 
 - Added unified marker, active-pulling, and permanent-reserve behavior to the ME item/fluid/gas/ore-dictionary inventory input buses.
