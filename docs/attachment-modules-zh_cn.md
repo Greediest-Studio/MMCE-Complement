@@ -1,6 +1,6 @@
 # MMCE Complement 附属模块指南
 
-[English documentation](attachment-modules-en_us.md)
+[中文 Wiki 总览](wiki-zh_cn.md) · [English documentation](attachment-modules-en_us.md)
 
 本文面向整合包制作者，介绍如何为已有的 Modular Machinery Community Edition（MMCE）机器添加可选多方块结构、模块依赖、模块互斥、JEI 预览和配方限制。
 

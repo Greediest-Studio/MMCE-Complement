@@ -1,6 +1,6 @@
 # MMCE Complement Attachment Modules Guide
 
-[中文文档](attachment-modules-zh_cn.md)
+[English Wiki overview](wiki-en_us.md) · [中文文档](attachment-modules-zh_cn.md)
 
 This guide is intended for modpack authors. It explains how to add optional multiblock structures, dependencies, conflicts, JEI previews, and recipe conditions to an existing Modular Machinery Community Edition (MMCE) machine.
 

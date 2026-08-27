@@ -1,7 +1,7 @@
 # MMCE Complement
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.12.2-62b47a)](https://www.minecraft.net/)
-[![Version](https://img.shields.io/badge/version-1.3.2-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
 [![Wiki](https://img.shields.io/badge/docs-GitHub%20Wiki-8250df)](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 
 MMCE Complement is an add-on for [Modular Machinery Community Edition](https://www.curseforge.com/minecraft/mc-mods/modular-machinery-community-edition) on Minecraft 1.12.2. It adds attachment-module multiblocks, advanced machine hatches, compact item/fluid assemblies, recipe conditions, and optional AE2, Flux Networks, Mekanism, and CrazyAE integrations.
@@ -11,6 +11,8 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 ## Documentation / 文档
 
 - [GitHub Wiki（完整中文文档）](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
+- [Wiki — 中文总览](docs/wiki-zh_cn.md)
+- [Wiki — English overview](docs/wiki-en_us.md)
 - [Attachment Modules — English](docs/attachment-modules-en_us.md)
 - [附属模块机制 — 中文](docs/attachment-modules-zh_cn.md)
 - [CurseForge project page](https://www.curseforge.com/minecraft/mc-mods/modularmachinery-community-edition-complement)
@@ -24,10 +26,16 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 - Quadruple and ninefold fluid input/output hatches with optional Mekanism gas support.
 - Data input, input, output, and self-cycle assemblies.
 - ME ore-dictionary input bus with expression filters and active pulling.
+- ME item/fluid/gas inventory buses with fixed markers, active pulling, and permanent stock reserves.
+- Mixed ME input, inventory input, output, and full-exposure assemblies.
+- ME Channel Input Hatch with dynamic recipe-time channel reservations and JEI support.
+- ME Machinery Pattern Provider II with 144 pattern slots and MMCE/Whimcraft compatibility.
+- Named redstone signal input/output interfaces and a configurable Redstone Control Hatch.
+- Wireless Flux hatches default to a 10,000 FE buffer and 800,000 FE/t transfer rate.
 - Configurable liquid energizer and high-capacity filtered output hatches.
 - Optional Flux Networks, AE2 Extended Life, CrazyAE, and Modular Magic components.
 
-Exact registry names, capacities, configuration keys, and examples are maintained in the [Wiki](https://github.com/Greediest-Studio/MMCE-Complement/wiki).
+Exact registry names, capacities, configuration keys, and examples are maintained in the [English Wiki overview](docs/wiki-en_us.md) and [中文 Wiki 总览](docs/wiki-zh_cn.md).
 
 ## Requirements
 
@@ -36,7 +44,7 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 - Modular Machinery Community Edition
 - GeckoLib 3
 
-Network and gas integrations register only when their corresponding optional dependencies are present. See the [installation and compatibility guide](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Getting-Started) before distributing a modpack.
+Network and gas integrations register only when their corresponding optional dependencies are present. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 
 ## Building
 
