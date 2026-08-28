@@ -19,6 +19,7 @@ import net.edwin.mmcecomplement.compat.ae.block.BlockMEInventoryInputAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
 import net.edwin.mmcecomplement.block.BlockThreadHatch;
@@ -74,6 +75,7 @@ public final class ModBlocks {
     public static Block ME_MANA_INPUT_BUS;
     public static Block ME_MANA_OUTPUT_BUS;
     public static Block ME_CHANNEL_INPUT_HATCH;
+    public static BlockMEConnectionShareHatch ME_CONNECTION_SHARE_HATCH;
     public static BlockMEPatternProviderII ME_PATTERN_PROVIDER_II;
 
     private ModBlocks() {}

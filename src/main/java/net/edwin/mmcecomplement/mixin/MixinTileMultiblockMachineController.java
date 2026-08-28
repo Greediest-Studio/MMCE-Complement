@@ -33,6 +33,7 @@ import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalOutputHatch;
+import net.edwin.mmcecomplement.compat.ae.tile.MEConnectionShareManager;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -371,6 +372,8 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$refreshRedstoneInterfaceHatches(
             (TileMultiblockMachineController) (Object) this);
+        MEConnectionShareManager.refresh(
+            (TileMultiblockMachineController) (Object) this);
     }
 
     @Inject(method = "resetMachine", at = @At("RETURN"))
@@ -397,6 +400,8 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$redstoneOutputHatches.clear();
         mmceComplement$pendingRedstoneOutputs.clear();
         mmceComplement$redstoneEventTick = false;
+        MEConnectionShareManager.clear(
+            (TileMultiblockMachineController) (Object) this);
     }
 
     @Inject(method = "hasMachineUpgrade", at = @At("RETURN"), cancellable = true)

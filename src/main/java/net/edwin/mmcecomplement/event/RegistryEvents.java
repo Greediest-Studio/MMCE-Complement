@@ -19,6 +19,7 @@ import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEChannelInputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
 import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
 import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
@@ -81,6 +82,7 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEOutputAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEChannelInputHatch;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEConnectionShareHatch;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
@@ -114,6 +116,7 @@ public final class RegistryEvents {
     public static void onComponentTypeRegister(
         RegistryEvent.Register<ComponentType> event) {
         event.getRegistry().register(ModMEChannelTypes.COMPONENT);
+        event.getRegistry().register(ModMEChannelTypes.SHARE_COMPONENT);
     }
 
     @SubscribeEvent
@@ -371,6 +374,16 @@ public final class RegistryEvents {
             GameRegistry.registerTileEntity(TileMEChannelInputHatch.class,
                 new ResourceLocation(Tags.MOD_ID,
                     "me_channel_input_hatch"));
+
+            ModBlocks.ME_CONNECTION_SHARE_HATCH =
+                new BlockMEConnectionShareHatch();
+            ModBlocks.ME_CONNECTION_SHARE_HATCH.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_connection_share_hatch"));
+            event.getRegistry().register(ModBlocks.ME_CONNECTION_SHARE_HATCH);
+            GameRegistry.registerTileEntity(TileMEConnectionShareHatch.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_connection_share_hatch"));
 
             ModBlocks.ME_ORE_DICT_INPUT_BUS = new BlockMEOreDictInputBus();
             ModBlocks.ME_ORE_DICT_INPUT_BUS.setRegistryName(
@@ -637,6 +650,7 @@ public final class RegistryEvents {
             && ModBlocks.ME_ORE_DICT_INPUT_BUS != null) {
             registerMEItemBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
             registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
+            registerMEItemBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
             ItemBlockMEMachineComponent mineralItem =
                 new ItemBlockMEMachineComponent(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             mineralItem.setRegistryName(
@@ -714,6 +728,7 @@ public final class RegistryEvents {
         if (CompatMods.isAeItemCompatLoaded()) {
             registerBlockItemModel(ModBlocks.ME_PATTERN_PROVIDER_II);
             registerBlockItemModel(ModBlocks.ME_CHANNEL_INPUT_HATCH);
+            registerBlockItemModel(ModBlocks.ME_CONNECTION_SHARE_HATCH);
             registerBlockItemModel(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);

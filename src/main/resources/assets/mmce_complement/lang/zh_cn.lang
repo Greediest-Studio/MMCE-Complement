@@ -276,3 +276,7 @@ gui.mmce_complement.redstone_interface_hatch.operator.1=最小值
 gui.mmce_complement.redstone_interface_hatch.operator.2=总和
 tile.mmce_complement.me_pattern_provider_ii.name=ME机械样板供应器 II
 gui.mmce_complement.me_pattern_provider_ii.title=ME机械样板供应器 II
+tile.mmce_complement.me_connection_share_hatch.name=ME连接共享仓
+tile.mmce_complement.me_connection_share_hatch.tip.1=连接一个AE网络后，共享给机器内未连接网络的ME仓室
+tile.mmce_complement.me_connection_share_hatch.tip.2=已连接到其他网络的ME仓室不会被共享；多个共享仓连接不同网络会暂停机器
+craftcheck.failure.mmce_complement.me_connection_share.network_mismatch=ME连接共享仓连接到了不同的ME网络

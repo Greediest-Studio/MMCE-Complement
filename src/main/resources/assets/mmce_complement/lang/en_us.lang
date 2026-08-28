@@ -276,3 +276,7 @@ gui.mmce_complement.redstone_interface_hatch.operator.1=minimum
 gui.mmce_complement.redstone_interface_hatch.operator.2=sum
 tile.mmce_complement.me_pattern_provider_ii.name=ME Machinery Pattern Provider II
 gui.mmce_complement.me_pattern_provider_ii.title=ME Machinery Pattern Provider II
+tile.mmce_complement.me_connection_share_hatch.name=ME Connection Share Hatch
+tile.mmce_complement.me_connection_share_hatch.tip.1=Connect one AE network and share it with unconnected ME hatches in this machine
+tile.mmce_complement.me_connection_share_hatch.tip.2=Hatches already on another network are not shared; different share networks pause the machine
+craftcheck.failure.mmce_complement.me_connection_share.network_mismatch=ME connection share hatches are connected to different ME networks

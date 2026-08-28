@@ -52,6 +52,11 @@ public class TileMEChannelInputHatch extends MEMachineComponent
     private volatile int requestedChannels;
     private volatile boolean applyQueued;
 
+    /** Number of virtual channels currently requested by a running recipe. */
+    public int getRequestedChannels() {
+        return requestedChannels;
+    }
+
     public TileMEChannelInputHatch() {
         // The visible/world node carries channels but does not consume one.
         proxy.setFlags(GridFlags.DENSE_CAPACITY);
