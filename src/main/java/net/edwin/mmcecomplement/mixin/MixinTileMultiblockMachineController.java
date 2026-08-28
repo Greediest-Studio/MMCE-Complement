@@ -9,6 +9,8 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
+import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -25,6 +27,7 @@ import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
 import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.config.ModConfig;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.overclock.OverclockHatchLogic;
 import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
@@ -113,7 +116,13 @@ public abstract class MixinTileMultiblockMachineController
         Collections.emptyList();
 
     @Unique
+    private volatile List<MachineRecipe> mmceComplement$moduleRecipeCandidates;
+
+    @Unique
     private volatile DynamicMachine mmceComplement$moduleRecipeMachine;
+
+    @Unique
+    private int mmceComplement$moduleRecipeRegistrySize = -1;
 
     @Unique
     private final Map<String, MachineUpgrade> mmceComplement$moduleUpgrades = new LinkedHashMap<>();
@@ -203,6 +212,53 @@ public abstract class MixinTileMultiblockMachineController
     public ModuleRecipeConditions.Failure mmceComplement$getModuleRecipeFailure(
         ModuleRecipeData recipe) {
         return mmceComplement$moduleRecipeConditionCache.get(recipe);
+    }
+
+    @Override
+    public Iterable<MachineRecipe> mmceComplement$getModuleRecipeCandidates() {
+        // CraftTweaker recipe adapters may finish expanding after the first
+        // structure snapshot. Refresh once when MMCE's registry generation
+        // (represented by its total size) changes, before creating the native
+        // search task. Subsequent searches are an O(1) comparison.
+        if (foundMachine != null
+            && mmceComplement$moduleRecipeRegistrySize
+                != RecipeRegistry.registeredRecipeCount()) {
+            mmceComplement$moduleRecipeMachine = null;
+            mmceComplement$rebuildModuleRecipeConditionCache();
+        }
+        return mmceComplement$moduleRecipeCandidates;
+    }
+
+    /**
+     * Use MMCE's native pre-start condition layer, the same short-circuit used
+     * by RecipeCheckEvent based smart-interface conditions. RecipeSearchTask,
+     * its priority iterable, and context scheduling remain completely native.
+     */
+    @Inject(method = "checkPreStartResult", at = @At("HEAD"), cancellable = true)
+    private void mmceComplement$checkAttachmentRecipeCondition(
+        RecipeCraftingContext context,
+        CallbackInfoReturnable<RecipeCraftingContext.CraftingCheckResult> cir) {
+        ActiveMachineRecipe active = context.getActiveRecipe();
+        if (active == null) {
+            return;
+        }
+        MachineRecipe recipe = active.getRecipe();
+        if (!(recipe instanceof ModuleRecipeData)) {
+            return;
+        }
+        ModuleRecipeData moduleRecipe = (ModuleRecipeData) recipe;
+        if (!ModuleRecipeConditions.hasRestrictions(moduleRecipe)) {
+            return;
+        }
+        ModuleRecipeConditions.Failure failure = ModuleRecipeConditions.evaluate(
+            moduleRecipe, mmceComplement$activeModules);
+        if (failure == ModuleRecipeConditions.Failure.NONE) {
+            return;
+        }
+        RecipeCraftingContext.CraftingCheckResult result =
+            new RecipeCraftingContext.CraftingCheckResult();
+        result.addError(failure.getMessage());
+        cir.setReturnValue(result);
     }
 
     @Override
@@ -311,8 +367,10 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$refreshRedstoneInterfaceHatches(
             (TileMultiblockMachineController) (Object) this);
-        MEConnectionShareManager.refresh(
-            (TileMultiblockMachineController) (Object) this);
+        if (CompatMods.isAeItemCompatLoaded()) {
+            MEConnectionShareManager.scheduleRefresh(
+                (TileMultiblockMachineController) (Object) this);
+        }
     }
 
     @Inject(method = "resetMachine", at = @At("RETURN"))
@@ -321,7 +379,9 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$combinedPattern = null;
         mmceComplement$moduleRecipeConditionCache.clear();
         mmceComplement$moduleRecipes = Collections.emptyList();
+        mmceComplement$moduleRecipeCandidates = null;
         mmceComplement$moduleRecipeMachine = null;
+        mmceComplement$moduleRecipeRegistrySize = -1;
         mmceComplement$replaceActiveModules(Collections.emptySet(), true);
         mmceComplement$clearOverclockModifiers(
             (TileMultiblockMachineController) (Object) this);
@@ -336,8 +396,28 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$redstoneOutputHatches.clear();
         mmceComplement$pendingRedstoneOutputs.clear();
         mmceComplement$redstoneEventTick = false;
-        MEConnectionShareManager.clear(
-            (TileMultiblockMachineController) (Object) this);
+        if (CompatMods.isAeItemCompatLoaded()) {
+            MEConnectionShareManager.scheduleClear(
+                (TileMultiblockMachineController) (Object) this);
+        }
+    }
+
+    @Inject(method = "onChunkUnload", at = @At("TAIL"))
+    private void mmceComplement$clearMEConnectionShareOnUnload(
+        CallbackInfo ci) {
+        if (CompatMods.isAeItemCompatLoaded()) {
+            MEConnectionShareManager.clear(
+                (TileMultiblockMachineController) (Object) this);
+        }
+    }
+
+    @Inject(method = "invalidate", at = @At("TAIL"))
+    private void mmceComplement$clearMEConnectionShareOnInvalidate(
+        CallbackInfo ci) {
+        if (CompatMods.isAeItemCompatLoaded()) {
+            MEConnectionShareManager.clear(
+                (TileMultiblockMachineController) (Object) this);
+        }
     }
 
     @Inject(method = "hasMachineUpgrade", at = @At("RETURN"), cancellable = true)
@@ -506,7 +586,25 @@ public abstract class MixinTileMultiblockMachineController
         }
         mmceComplement$moduleRecipeConditionCache.rebuild(
             mmceComplement$moduleRecipes, mmceComplement$activeModules);
-
+        mmceComplement$moduleRecipeRegistrySize =
+            RecipeRegistry.registeredRecipeCount();
+        if (!mmceComplement$moduleRecipeConditionCache.hasRestrictions()) {
+            mmceComplement$moduleRecipeCandidates = null;
+            return;
+        }
+        List<MachineRecipe> candidates = new ArrayList<>(
+            mmceComplement$moduleRecipes.size());
+        for (MachineRecipe recipe : mmceComplement$moduleRecipes) {
+            ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
+            if (!ModuleRecipeConditions.hasRestrictions(moduleRecipe)
+                || mmceComplement$moduleRecipeConditionCache.get(moduleRecipe)
+                    == ModuleRecipeConditions.Failure.NONE) {
+                candidates.add(recipe);
+            }
+        }
+        mmceComplement$moduleRecipeCandidates = candidates.isEmpty()
+            ? Collections.emptyList()
+            : Collections.unmodifiableList(candidates);
     }
 
     @Unique

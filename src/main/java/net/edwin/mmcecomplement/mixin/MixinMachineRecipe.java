@@ -2,6 +2,7 @@ package net.edwin.mmcecomplement.mixin;
 
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.PreparedRecipe;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
 import net.minecraft.util.ResourceLocation;
@@ -31,6 +32,20 @@ public abstract class MixinMachineRecipe implements ModuleRecipeData {
     private void mmceComplement$copyModuleConditions(PreparedRecipe prepared, CallbackInfo ci) {
         if (prepared instanceof ModuleRecipeData) {
             mmceComplement$copyFrom((ModuleRecipeData) prepared);
+        }
+    }
+
+    /**
+     * Adapter recipes are created from a parent MachineRecipe and then merged
+     * with RecipeAdapterBuilder; they do not use the PreparedRecipe
+     * constructor. Copy attachment metadata at the same merge boundary where
+     * MMCE copies components, tooltips, thread settings, and event handlers.
+     */
+    @Inject(method = "mergeAdapter", at = @At("RETURN"))
+    private void mmceComplement$mergeAdapterModuleConditions(
+        RecipeAdapterBuilder adapter, CallbackInfo ci) {
+        if (adapter instanceof ModuleRecipeData) {
+            mmceComplement$copyFrom((ModuleRecipeData) adapter);
         }
     }
 

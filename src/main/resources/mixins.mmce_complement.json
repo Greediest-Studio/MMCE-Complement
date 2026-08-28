@@ -12,6 +12,8 @@
 		"MixinDynamicMachineDeserializer",
 		"MixinDataItemInputController",
 		"MixinMachineRecipe",
+		"MixinMachineRecipeThread",
+		"MixinFactoryRecipeSearchTask",
 		"MixinItemUtilsCycle",
 		"MixinRecipePrimer",
 		"MixinRecipeThread",

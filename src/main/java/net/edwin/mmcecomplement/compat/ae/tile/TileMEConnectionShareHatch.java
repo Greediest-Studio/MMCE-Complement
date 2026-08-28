@@ -56,7 +56,7 @@ public class TileMEConnectionShareHatch extends MEMachineComponent
             @Override public Object getContainerProvider() {
                 return TileMEConnectionShareHatch.this;
             }
-            @Override public boolean isAsyncSupported() { return false; }
+            @Override public boolean isAsyncSupported() { return true; }
         };
     }
 

@@ -66,6 +66,7 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
         registerBlock(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         registerBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
+        registerBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
         registerBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
     }
 
@@ -108,6 +109,7 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
         registerItem(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         registerItem(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
+        registerItem(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
         registerItem(event, ModBlocks.ME_PATTERN_PROVIDER_II);
     }
 

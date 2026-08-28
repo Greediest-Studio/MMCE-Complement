@@ -2,9 +2,13 @@ package net.edwin.mmcecomplement.mixin;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
+import net.edwin.mmcecomplement.attachment.AttachmentController;
+import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
+import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
 import net.edwin.mmcecomplement.batch.BatchProcessingLogic;
 import net.edwin.mmcecomplement.batch.BatchRecipeData;
 import net.minecraft.nbt.NBTTagCompound;
@@ -16,6 +20,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @Mixin(value = ActiveMachineRecipe.class, remap = false)
 public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
@@ -209,6 +216,36 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$batchParallelismApplied =
             batchedRuntimeParallelism != unbatchedRuntimeParallelism;
         mmceComplement$finishBatchCalculation();
+    }
+
+    /**
+     * Enforce attachment conditions at the actual processing boundary.  The
+     * recipe search runs asynchronously and must not inspect controller state;
+     * this method is called from the server thread immediately before the
+     * recipe performs its per-tick IO, so a stale/unsupported recipe can never
+     * consume inputs or produce outputs.
+     */
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    private void mmceComplement$checkModulesWhileRunning(
+        TileMultiblockMachineController controller,
+        RecipeCraftingContext context,
+        CallbackInfoReturnable<CraftingStatus> cir) {
+        if (!(recipe instanceof ModuleRecipeData)) {
+            return;
+        }
+        ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
+        if (!ModuleRecipeConditions.hasRestrictions(moduleRecipe)) {
+            return;
+        }
+        Collection<String> activeModules = controller instanceof AttachmentController
+            ? ((AttachmentController) controller)
+                .mmceComplement$getActiveAttachmentModules()
+            : Collections.emptySet();
+        ModuleRecipeConditions.Failure failure = ModuleRecipeConditions.evaluate(
+            moduleRecipe, activeModules);
+        if (failure != ModuleRecipeConditions.Failure.NONE) {
+            cir.setReturnValue(CraftingStatus.failure(failure.getMessage()));
+        }
     }
 
     @Inject(method = {"canStartCrafting", "canRestartCrafting"}, at = @At("RETURN"))

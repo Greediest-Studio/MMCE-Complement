@@ -1,6 +1,6 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.4.0** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.4.1** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
 

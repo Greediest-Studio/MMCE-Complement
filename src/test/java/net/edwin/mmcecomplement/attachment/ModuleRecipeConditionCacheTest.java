@@ -8,6 +8,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleRecipeConditionCacheTest {
 
@@ -18,6 +20,7 @@ class ModuleRecipeConditionCacheTest {
         ModuleRecipeConditionCache cache = new ModuleRecipeConditionCache();
 
         cache.rebuild(Arrays.asList(allowed, blocked), Collections.singleton("cooling"));
+        assertTrue(cache.hasRestrictions());
         allowed.resetReads();
         blocked.resetReads();
 
@@ -39,7 +42,18 @@ class ModuleRecipeConditionCacheTest {
         assertEquals(ModuleRecipeConditions.Failure.NONE, cache.get(recipe));
 
         cache.clear();
+        assertFalse(cache.hasRestrictions());
         assertEquals(ModuleRecipeConditions.Failure.MISSING_REQUIRED, cache.get(recipe));
+    }
+
+    @Test
+    void unrestrictedRecipesKeepSearchFastPathDisabled() {
+        ModuleRecipeConditionCache cache = new ModuleRecipeConditionCache();
+        cache.rebuild(Arrays.asList(
+            new CountingRecipe(null, null),
+            new CountingRecipe(null, null)), Collections.emptySet());
+
+        assertFalse(cache.hasRestrictions());
     }
 
     private static final class CountingRecipe implements ModuleRecipeData {
