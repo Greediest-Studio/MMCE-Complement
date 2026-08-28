@@ -16,7 +16,7 @@ Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life.
 | --- | --- |
 | ME item buses, ME Machinery Pattern Provider II, ME Channel Input Hatch | None beyond required AE2/MMCE |
 | ME energy input/output buses | CrazyAE |
-| ME mana input/output buses | CrazyAE + Modular Magic |
+| ME mana input/output buses | CrazyAE + the Modular Magic API bundled with MMCE |
 | ME gas buses and mixed gas assemblies | Mekanism + Mekanism Energistics |
 | Fake fluid/gas ingredients in Pattern Provider II | AE2 Fluid Crafting Rework (plus Mekanism Energistics for gas) |
 | Wireless Flux hatches | Flux Networks |
@@ -205,7 +205,7 @@ val modules = controller.moduleList;
 
 `addMEChannelInput(int)`, `RedstoneInterface.newRedstone(...).build()`, `controller.getRedstone(...)`, and `controller.setRedstone(...)` have an effect only when the corresponding integration is available.
 
-Attachment structure checks use a change-aware cache. Once a machine has been checked, module patterns are re-matched only after a block/chunk update in the attachment area or a periodic 100-tick fallback check. This avoids repeatedly scanning unchanged modules on idle machines while retaining normal build and break detection.
+Attachment structure checks run synchronously with MMCE's main structure check, using the same schedule and thread. There is no independent per-tick attachment scan or change-listener polling path.
 
 ## 1.4.0 summary
 

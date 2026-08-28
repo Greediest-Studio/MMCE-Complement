@@ -72,7 +72,6 @@ if (propertyBool('publish_to_curseforge')) {
                     optionalDependency 'mekanism-ce-unofficial'
                     optionalDependency 'mekanism-energistics'
                     optionalDependency 'ae2-fluid-crafting-rework'
-                    optionalDependency 'modular-magic'
                     optionalDependency 'botania'
                     optionalDependency 'baubles'
                 }
@@ -108,7 +107,6 @@ if (propertyBool('publish_to_modrinth')) {
             optional.project 'mekanism-ce-unofficial'
             optional.project 'mekanism-energistics'
             optional.project 'ae2-fluid-crafting-rework'
-            optional.project 'modular-magic'
             optional.project 'botania'
             optional.project 'baubles'
             if (propertyBool('use_mixins')) {

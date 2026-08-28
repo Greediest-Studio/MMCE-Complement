@@ -9,8 +9,8 @@ import java.util.Map;
  * Immutable, identity-keyed snapshot of module recipe conditions.
  *
  * <p>The snapshot is rebuilt by the controller's structure-check task after
- * attachment matching has completed. Recipe search and recipe tick tasks only
- * read the published result and never scan the active module set themselves.</p>
+ * attachment matching has completed. Recipe lifecycle boundaries only read
+ * the published result; the asynchronous recipe search never consults it.</p>
  */
 public final class ModuleRecipeConditionCache {
 
@@ -22,11 +22,12 @@ public final class ModuleRecipeConditionCache {
      * MMCE's registry, so identity keys avoid invoking addon-defined equality
      * implementations from asynchronous recipe tasks.
      */
-    public void rebuild(Iterable<? extends ModuleRecipeData> recipes,
+    public void rebuild(Iterable<?> recipes,
                         Collection<String> activeModules) {
         IdentityHashMap<ModuleRecipeData, ModuleRecipeConditions.Failure> rebuilt =
             new IdentityHashMap<>();
-        for (ModuleRecipeData recipe : recipes) {
+        for (Object candidate : recipes) {
+            ModuleRecipeData recipe = (ModuleRecipeData) candidate;
             rebuilt.put(recipe, ModuleRecipeConditions.evaluate(recipe, activeModules));
         }
         failures = Collections.unmodifiableMap(rebuilt);

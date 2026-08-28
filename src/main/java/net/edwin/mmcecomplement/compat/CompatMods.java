@@ -10,7 +10,6 @@ public final class CompatMods {
     public static final String MODID_MEKANISM = "mekanism";
     public static final String MODID_MEKENG = "mekeng";
     public static final String MODID_AE2FCR = "ae2fc";
-    public static final String MODID_MODULAR_MAGIC = "modularmagic";
 
     private static Boolean fluxCompatLoaded;
     private static Boolean mekanismCompatLoaded;
@@ -80,7 +79,6 @@ public final class CompatMods {
         if (aeManaCompatLoaded == null) {
             aeManaCompatLoaded = Loader.isModLoaded(MODID_AE2)
                     && Loader.isModLoaded(MODID_CRAZY_AE)
-                    && Loader.isModLoaded(MODID_MODULAR_MAGIC)
                     && classExists("appeng.core.AE2ELCore")
                     && classExists("dev.beecube31.crazyae2.core.CrazyAE")
                     && classExists("dev.beecube31.crazyae2.core.api.storage.IManaStorageChannel")

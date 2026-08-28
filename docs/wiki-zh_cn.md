@@ -16,7 +16,7 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 | --- | --- |
 | ME 物品总线、ME 机械样板供应器 II、ME 频道输入仓 | 无（仅使用必需的 AE2/MMCE） |
 | ME 能源输入/输出总线 | CrazyAE |
-| ME 魔力输入/输出总线 | CrazyAE + Modular Magic |
+| ME 魔力输入/输出总线 | CrazyAE + MMCE 内置的 Modular Magic API |
 | ME 气体总线和混合气体总成 | Mekanism + Mekanism Energistics |
 | 样板供应器 II 的假流体/假气体原料 | AE2 Fluid Crafting Rework（假气体还需 Mekanism Energistics） |
 | 无线通量仓 | Flux Networks |
@@ -205,7 +205,7 @@ val modules = controller.moduleList;
 
 `addMEChannelInput(int)`、`RedstoneInterface.newRedstone(...).build()`、`controller.getRedstone(...)` 和 `controller.setRedstone(...)` 只在相应集成可用时才有实际效果。
 
-附属模块结构检查采用变化感知缓存：机器完成一次检查后，只有附属区域发生方块/区块更新，或到达默认 100 tick 的定期兜底检查时，才会重新匹配模块。这能避免待机机器反复扫描未变化的模块，同时保留正常搭建和拆除检测。
+附属模块结构检查与 MMCE 主结构使用相同的同步检查流程、调度和线程，不再存在独立的逐 tick 附属区域扫描或变化监听轮询。
 
 ## 1.4.0 更新摘要
 

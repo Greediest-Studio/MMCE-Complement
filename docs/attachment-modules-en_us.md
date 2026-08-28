@@ -145,7 +145,9 @@ Declaring a conflict on one side is sufficient to make it bidirectional, althoug
 
 When module state changes, the controller requests a new recipe search and updates its structural components. Hatches, buses, and other MMCE modular blocks from active modules join the machine and are removed again when their module becomes inactive.
 
-Attachment matching is change-aware. After a successful check, the expensive module pattern matches are cached while the attachment area is unchanged. A block or chunk update in that area invalidates the cache immediately; a periodic fallback check (100 ticks by default) catches changes made outside the event-listener window. This keeps idle machines from re-matching every attachment on every MMCE structure-check interval without delaying normal build/break updates. If an attachment area is unloaded, the last valid active state is retained until the area can be checked again.
+Attachment matching runs synchronously in the same MMCE structure-check pass as the main pattern, using the same scheduling and thread. There is no independent per-tick attachment scan or change-listener polling path. If an attachment area is unloaded, its last valid active state is retained until the next synchronous structure check can inspect it.
+
+The asynchronous recipe search does not evaluate attachment-module conditions. A selected recipe checks its module state once at the pre-tick/start boundary and once again at the completion tick; ordinary processing ticks never re-check the module structures.
 
 ## Modules as MMCE upgrades
 
@@ -247,7 +249,7 @@ mods.modularmachinery.RecipeBuilder.newBuilder(
     .build();
 ```
 
-Module state is resolved only by the machine structure-check task. The same structure pass precomputes an immutable result for every module-restricted recipe of that machine. Recipe start, restart, and running ticks only read that result; they no longer copy the active-module set or perform module formation checks. Losing a required module or gaining a forbidden module returns the corresponding crafting failure after the structure check refreshes the snapshot.
+Module structures are resolved only by the machine structure-check task. A recipe with module restrictions reads the resulting snapshot once before its first processing tick and once at its completion tick. It does not copy the active-module set or perform module formation checks during the intervening processing ticks. Losing a required module or gaining a forbidden module is reported at the next lifecycle boundary after the structure snapshot refreshes.
 
 ## CraftTweaker controller queries
 

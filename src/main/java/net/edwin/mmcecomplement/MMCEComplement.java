@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
         + "required-after:appliedenergistics2;"
         + "after:geckolib3;after:fluxnetworks;after:crazyae;"
         + "after:mekanism;after:mekeng;after:ae2fc;"
-        + "after:modularmagic;after:botania;after:baubles;"
+        + "after:botania;after:baubles;"
 )
 public class MMCEComplement {
 

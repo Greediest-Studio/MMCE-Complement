@@ -2,13 +2,9 @@ package net.edwin.mmcecomplement.mixin;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
-import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
-import net.edwin.mmcecomplement.attachment.AttachmentController;
-import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
-import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
 import net.edwin.mmcecomplement.batch.BatchProcessingLogic;
 import net.edwin.mmcecomplement.batch.BatchRecipeData;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Collections;
 
 @Mixin(value = ActiveMachineRecipe.class, remap = false)
 public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
@@ -83,10 +77,6 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Unique
     private boolean mmceComplement$batchCalculationActive;
 
-    /** Immutable recipe metadata; avoids reading condition sets on hot paths. */
-    @Unique
-    private boolean mmceComplement$hasModuleRestrictions;
-
     @Inject(method = "<init>(Lhellfirepvp/modularmachinery/common/crafting/MachineRecipe;I)V",
         at = @At("RETURN"))
     private void mmceComplement$initializeBatchData(MachineRecipe recipe,
@@ -99,8 +89,6 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$batchBaseMaxParallelism = Math.max(1, maxParallelism);
         mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
         mmceComplement$batchOutputMaxParallelism = this.maxParallelism;
-        mmceComplement$hasModuleRestrictions = ModuleRecipeConditions.hasRestrictions(
-            (ModuleRecipeData) (Object) recipe);
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
@@ -124,8 +112,6 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             && mmceComplement$batchOutputMaxParallelism
                 != mmceComplement$batchBaseMaxParallelism;
         mmceComplement$maxParallelismExplicitlyUpdated = false;
-        mmceComplement$hasModuleRestrictions = recipe != null
-            && ModuleRecipeConditions.hasRestrictions((ModuleRecipeData) (Object) recipe);
     }
 
     @Inject(method = "serialize", at = @At("RETURN"))
@@ -225,20 +211,6 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$finishBatchCalculation();
     }
 
-    @Inject(method = "canStartCrafting", at = @At("HEAD"), cancellable = true)
-    private void mmceComplement$checkModulesBeforeStart(
-        RecipeCraftingContext context,
-        CallbackInfoReturnable<RecipeCraftingContext.CraftingCheckResult> cir) {
-        mmceComplement$rejectCheckIfNeeded(context.getMachineController(), cir);
-    }
-
-    @Inject(method = "canRestartCrafting", at = @At("HEAD"), cancellable = true)
-    private void mmceComplement$checkModulesBeforeRestart(
-        RecipeCraftingContext context,
-        CallbackInfoReturnable<RecipeCraftingContext.CraftingCheckResult> cir) {
-        mmceComplement$rejectCheckIfNeeded(context.getMachineController(), cir);
-    }
-
     @Inject(method = {"canStartCrafting", "canRestartCrafting"}, at = @At("RETURN"))
     private void mmceComplement$adjustBatchToAvailableInputs(
         RecipeCraftingContext context,
@@ -248,44 +220,6 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             && cir.getReturnValue().isSuccess()) {
             mmceComplement$adjustBatchFactorToActualParallelism(parallelism);
         }
-    }
-
-    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    private void mmceComplement$checkModulesWhileRunning(
-        TileMultiblockMachineController controller,
-        RecipeCraftingContext context,
-        CallbackInfoReturnable<CraftingStatus> cir) {
-        ModuleRecipeConditions.Failure failure = mmceComplement$evaluate(controller);
-        if (failure != ModuleRecipeConditions.Failure.NONE) {
-            cir.setReturnValue(CraftingStatus.failure(failure.getMessage()));
-        }
-    }
-
-    @Unique
-    private void mmceComplement$rejectCheckIfNeeded(
-        TileMultiblockMachineController controller,
-        CallbackInfoReturnable<RecipeCraftingContext.CraftingCheckResult> cir) {
-        ModuleRecipeConditions.Failure failure = mmceComplement$evaluate(controller);
-        if (failure == ModuleRecipeConditions.Failure.NONE) {
-            return;
-        }
-        RecipeCraftingContext.CraftingCheckResult result =
-            new RecipeCraftingContext.CraftingCheckResult();
-        result.addError(failure.getMessage());
-        cir.setReturnValue(result);
-    }
-
-    @Unique
-    private ModuleRecipeConditions.Failure mmceComplement$evaluate(
-        TileMultiblockMachineController controller) {
-        ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
-        if (!mmceComplement$hasModuleRestrictions) {
-            return ModuleRecipeConditions.Failure.NONE;
-        }
-        return controller instanceof AttachmentController
-            ? ((AttachmentController) controller)
-                .mmceComplement$getModuleRecipeFailure(moduleRecipe)
-            : ModuleRecipeConditions.evaluate(moduleRecipe, Collections.emptySet());
     }
 
     @Override

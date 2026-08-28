@@ -3,7 +3,6 @@ package net.edwin.mmcecomplement.mixin;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
-import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.event.Phase;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -14,7 +13,6 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.edwin.mmcecomplement.attachment.AttachmentController;
-import net.edwin.mmcecomplement.attachment.AttachmentCheckCache;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentModule;
 import net.edwin.mmcecomplement.attachment.AttachmentPatternResolver;
@@ -111,11 +109,11 @@ public abstract class MixinTileMultiblockMachineController
         new ModuleRecipeConditionCache();
 
     @Unique
-    private List<ModuleRecipeData> mmceComplement$moduleRestrictedRecipes =
+    private List<MachineRecipe> mmceComplement$moduleRecipes =
         Collections.emptyList();
 
     @Unique
-    private DynamicMachine mmceComplement$moduleRecipeMachine;
+    private volatile DynamicMachine mmceComplement$moduleRecipeMachine;
 
     @Unique
     private final Map<String, MachineUpgrade> mmceComplement$moduleUpgrades = new LinkedHashMap<>();
@@ -128,33 +126,6 @@ public abstract class MixinTileMultiblockMachineController
 
     @Unique
     private int mmceComplement$previousStructureCheckTick = -1;
-
-    /**
-     * Attachment matching is considerably more expensive than checking the
-     * small amount of controller state used by most machines.  Keep the last
-     * result until MMCE's world listener reports a block change in an
-     * attachment area (with a periodic fallback for changes made after the
-     * listener's per-tick window has been cleared).
-     */
-    @Unique
-    private final AttachmentCheckCache mmceComplement$attachmentCheckCache =
-        new AttachmentCheckCache();
-
-    @Unique
-    private final List<StructureBoundingBox> mmceComplement$attachmentBounds =
-        new ArrayList<>();
-
-    @Unique
-    private DynamicMachine mmceComplement$attachmentMachine;
-
-    @Unique
-    private TaggedPositionBlockArray mmceComplement$attachmentMainPattern;
-
-    @Unique
-    private EnumFacing mmceComplement$attachmentRotation;
-
-    @Unique
-    private DynamicMachine.ModifierReplacementMap mmceComplement$attachmentReplacements;
 
     @Unique
     private volatile int mmceComplement$maxBatchTime;
@@ -300,41 +271,7 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
     }
 
-    /**
-     * MMCE normally checks a formed machine on a fixed interval.  Observing
-     * the attachment bounding area on every controller tick lets us keep the
-     * expensive attachment pattern.matches calls out of those unchanged
-     * checks, while invalidating the cached result in the block-update tick so
-     * the next structure pass cannot reuse stale module state.
-     */
-    @Inject(method = "doRestrictedTick", at = @At("HEAD"))
-    private void mmceComplement$observeAttachmentChanges(CallbackInfo ci) {
-        if (mmceComplement$attachmentBounds.isEmpty()) {
-            return;
-        }
-        TileMultiblockMachineController controller =
-            (TileMultiblockMachineController) (Object) this;
-        World world = controller.getWorld();
-        if (world == null || world.isRemote || foundMachine == null
-            || controllerRotation == null) {
-            return;
-        }
-
-        long now = world.getTotalWorldTime();
-        if (mmceComplement$attachmentCheckCache.shouldRefresh(now, false)) {
-            return;
-        }
-        for (StructureBoundingBox bounds : mmceComplement$attachmentBounds) {
-            if (MMWorldEventListener.INSTANCE.isAreaChanged(world,
-                new BlockPos(bounds.minX, bounds.minY, bounds.minZ),
-                new BlockPos(bounds.maxX, bounds.maxY, bounds.maxZ))) {
-                mmceComplement$attachmentCheckCache.observeWorldChange(now, true);
-                return;
-            }
-        }
-        mmceComplement$attachmentCheckCache.observeWorldChange(now, false);
-    }
-
+    /** Run attachment matching synchronously with MMCE's main structure check. */
     @Inject(method = "checkStructure", at = @At("HEAD"))
     private void mmceComplement$restoreMainPatternForCheck(CallbackInfoReturnable<Boolean> cir) {
         mmceComplement$previousStructureCheckTick = lastStructureCheckTick;
@@ -354,32 +291,11 @@ public abstract class MixinTileMultiblockMachineController
         if (controller.getWorld() == null || controller.getWorld().isRemote) {
             return;
         }
-        boolean contextChanged = mmceComplement$attachmentMachine != foundMachine
-            || mmceComplement$attachmentMainPattern != foundPattern
-            || mmceComplement$attachmentRotation != controllerRotation
-            || mmceComplement$attachmentReplacements != foundReplacements;
-        long worldTime = controller.getWorld().getTotalWorldTime();
-        if (!mmceComplement$attachmentCheckCache.shouldRefresh(
-            worldTime, contextChanged)) {
-            // checkStructure temporarily exposes only the main pattern to
-            // MMCE. Restore the already combined pattern without rebuilding or
-            // rematching every attachment when nothing in its area changed.
-            foundPattern = mmceComplement$combinedPattern == null
-                ? mmceComplement$mainPattern : mmceComplement$combinedPattern;
-            return;
-        }
-
         TaggedPositionBlockArray mainPattern = foundPattern;
         mmceComplement$mainPattern = mainPattern;
-        boolean allAreasLoaded = mmceComplement$refreshModules(controller);
+        mmceComplement$refreshModules(controller);
         mmceComplement$combineActivePatterns();
         mmceComplement$rebuildModuleRecipeConditionCache();
-        mmceComplement$attachmentMachine = foundMachine;
-        mmceComplement$attachmentMainPattern = mainPattern;
-        mmceComplement$attachmentRotation = controllerRotation;
-        mmceComplement$attachmentReplacements = foundReplacements;
-        mmceComplement$attachmentCheckCache.markRefreshed(
-            worldTime, allAreasLoaded);
     }
 
     @Inject(method = "updateComponents", at = @At("RETURN"))
@@ -403,14 +319,8 @@ public abstract class MixinTileMultiblockMachineController
     private void mmceComplement$resetAttachmentModules(boolean clearData, CallbackInfo ci) {
         mmceComplement$mainPattern = null;
         mmceComplement$combinedPattern = null;
-        mmceComplement$attachmentCheckCache.reset();
-        mmceComplement$attachmentBounds.clear();
-        mmceComplement$attachmentMachine = null;
-        mmceComplement$attachmentMainPattern = null;
-        mmceComplement$attachmentRotation = null;
-        mmceComplement$attachmentReplacements = null;
         mmceComplement$moduleRecipeConditionCache.clear();
-        mmceComplement$moduleRestrictedRecipes = Collections.emptyList();
+        mmceComplement$moduleRecipes = Collections.emptyList();
         mmceComplement$moduleRecipeMachine = null;
         mmceComplement$replaceActiveModules(Collections.emptySet(), true);
         mmceComplement$clearOverclockModifiers(
@@ -487,19 +397,16 @@ public abstract class MixinTileMultiblockMachineController
     }
 
     @Unique
-    private boolean mmceComplement$refreshModules(TileMultiblockMachineController controller) {
+    private void mmceComplement$refreshModules(TileMultiblockMachineController controller) {
         Map<String, AttachmentModule> definitions = mmceComplement$getDefinitions();
         if (foundMachine == null || controllerRotation == null || definitions.isEmpty()) {
-            mmceComplement$attachmentBounds.clear();
             mmceComplement$replaceActiveModules(Collections.emptySet(), false);
-            return true;
+            return;
         }
 
         LinkedHashSet<String> matched = new LinkedHashSet<>();
         Map<String, Collection<String>> dependencies = new LinkedHashMap<>();
         Map<String, Collection<String>> conflicts = new LinkedHashMap<>();
-        boolean allAreasLoaded = true;
-        List<StructureBoundingBox> attachmentBounds = new ArrayList<>();
         for (AttachmentModule module : definitions.values()) {
             dependencies.put(module.getId(), module.getDependencies());
             conflicts.put(module.getId(), module.getConflicts());
@@ -511,9 +418,7 @@ public abstract class MixinTileMultiblockMachineController
                 continue;
             }
             StructureBoundingBox patternBounds = pattern.getPatternBoundingBox(controller.getPos());
-            mmceComplement$appendAttachmentBounds(attachmentBounds, patternBounds);
             if (!controller.getWorld().isAreaLoaded(patternBounds)) {
-                allAreasLoaded = false;
                 if (mmceComplement$activeModules.contains(module.getId())) {
                     matched.add(module.getId());
                 }
@@ -531,30 +436,8 @@ public abstract class MixinTileMultiblockMachineController
                 matched.add(module.getId());
             }
         }
-        mmceComplement$attachmentBounds.clear();
-        mmceComplement$attachmentBounds.addAll(attachmentBounds);
         mmceComplement$replaceActiveModules(
             AttachmentResolver.resolve(matched, dependencies, conflicts), false);
-        return allAreasLoaded;
-    }
-
-    @Unique
-    private static void mmceComplement$appendAttachmentBounds(
-        List<StructureBoundingBox> bounds,
-        StructureBoundingBox addition) {
-        StructureBoundingBox merged = new StructureBoundingBox(addition);
-        // Effective module patterns commonly overlap through shared parent
-        // positions. Merge those boxes so the per-tick change probe does not
-        // visit the same chunks once for every descendant module.
-        for (int i = bounds.size() - 1; i >= 0; i--) {
-            StructureBoundingBox existing = bounds.get(i);
-            if (!existing.intersectsWith(merged)) {
-                continue;
-            }
-            merged.expandTo(existing);
-            bounds.remove(i);
-        }
-        bounds.add(merged);
     }
 
     @Unique
@@ -614,18 +497,16 @@ public abstract class MixinTileMultiblockMachineController
     @Unique
     private void mmceComplement$rebuildModuleRecipeConditionCache() {
         if (mmceComplement$moduleRecipeMachine != foundMachine) {
-            List<ModuleRecipeData> recipes = new ArrayList<>();
+            List<MachineRecipe> recipes = new ArrayList<>();
             for (MachineRecipe recipe : RecipeRegistry.getRecipesFor(foundMachine)) {
-                ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
-                if (ModuleRecipeConditions.hasRestrictions(moduleRecipe)) {
-                    recipes.add(moduleRecipe);
-                }
+                recipes.add(recipe);
             }
-            mmceComplement$moduleRestrictedRecipes = Collections.unmodifiableList(recipes);
+            mmceComplement$moduleRecipes = Collections.unmodifiableList(recipes);
             mmceComplement$moduleRecipeMachine = foundMachine;
         }
         mmceComplement$moduleRecipeConditionCache.rebuild(
-            mmceComplement$moduleRestrictedRecipes, mmceComplement$activeModules);
+            mmceComplement$moduleRecipes, mmceComplement$activeModules);
+
     }
 
     @Unique

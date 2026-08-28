@@ -44,7 +44,7 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 - Modular Machinery Community Edition
 - AE2 Extended Life
 
-GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, Modular Magic, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
+GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. MMCE's bundled Modular Magic API is detected by class availability rather than as a separate Forge mod. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 
 ## Building
 

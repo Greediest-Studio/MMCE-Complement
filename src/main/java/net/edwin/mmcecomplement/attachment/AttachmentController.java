@@ -11,4 +11,5 @@ public interface AttachmentController {
 
     ModuleRecipeConditions.Failure mmceComplement$getModuleRecipeFailure(
         ModuleRecipeData recipe);
+
 }

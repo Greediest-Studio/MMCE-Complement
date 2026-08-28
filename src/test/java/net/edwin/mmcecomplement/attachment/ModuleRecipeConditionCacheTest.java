@@ -25,6 +25,7 @@ class ModuleRecipeConditionCacheTest {
         assertEquals(ModuleRecipeConditions.Failure.MISSING_REQUIRED, cache.get(blocked));
         assertEquals(0, allowed.getReads());
         assertEquals(0, blocked.getReads());
+
     }
 
     @Test
