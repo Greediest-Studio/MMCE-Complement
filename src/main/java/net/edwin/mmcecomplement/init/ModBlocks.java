@@ -1,7 +1,5 @@
 package net.edwin.mmcecomplement.init;
 
-import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
-import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockBatchHatch;
 import net.edwin.mmcecomplement.block.BlockCasing;
@@ -15,9 +13,6 @@ import net.edwin.mmcecomplement.block.BlockFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFluidInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEInventoryInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
@@ -37,8 +32,10 @@ import net.minecraft.block.Block;
  */
 public final class ModBlocks {
 
-    public static BlockFluxInputHatch FLUX_INPUT_HATCH;
-    public static BlockFluxOutputHatch FLUX_OUTPUT_HATCH;
+    // Keep optional integration blocks typed as vanilla Blocks so loading this
+    // central holder never resolves their third-party API hierarchies.
+    public static Block FLUX_INPUT_HATCH;
+    public static Block FLUX_OUTPUT_HATCH;
     public static BlockCasing BLOCK_CASING;
     public static BlockMachineGlass MACHINE_GLASS;
     public static BlockThreadHatch THREAD_HATCH;
@@ -63,9 +60,9 @@ public final class ModBlocks {
     public static Block ME_GAS_INVENTORY_INPUT_BUS;
     // Requires AE2, Mekanism and Mekanism Energistics at runtime.
     public static Block ME_INPUT_ASSEMBLY;
-    public static BlockMEInventoryInputAssembly ME_INVENTORY_INPUT_ASSEMBLY;
-    public static BlockMEOutputAssembly ME_OUTPUT_ASSEMBLY;
-    public static BlockMEFullExposureAssembly ME_FULL_EXPOSURE_ASSEMBLY;
+    public static Block ME_INVENTORY_INPUT_ASSEMBLY;
+    public static Block ME_OUTPUT_ASSEMBLY;
+    public static Block ME_FULL_EXPOSURE_ASSEMBLY;
     public static BlockQuadFluidInputHatch QUAD_FLUID_INPUT_HATCH_TINY;
     public static BlockQuadFluidOutputHatch QUAD_FLUID_OUTPUT_HATCH_TINY;
     public static BlockNineFluidInputHatch NINE_FLUID_INPUT_HATCH_NORMAL;

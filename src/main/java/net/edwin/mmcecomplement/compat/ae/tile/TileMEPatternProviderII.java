@@ -17,23 +17,19 @@ import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.inv.InvOperation;
-import com.glodblock.github.common.item.fake.FakeFluids;
-import com.glodblock.github.common.item.fake.FakeItemRegister;
-import com.glodblock.github.integration.mek.FakeGases;
-import com.mekeng.github.common.me.data.IAEGasStack;
-import com.mekeng.github.common.me.storage.IGasStorageChannel;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
 import github.kasuminova.mmce.common.util.InfItemFluidHandler;
 import github.kasuminova.mmce.common.util.PatternItemFilter;
 import hellfirepvp.modularmachinery.ModularMachinery;
-import hellfirepvp.modularmachinery.common.base.Mods;
+import net.edwin.mmcecomplement.compat.ae2fc.Ae2FcrPatternCompat;
+import net.edwin.mmcecomplement.compat.mekeng.MekEngPatternCompat;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import mekanism.api.gas.GasStack;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
@@ -42,7 +38,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -143,7 +138,7 @@ public class TileMEPatternProviderII extends MEPatternProvider {
             handlerDirty = true;
             markChunkDirty();
         });
-        if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
+        if (CompatMods.isAeGasCompatLoaded()) {
             target.setOnGasChanged(slot -> {
                 handlerDirty = true;
                 markChunkDirty();
@@ -224,19 +219,13 @@ public class TileMEPatternProviderII extends MEPatternProvider {
             if (stack.isEmpty()) {
                 continue;
             }
-            if (Mods.AE2FCR.isPresent() && FakeFluids.isFluidFakeItem(stack)) {
-                FluidStack fluid = FakeItemRegister.getStack(stack);
-                if (fluid != null) {
-                    target.fill(fluid, true);
-                    continue;
-                }
+            if (CompatMods.isAe2FcrCompatLoaded()
+                    && Ae2FcrPatternCompat.appendFakeFluid(stack, target)) {
+                continue;
             }
-            if (Mods.MEKENG.isPresent() && FakeGases.isGasFakeItem(stack)) {
-                GasStack gas = FakeItemRegister.getStack(stack);
-                if (gas != null) {
-                    target.receiveGas(null, gas, true);
-                    continue;
-                }
+            if (CompatMods.isAeGasCompatLoaded()
+                    && MekEngPatternCompat.appendFakeGas(stack, target)) {
+                continue;
             }
             target.appendItem(stack);
         }
@@ -379,30 +368,11 @@ public class TileMEPatternProviderII extends MEPatternProvider {
                 fluids.set(i, remainder == null
                     ? null : remainder.getFluidStack());
             }
-            if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
-                returnGasesToNetwork(target);
+            if (CompatMods.isAeGasCompatLoaded()) {
+                MekEngPatternCompat.returnGasesToNetwork(
+                    target, proxy, source);
             }
         } catch (GridAccessException ignored) {
-        }
-    }
-
-    @Optional.Method(modid = "mekeng")
-    @SuppressWarnings("unchecked")
-    private void returnGasesToNetwork(InfItemFluidHandler target)
-        throws GridAccessException {
-        IGasStorageChannel gasChannel = AEApi.instance().storage()
-            .getStorageChannel(IGasStorageChannel.class);
-        IMEMonitor<IAEGasStack> gasInventory =
-            proxy.getStorage().getInventory(gasChannel);
-        List<GasStack> gases = (List<GasStack>) target.getGasStackList();
-        for (int i = 0; i < gases.size(); i++) {
-            GasStack stack = gases.get(i);
-            if (stack == null) {
-                continue;
-            }
-            IAEGasStack remainder = insertToNetwork(gasInventory,
-                gasChannel.createStack(stack));
-            gases.set(i, remainder == null ? null : remainder.getGasStack());
         }
     }
 

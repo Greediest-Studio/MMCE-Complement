@@ -10,14 +10,15 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 
 ## 安装与可选依赖
 
-必需依赖：Minecraft Forge、MMCE、GeckoLib 3。下面的内容只有在对应模组和 API 可用时才会注册；缺少可选依赖不会阻止基础仓室加载。
+必需的内容模组依赖为 Minecraft Forge、MMCE 和 AE2 Extended Life；MixinBooter 仍是必需的技术加载器。其他兼容功能对本附属模组均为可选，只有同时检测到对应模组及所需 API 类时才会注册。特定 MMCE 版本自身仍可能传递依赖 GeckoLib，但 MMCE Complement 不再把它声明为自己的强依赖。
 
-| 功能 | 可选依赖 |
+| 功能 | 额外可选依赖 |
 | --- | --- |
-| ME 物品总线、ME 机械样板供应器 II、ME 频道输入仓 | AE2 Extended Life（以及 MMCE 的 ME 物品组件） |
-| ME 能源输入/输出总线 | AE2 Extended Life + CrazyAE |
-| ME 魔力输入/输出总线 | AE2 Extended Life + CrazyAE + Modular Magic |
-| ME 气体总线和混合气体总成 | AE2 Extended Life + Mekanism + Mekanism Energistics |
+| ME 物品总线、ME 机械样板供应器 II、ME 频道输入仓 | 无（仅使用必需的 AE2/MMCE） |
+| ME 能源输入/输出总线 | CrazyAE |
+| ME 魔力输入/输出总线 | CrazyAE + Modular Magic |
+| ME 气体总线和混合气体总成 | Mekanism + Mekanism Energistics |
+| 样板供应器 II 的假流体/假气体原料 | AE2 Fluid Crafting Rework（假气体还需 Mekanism Energistics） |
 | 无线通量仓 | Flux Networks |
 | 配方脚本和控制器脚本 API | CraftTweaker 2 |
 | JEI 配方显示 | JEI 或 HEI（由 MMCE 提供的显示环境决定） |

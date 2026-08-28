@@ -42,9 +42,9 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 - Minecraft 1.12.2
 - Minecraft Forge
 - Modular Machinery Community Edition
-- GeckoLib 3
+- AE2 Extended Life
 
-Network and gas integrations register only when their corresponding optional dependencies are present. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
+GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, Modular Magic, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 
 ## Building
 

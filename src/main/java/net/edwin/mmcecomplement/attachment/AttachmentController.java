@@ -8,4 +8,7 @@ public interface AttachmentController {
     Set<String> mmceComplement$getActiveAttachmentModules();
 
     boolean mmceComplement$isAttachmentModuleActive(String id);
+
+    ModuleRecipeConditions.Failure mmceComplement$getModuleRecipeFailure(
+        ModuleRecipeData recipe);
 }

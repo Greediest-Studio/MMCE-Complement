@@ -1,13 +1,13 @@
 package net.edwin.mmcecomplement.block;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockCustomName;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.compat.mekanism.QuadFluidHatchMekanismFactory;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -92,7 +92,7 @@ public class BlockQuadFluidOutputHatch extends BlockMachineComponent
         tooltip.add(TextFormatting.GRAY + I18n.format(
             "tile.mmce_complement.quad_fluid_output_hatch.tip.capacity",
             totalCapacity, capacity));
-        if (Mods.MEKANISM.isPresent()) {
+        if (CompatMods.isMekanismCompatLoaded()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.fluidhatch.tank.mek"));
         }
         tooltip.add(TextFormatting.GRAY + I18n.format(
@@ -186,7 +186,7 @@ public class BlockQuadFluidOutputHatch extends BlockMachineComponent
     }
 
     private static TileEntity createHatchTile(FluidHatchSize size) {
-        if (Mods.MEKANISM.isPresent()) {
+        if (CompatMods.isMekanismCompatLoaded()) {
             return QuadFluidHatchMekanismFactory.createOutput(size);
         }
         return new TileQuadFluidOutputHatch(size);

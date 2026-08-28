@@ -61,6 +61,11 @@ public final class ModuleRecipeConditions {
         return Failure.NONE;
     }
 
+    public static boolean hasRestrictions(ModuleRecipeData recipe) {
+        return !recipe.mmceComplement$getRequiredModules().isEmpty()
+            || !recipe.mmceComplement$getForbiddenModules().isEmpty();
+    }
+
     public enum Failure {
         NONE(null),
         MISSING_REQUIRED(MISSING_MODULE_MESSAGE),

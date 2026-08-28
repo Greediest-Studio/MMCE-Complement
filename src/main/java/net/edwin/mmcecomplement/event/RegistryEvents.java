@@ -12,17 +12,10 @@ import net.edwin.mmcecomplement.block.BlockFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFluidInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEGasInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEInventoryInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEChannelInputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
-import net.edwin.mmcecomplement.block.BlockFluxInputHatch;
-import net.edwin.mmcecomplement.block.BlockFluxOutputHatch;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockBatchHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneControlHatch;
@@ -36,19 +29,14 @@ import net.edwin.mmcecomplement.block.BlockQuadFluidOutputHatch;
 import net.edwin.mmcecomplement.block.BlockNineFluidInputHatch;
 import net.edwin.mmcecomplement.block.BlockNineFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.CompatMods;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyInputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEEnergyOutputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaInputBus;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEManaOutputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
+import net.edwin.mmcecomplement.compat.ae.AeEnergyRegistryCompat;
+import net.edwin.mmcecomplement.compat.ae.AeGasRegistryCompat;
+import net.edwin.mmcecomplement.compat.ae.AeManaRegistryCompat;
+import net.edwin.mmcecomplement.compat.flux.FluxRegistryCompat;
+import net.edwin.mmcecomplement.compat.mekanism.MekanismTileRegistryCompat;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.init.ModItems;
 import net.edwin.mmcecomplement.item.ItemAttachmentConstructTool;
-import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
-import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
@@ -64,29 +52,15 @@ import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
-import net.edwin.mmcecomplement.compat.mekanism.TileQuadFluidInputHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileQuadFluidOutputHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileNineFluidInputHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileNineFluidOutputHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileDataItemInputHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileItemInputAssemblyHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileItemOutputAssemblyHatchMekanism;
-import net.edwin.mmcecomplement.compat.mekanism.TileSelfCycleAssemblyHatchMekanism;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEFluidInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEGasInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEInventoryInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEChannelInputHatch;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEConnectionShareHatch;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
-import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -130,13 +104,7 @@ public final class RegistryEvents {
     @SubscribeEvent
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
         if (CompatMods.isFluxCompatLoaded()) {
-            ModBlocks.FLUX_INPUT_HATCH = new BlockFluxInputHatch();
-            ModBlocks.FLUX_INPUT_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "flux_input_hatch"));
-            event.getRegistry().register(ModBlocks.FLUX_INPUT_HATCH);
-
-            ModBlocks.FLUX_OUTPUT_HATCH = new BlockFluxOutputHatch();
-            ModBlocks.FLUX_OUTPUT_HATCH.setRegistryName(new ResourceLocation(Tags.MOD_ID, "flux_output_hatch"));
-            event.getRegistry().register(ModBlocks.FLUX_OUTPUT_HATCH);
+            FluxRegistryCompat.registerBlocks(event.getRegistry());
         }
 
         ModBlocks.BLOCK_CASING = new BlockCasing();
@@ -221,10 +189,7 @@ public final class RegistryEvents {
         ModBlocks.DATA_INPUT_ASSEMBLY_HATCH.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "data_input_assembly_hatch"));
         event.getRegistry().register(ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileDataItemInputHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "data_input_assembly_hatch"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileDataItemInputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "data_input_assembly_hatch"));
         }
@@ -233,10 +198,7 @@ public final class RegistryEvents {
         ModBlocks.INPUT_ASSEMBLY_HATCH.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "input_assembly_hatch"));
         event.getRegistry().register(ModBlocks.INPUT_ASSEMBLY_HATCH);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileItemInputAssemblyHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "input_assembly_hatch"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileItemInputAssemblyHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "input_assembly_hatch"));
         }
@@ -245,10 +207,7 @@ public final class RegistryEvents {
         ModBlocks.OUTPUT_ASSEMBLY_HATCH.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "output_assembly_hatch"));
         event.getRegistry().register(ModBlocks.OUTPUT_ASSEMBLY_HATCH);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileItemOutputAssemblyHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "output_assembly_hatch"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileItemOutputAssemblyHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "output_assembly_hatch"));
         }
@@ -258,12 +217,7 @@ public final class RegistryEvents {
         ModBlocks.SELF_CYCLE_ASSEMBLY_HATCH.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "self_cycle_assembly_hatch"));
         event.getRegistry().register(ModBlocks.SELF_CYCLE_ASSEMBLY_HATCH);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(
-                TileSelfCycleAssemblyHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID,
-                    "self_cycle_assembly_hatch"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileSelfCycleAssemblyHatch.class,
                 new ResourceLocation(Tags.MOD_ID,
                     "self_cycle_assembly_hatch"));
@@ -273,10 +227,7 @@ public final class RegistryEvents {
         ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
         event.getRegistry().register(ModBlocks.QUAD_FLUID_INPUT_HATCH_TINY);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileQuadFluidInputHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileQuadFluidInputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "quad_fluid_input_hatch_tiny"));
         }
@@ -285,10 +236,7 @@ public final class RegistryEvents {
         ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
         event.getRegistry().register(ModBlocks.QUAD_FLUID_OUTPUT_HATCH_TINY);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileQuadFluidOutputHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileQuadFluidOutputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "quad_fluid_output_hatch_tiny"));
         }
@@ -297,10 +245,7 @@ public final class RegistryEvents {
         ModBlocks.NINE_FLUID_INPUT_HATCH_NORMAL.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "nine_fluid_input_hatch_normal"));
         event.getRegistry().register(ModBlocks.NINE_FLUID_INPUT_HATCH_NORMAL);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileNineFluidInputHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "nine_fluid_input_hatch_normal"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileNineFluidInputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "nine_fluid_input_hatch_normal"));
         }
@@ -309,49 +254,21 @@ public final class RegistryEvents {
         ModBlocks.NINE_FLUID_OUTPUT_HATCH_NORMAL.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "nine_fluid_output_hatch_normal"));
         event.getRegistry().register(ModBlocks.NINE_FLUID_OUTPUT_HATCH_NORMAL);
-        if (Mods.MEKANISM.isPresent()) {
-            GameRegistry.registerTileEntity(TileNineFluidOutputHatchMekanism.class,
-                new ResourceLocation(Tags.MOD_ID, "nine_fluid_output_hatch_normal"));
-        } else {
+        if (!CompatMods.isMekanismCompatLoaded()) {
             GameRegistry.registerTileEntity(TileNineFluidOutputHatch.class,
                 new ResourceLocation(Tags.MOD_ID, "nine_fluid_output_hatch_normal"));
         }
 
-        if (CompatMods.isFluxCompatLoaded()) {
-            GameRegistry.registerTileEntity(TileFluxInputHatch.class,
-                new ResourceLocation(Tags.MOD_ID, "flux_input_hatch"));
-            GameRegistry.registerTileEntity(TileFluxOutputHatch.class,
-                new ResourceLocation(Tags.MOD_ID, "flux_output_hatch"));
+        if (CompatMods.isMekanismCompatLoaded()) {
+            MekanismTileRegistryCompat.registerTiles();
         }
 
         if (CompatMods.isAeEnergyCompatLoaded()) {
-            ModBlocks.ME_ENERGY_INPUT_BUS = new BlockMEEnergyInputBus();
-            ModBlocks.ME_ENERGY_INPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_energy_input_bus"));
-            event.getRegistry().register(ModBlocks.ME_ENERGY_INPUT_BUS);
-
-            ModBlocks.ME_ENERGY_OUTPUT_BUS = new BlockMEEnergyOutputBus();
-            ModBlocks.ME_ENERGY_OUTPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_energy_output_bus"));
-            event.getRegistry().register(ModBlocks.ME_ENERGY_OUTPUT_BUS);
-
-            GameRegistry.registerTileEntity(TileMEEnergyInputBus.class,
-                new ResourceLocation(Tags.MOD_ID, "me_energy_input_bus"));
-            GameRegistry.registerTileEntity(TileMEEnergyOutputBus.class,
-                new ResourceLocation(Tags.MOD_ID, "me_energy_output_bus"));
+            AeEnergyRegistryCompat.registerBlocks(event.getRegistry());
         }
 
         if (CompatMods.isAeManaCompatLoaded()) {
-            ModBlocks.ME_MANA_INPUT_BUS = new BlockMEManaInputBus();
-            ModBlocks.ME_MANA_INPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_mana_input_bus"));
-            event.getRegistry().register(ModBlocks.ME_MANA_INPUT_BUS);
-
-            ModBlocks.ME_MANA_OUTPUT_BUS = new BlockMEManaOutputBus();
-            ModBlocks.ME_MANA_OUTPUT_BUS.setRegistryName(new ResourceLocation(Tags.MOD_ID, "me_mana_output_bus"));
-            event.getRegistry().register(ModBlocks.ME_MANA_OUTPUT_BUS);
-
-            GameRegistry.registerTileEntity(TileMEManaInputBus.class,
-                new ResourceLocation(Tags.MOD_ID, "me_mana_input_bus"));
-            GameRegistry.registerTileEntity(TileMEManaOutputBus.class,
-                new ResourceLocation(Tags.MOD_ID, "me_mana_output_bus"));
+            AeManaRegistryCompat.registerBlocks(event.getRegistry());
         }
 
         if (CompatMods.isAeItemCompatLoaded()) {
@@ -418,51 +335,7 @@ public final class RegistryEvents {
         }
 
         if (CompatMods.isAeGasCompatLoaded()) {
-            ModBlocks.ME_GAS_INVENTORY_INPUT_BUS =
-                new BlockMEGasInventoryInputBus();
-            ModBlocks.ME_GAS_INVENTORY_INPUT_BUS.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_gas_inventory_input_bus"));
-            event.getRegistry().register(
-                ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
-            GameRegistry.registerTileEntity(
-                TileMEGasInventoryInputBus.class,
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_gas_inventory_input_bus"));
-
-            ModBlocks.ME_INPUT_ASSEMBLY = new BlockMEInputAssembly();
-            ModBlocks.ME_INPUT_ASSEMBLY.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID, "me_input_assembly"));
-            event.getRegistry().register(ModBlocks.ME_INPUT_ASSEMBLY);
-            GameRegistry.registerTileEntity(TileMEInputAssembly.class,
-                new ResourceLocation(Tags.MOD_ID, "me_input_assembly"));
-
-            ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY =
-                new BlockMEInventoryInputAssembly();
-            ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_inventory_input_assembly"));
-            event.getRegistry().register(ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
-            GameRegistry.registerTileEntity(TileMEInventoryInputAssembly.class,
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_inventory_input_assembly"));
-
-            ModBlocks.ME_OUTPUT_ASSEMBLY = new BlockMEOutputAssembly();
-            ModBlocks.ME_OUTPUT_ASSEMBLY.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID, "me_output_assembly"));
-            event.getRegistry().register(ModBlocks.ME_OUTPUT_ASSEMBLY);
-            GameRegistry.registerTileEntity(TileMEOutputAssembly.class,
-                new ResourceLocation(Tags.MOD_ID, "me_output_assembly"));
-
-            ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY =
-                new BlockMEFullExposureAssembly();
-            ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_full_exposure_assembly"));
-            event.getRegistry().register(ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
-            GameRegistry.registerTileEntity(TileMEFullExposureAssembly.class,
-                new ResourceLocation(Tags.MOD_ID,
-                    "me_full_exposure_assembly"));
+            AeGasRegistryCompat.registerBlocks(event.getRegistry());
         }
     }
 

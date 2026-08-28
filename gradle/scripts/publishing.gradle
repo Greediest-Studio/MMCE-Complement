@@ -64,8 +64,17 @@ if (propertyBool('publish_to_curseforge')) {
                     }
                 }
                 relations {
-                    requiredDependency 'flux-networks'
                     requiredDependency 'modularmachinery-community-edition'
+                    requiredDependency 'ae2-extended-life'
+                    optionalDependency 'flux-networks'
+                    optionalDependency 'geckolib'
+                    optionalDependency 'crazyae'
+                    optionalDependency 'mekanism-ce-unofficial'
+                    optionalDependency 'mekanism-energistics'
+                    optionalDependency 'ae2-fluid-crafting-rework'
+                    optionalDependency 'modular-magic'
+                    optionalDependency 'botania'
+                    optionalDependency 'baubles'
                 }
             }
             options {
@@ -90,14 +99,23 @@ if (propertyBool('publish_to_modrinth')) {
         gameVersions = ['1.12.2']
         loaders = ['forge']
         debugMode = propertyBool('modrinth_debug')
-        if (propertyBool('use_mixins') || propertyBool('use_asset_mover')) {
-            dependencies {
-                if (propertyBool('use_mixins')) {
-                    required.project 'mixinbooter'
-                }
-                if (propertyBool('use_asset_mover')) {
-                    required.project 'assetmover'
-                }
+        dependencies {
+            required.project 'modular-machinery-community-edition'
+            required.project 'ae2-extended-life'
+            optional.project 'flux-networks'
+            optional.project 'geckolib'
+            optional.project 'crazyae'
+            optional.project 'mekanism-ce-unofficial'
+            optional.project 'mekanism-energistics'
+            optional.project 'ae2-fluid-crafting-rework'
+            optional.project 'modular-magic'
+            optional.project 'botania'
+            optional.project 'baubles'
+            if (propertyBool('use_mixins')) {
+                required.project 'mixinbooter'
+            }
+            if (propertyBool('use_asset_mover')) {
+                required.project 'assetmover'
             }
         }
         if (propertyBool('publish_with_changelog')) {

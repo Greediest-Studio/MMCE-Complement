@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.edwin.mmcecomplement.cycle.CycleRuntime;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -12,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 /** Exposes Mekanism gas recipe IO without linking common code to its API. */
+@Pseudo
 @Mixin(targets =
     "hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas",
     remap = false)

@@ -1,17 +1,14 @@
 package net.edwin.mmcecomplement.network;
 
-import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.compat.CompatMods;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
+import net.edwin.mmcecomplement.compat.ae.AeEnergyNetworkCompat;
+import net.edwin.mmcecomplement.compat.ae.AeGasNetworkCompat;
+import net.edwin.mmcecomplement.compat.ae.AeManaNetworkCompat;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.MEInventoryInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.MixedMEInputMarker;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEInputAssembly;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
-import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
+import net.edwin.mmcecomplement.compat.flux.FluxNetworkCompat;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.gui.ContainerRedstoneInterfaceHatch;
@@ -45,14 +42,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraft.item.ItemStack;
-import sonar.fluxnetworks.api.network.IFluxNetwork;
-import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 
 import io.netty.buffer.ByteBuf;
 
 /**
  * Tiny SimpleNetworkWrapper plus the single packet we need to ask the server
- * to connect a {@link TileFluxHatchBase} to a Flux Network the player just
+ * to connect an optional Flux hatch to a Flux Network the player just
  * picked in the GUI.
  *
  * <p>Flux Networks' own {@code PacketTile} does an {@code instanceof TileFluxCore}
@@ -269,30 +264,10 @@ public final class NetworkHandlerMMCE {
             if (player.getDistanceSq(msg.pos) > 64.0D) {
                 return;
             }
-            TileEntity te = world.getTileEntity(msg.pos);
-            if (!(te instanceof TileFluxHatchBase)) {
-                return;
+            if (CompatMods.isFluxCompatLoaded()) {
+                FluxNetworkCompat.applyNetwork(
+                    player, world, msg.pos, msg.networkID);
             }
-            TileFluxHatchBase hatch = (TileFluxHatchBase) te;
-
-            IFluxNetwork current = hatch.getNetwork();
-            if (current != null && !current.isInvalid()) {
-                current.queueConnectionRemoval(hatch, false);
-                hatch.disconnect(current);
-            }
-
-            if (msg.networkID > 0) {
-                IFluxNetwork target = FluxNetworkCache.instance.getNetwork(msg.networkID);
-                if (target != null && !target.isInvalid()) {
-                    hatch.connect(target);
-                    target.queueConnectionAddition(hatch);
-                }
-            }
-            net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
-            world.notifyBlockUpdate(msg.pos, state, state, 3);
-            MMCEComplement.LOGGER.debug(
-                    "Hatch at {} connected to network id={} by {}",
-                    msg.pos, msg.networkID, player.getName());
         }
     }
 
@@ -465,26 +440,9 @@ public final class NetworkHandlerMMCE {
                 return;
             }
 
-            if (te instanceof TileMEInputAssembly
-                && msg.fieldId == FIELD_ME_INPUT_ASSEMBLY_MARKER) {
-                if (!(player.openContainer instanceof ContainerMEInputAssembly)
-                    || ((ContainerMEInputAssembly) player.openContainer)
-                        .getOwner() != te) {
-                    return;
-                }
-                int slot = nbt.getInteger("slot");
-                if (slot < 0 || slot >= TileMEInputAssembly.SLOT_COUNT) {
-                    return;
-                }
-                ItemStack marker = nbt.hasKey("marker", 10)
-                    ? new ItemStack(nbt.getCompoundTag("marker"))
-                    : ItemStack.EMPTY;
-                if (!marker.isEmpty() && nbt.hasKey("amount", 99)) {
-                    marker = MixedMEInputMarker.withAmount(marker,
-                        nbt.getLong("amount"));
-                }
-                ((TileMEInputAssembly) te).setMarker(slot, marker);
-                player.openContainer.detectAndSendChanges();
+            if (CompatMods.isAeGasCompatLoaded()
+                    && AeGasNetworkCompat.applyMarker(
+                        player, te, msg.fieldId, nbt)) {
                 return;
             }
 
@@ -512,54 +470,25 @@ public final class NetworkHandlerMMCE {
                 return;
             }
 
-            if (CompatMods.isFluxCompatLoaded() && te instanceof TileFluxHatchBase) {
-                TileFluxHatchBase hatch = (TileFluxHatchBase) te;
-
-                switch (msg.fieldId) {
-                    case FIELD_CUSTOM_NAME:
-                        hatch.setCustomNameRaw(clampName(nbt.getString("v")));
-                        break;
-                    case FIELD_PRIORITY:
-                        hatch.setPriorityRaw(nbt.getInteger("v"));
-                        break;
-                    case FIELD_LIMIT:
-                        hatch.setTransferLimitRaw(nbt.getLong("v"));
-                        break;
-                    case FIELD_SURGE_MODE:
-                        hatch.setSurgeModeRaw(nbt.getBoolean("v"));
-                        break;
-                    case FIELD_DISABLE_LIMIT:
-                        hatch.setDisableLimitRaw(nbt.getBoolean("v"));
-                        break;
-                    case FIELD_CHUNK_LOAD:
-                        hatch.setChunkLoadingRequested(nbt.getBoolean("v"));
-                        break;
-                    case FIELD_BUFFER_CAP:
-                        hatch.setBufferCapacityRaw(nbt.getLong("v"));
-                        break;
-                    default:
-                        return;
-                }
-                net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
-                world.notifyBlockUpdate(msg.pos, state, state, 3);
+            if (CompatMods.isFluxCompatLoaded()
+                    && FluxNetworkCompat.applyField(
+                        te, msg.fieldId, nbt, world, msg.pos)) {
                 return;
             }
 
             if (CompatMods.isAeEnergyCompatLoaded()
-                    && te instanceof TileMEEnergyBusBase
-                    && msg.fieldId == FIELD_BUFFER_CAP) {
-                TileMEEnergyBusBase bus = (TileMEEnergyBusBase) te;
-                bus.setBufferCapacityRaw(nbt.getLong("v"));
+                    && msg.fieldId == FIELD_BUFFER_CAP
+                    && AeEnergyNetworkCompat.setBufferCapacity(
+                        te, nbt.getLong("v"))) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
                 world.notifyBlockUpdate(msg.pos, state, state, 3);
                 return;
             }
 
             if (CompatMods.isAeManaCompatLoaded()
-                    && te instanceof TileMEManaBusBase
-                    && msg.fieldId == FIELD_BUFFER_CAP) {
-                TileMEManaBusBase bus = (TileMEManaBusBase) te;
-                bus.setBufferCapacityRaw(nbt.getLong("v"));
+                    && msg.fieldId == FIELD_BUFFER_CAP
+                    && AeManaNetworkCompat.setBufferCapacity(
+                        te, nbt.getLong("v"))) {
                 net.minecraft.block.state.IBlockState state = world.getBlockState(msg.pos);
                 world.notifyBlockUpdate(msg.pos, state, state, 3);
             }

@@ -1,13 +1,13 @@
 package net.edwin.mmcecomplement.block;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockCustomName;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.compat.mekanism.DataItemInputHatchMekanismFactory;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.config.ModConfig;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.minecraft.block.Block;
@@ -103,7 +103,7 @@ public class BlockDataItemInputHatch extends BlockMachineComponent
             "tile.mmce_complement.data_input_assembly_hatch.tip.fluids",
             tier.getFluidTanks(),
             ModConfig.getDataInputAssemblyCapacity(tier)));
-        if (Mods.MEKANISM.isPresent()) {
+        if (CompatMods.isMekanismCompatLoaded()) {
             tooltip.add(TextFormatting.GRAY
                 + I18n.format("tooltip.fluidhatch.tank.mek"));
         }
@@ -213,7 +213,7 @@ public class BlockDataItemInputHatch extends BlockMachineComponent
     }
 
     private static TileEntity createHatchTile(DataInputAssemblyTier tier) {
-        if (Mods.MEKANISM.isPresent()) {
+        if (CompatMods.isMekanismCompatLoaded()) {
             return DataItemInputHatchMekanismFactory.create(tier);
         }
         return new TileDataItemInputHatch(tier);

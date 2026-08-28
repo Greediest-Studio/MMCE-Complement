@@ -13,9 +13,11 @@ import org.apache.logging.log4j.Logger;
     modid = Tags.MOD_ID,
     name = Tags.MOD_NAME,
     version = Tags.VERSION,
-    dependencies = "required-after:modularmachinery;required-after:geckolib3;"
-        + "after:fluxnetworks;after:appliedenergistics2;after:crazyae;"
-        + "after:mekanism;after:mekeng;"
+    dependencies = "required-after:modularmachinery;"
+        + "required-after:appliedenergistics2;"
+        + "after:geckolib3;after:fluxnetworks;after:crazyae;"
+        + "after:mekanism;after:mekeng;after:ae2fc;"
+        + "after:modularmagic;after:botania;after:baubles;"
 )
 public class MMCEComplement {
 

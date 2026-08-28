@@ -10,14 +10,15 @@ MMCE Complement is an add-on for [Modular Machinery Community Edition (MMCE)](ht
 
 ## Installation and optional dependencies
 
-Required dependencies are Minecraft Forge, MMCE, and GeckoLib 3. The features below are registered only when their APIs are present; missing optional mods do not prevent the base hatches from loading.
+Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life. MixinBooter remains a required technical loader. Every other integration is optional to this addon and is registered only when its mod and required API classes are present. GeckoLib may still be required transitively by the installed MMCE build, but MMCE Complement no longer declares it as its own hard dependency.
 
-| Feature | Optional dependency |
+| Feature | Additional optional dependency |
 | --- | --- |
-| ME item buses, ME Machinery Pattern Provider II, ME Channel Input Hatch | AE2 Extended Life (and MMCE ME item components) |
-| ME energy input/output buses | AE2 Extended Life + CrazyAE |
-| ME mana input/output buses | AE2 Extended Life + CrazyAE + Modular Magic |
-| ME gas buses and mixed gas assemblies | AE2 Extended Life + Mekanism + Mekanism Energistics |
+| ME item buses, ME Machinery Pattern Provider II, ME Channel Input Hatch | None beyond required AE2/MMCE |
+| ME energy input/output buses | CrazyAE |
+| ME mana input/output buses | CrazyAE + Modular Magic |
+| ME gas buses and mixed gas assemblies | Mekanism + Mekanism Energistics |
+| Fake fluid/gas ingredients in Pattern Provider II | AE2 Fluid Crafting Rework (plus Mekanism Energistics for gas) |
 | Wireless Flux hatches | Flux Networks |
 | Recipe and controller scripts | CraftTweaker 2 |
 | Recipe displays | JEI or HEI, as provided by the MMCE environment |

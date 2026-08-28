@@ -8,6 +8,8 @@ import github.kasuminova.mmce.common.event.Phase;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -17,6 +19,9 @@ import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentModule;
 import net.edwin.mmcecomplement.attachment.AttachmentPatternResolver;
 import net.edwin.mmcecomplement.attachment.AttachmentResolver;
+import net.edwin.mmcecomplement.attachment.ModuleRecipeConditionCache;
+import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
+import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
 import net.edwin.mmcecomplement.accelerator.AcceleratorHatchLogic;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
@@ -99,7 +104,18 @@ public abstract class MixinTileMultiblockMachineController
     protected Map<String, List<MachineUpgrade>> foundUpgrades;
 
     @Unique
-    private final Set<String> mmceComplement$activeModules = new LinkedHashSet<>();
+    private volatile Set<String> mmceComplement$activeModules = Collections.emptySet();
+
+    @Unique
+    private final ModuleRecipeConditionCache mmceComplement$moduleRecipeConditionCache =
+        new ModuleRecipeConditionCache();
+
+    @Unique
+    private List<ModuleRecipeData> mmceComplement$moduleRestrictedRecipes =
+        Collections.emptyList();
+
+    @Unique
+    private DynamicMachine mmceComplement$moduleRecipeMachine;
 
     @Unique
     private final Map<String, MachineUpgrade> mmceComplement$moduleUpgrades = new LinkedHashMap<>();
@@ -204,12 +220,18 @@ public abstract class MixinTileMultiblockMachineController
 
     @Override
     public Set<String> mmceComplement$getActiveAttachmentModules() {
-        return Collections.unmodifiableSet(new LinkedHashSet<>(mmceComplement$activeModules));
+        return mmceComplement$activeModules;
     }
 
     @Override
     public boolean mmceComplement$isAttachmentModuleActive(String id) {
         return mmceComplement$activeModules.contains(id);
+    }
+
+    @Override
+    public ModuleRecipeConditions.Failure mmceComplement$getModuleRecipeFailure(
+        ModuleRecipeData recipe) {
+        return mmceComplement$moduleRecipeConditionCache.get(recipe);
     }
 
     @Override
@@ -351,6 +373,7 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$mainPattern = mainPattern;
         boolean allAreasLoaded = mmceComplement$refreshModules(controller);
         mmceComplement$combineActivePatterns();
+        mmceComplement$rebuildModuleRecipeConditionCache();
         mmceComplement$attachmentMachine = foundMachine;
         mmceComplement$attachmentMainPattern = mainPattern;
         mmceComplement$attachmentRotation = controllerRotation;
@@ -386,6 +409,9 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$attachmentMainPattern = null;
         mmceComplement$attachmentRotation = null;
         mmceComplement$attachmentReplacements = null;
+        mmceComplement$moduleRecipeConditionCache.clear();
+        mmceComplement$moduleRestrictedRecipes = Collections.emptyList();
+        mmceComplement$moduleRecipeMachine = null;
         mmceComplement$replaceActiveModules(Collections.emptySet(), true);
         mmceComplement$clearOverclockModifiers(
             (TileMultiblockMachineController) (Object) this);
@@ -569,8 +595,9 @@ public abstract class MixinTileMultiblockMachineController
     @Unique
     private void mmceComplement$replaceActiveModules(Set<String> newModules, boolean rebuildUpgrades) {
         boolean changed = !mmceComplement$activeModules.equals(newModules);
-        mmceComplement$activeModules.clear();
-        mmceComplement$activeModules.addAll(newModules);
+        mmceComplement$activeModules = newModules.isEmpty()
+            ? Collections.emptySet()
+            : Collections.unmodifiableSet(new LinkedHashSet<>(newModules));
         if (rebuildUpgrades) {
             mmceComplement$rebuildSyntheticUpgrades();
         }
@@ -582,6 +609,23 @@ public abstract class MixinTileMultiblockMachineController
                 controller.markForUpdateSync();
             }
         }
+    }
+
+    @Unique
+    private void mmceComplement$rebuildModuleRecipeConditionCache() {
+        if (mmceComplement$moduleRecipeMachine != foundMachine) {
+            List<ModuleRecipeData> recipes = new ArrayList<>();
+            for (MachineRecipe recipe : RecipeRegistry.getRecipesFor(foundMachine)) {
+                ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
+                if (ModuleRecipeConditions.hasRestrictions(moduleRecipe)) {
+                    recipes.add(moduleRecipe);
+                }
+            }
+            mmceComplement$moduleRestrictedRecipes = Collections.unmodifiableList(recipes);
+            mmceComplement$moduleRecipeMachine = foundMachine;
+        }
+        mmceComplement$moduleRecipeConditionCache.rebuild(
+            mmceComplement$moduleRestrictedRecipes, mmceComplement$activeModules);
     }
 
     @Unique

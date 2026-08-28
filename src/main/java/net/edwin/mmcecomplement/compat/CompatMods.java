@@ -9,12 +9,16 @@ public final class CompatMods {
     public static final String MODID_CRAZY_AE = "crazyae";
     public static final String MODID_MEKANISM = "mekanism";
     public static final String MODID_MEKENG = "mekeng";
+    public static final String MODID_AE2FCR = "ae2fc";
+    public static final String MODID_MODULAR_MAGIC = "modularmagic";
 
     private static Boolean fluxCompatLoaded;
+    private static Boolean mekanismCompatLoaded;
     private static Boolean aeEnergyCompatLoaded;
     private static Boolean aeItemCompatLoaded;
     private static Boolean aeGasCompatLoaded;
     private static Boolean aeManaCompatLoaded;
+    private static Boolean ae2FcrCompatLoaded;
     private static Boolean guguManaCompatLoaded;
 
     private CompatMods() {}
@@ -28,6 +32,15 @@ public final class CompatMods {
                     && classExists("sonar.fluxnetworks.common.connection.FluxNetworkCache");
         }
         return fluxCompatLoaded;
+    }
+
+    public static boolean isMekanismCompatLoaded() {
+        if (mekanismCompatLoaded == null) {
+            mekanismCompatLoaded = Loader.isModLoaded(MODID_MEKANISM)
+                && classExists("mekanism.api.gas.IGasHandler")
+                && classExists("mekanism.common.capabilities.Capabilities");
+        }
+        return mekanismCompatLoaded;
     }
 
     public static boolean isAeEnergyCompatLoaded() {
@@ -55,7 +68,7 @@ public final class CompatMods {
     public static boolean isAeGasCompatLoaded() {
         if (aeGasCompatLoaded == null) {
             aeGasCompatLoaded = isAeItemCompatLoaded()
-                && Loader.isModLoaded(MODID_MEKANISM)
+                && isMekanismCompatLoaded()
                 && Loader.isModLoaded(MODID_MEKENG)
                 && classExists("com.mekeng.github.common.me.storage.IGasStorageChannel")
                 && classExists("github.kasuminova.mmce.common.tile.MEGasInputBus");
@@ -67,6 +80,7 @@ public final class CompatMods {
         if (aeManaCompatLoaded == null) {
             aeManaCompatLoaded = Loader.isModLoaded(MODID_AE2)
                     && Loader.isModLoaded(MODID_CRAZY_AE)
+                    && Loader.isModLoaded(MODID_MODULAR_MAGIC)
                     && classExists("appeng.core.AE2ELCore")
                     && classExists("dev.beecube31.crazyae2.core.CrazyAE")
                     && classExists("dev.beecube31.crazyae2.core.api.storage.IManaStorageChannel")
@@ -74,6 +88,15 @@ public final class CompatMods {
                     && classExists("kport.modularmagic.common.tile.machinecomponent.MachineComponentManaProvider");
         }
         return aeManaCompatLoaded;
+    }
+
+    public static boolean isAe2FcrCompatLoaded() {
+        if (ae2FcrCompatLoaded == null) {
+            ae2FcrCompatLoaded = Loader.isModLoaded(MODID_AE2FCR)
+                && classExists("com.glodblock.github.common.item.fake.FakeFluids")
+                && classExists("com.glodblock.github.common.item.fake.FakeItemRegister");
+        }
+        return ae2FcrCompatLoaded;
     }
 
     public static boolean isGuguManaCompatLoaded() {

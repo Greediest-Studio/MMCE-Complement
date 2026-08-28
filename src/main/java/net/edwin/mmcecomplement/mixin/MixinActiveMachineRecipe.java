@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collection;
 import java.util.Collections;
 
 @Mixin(value = ActiveMachineRecipe.class, remap = false)
@@ -84,6 +83,10 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Unique
     private boolean mmceComplement$batchCalculationActive;
 
+    /** Immutable recipe metadata; avoids reading condition sets on hot paths. */
+    @Unique
+    private boolean mmceComplement$hasModuleRestrictions;
+
     @Inject(method = "<init>(Lhellfirepvp/modularmachinery/common/crafting/MachineRecipe;I)V",
         at = @At("RETURN"))
     private void mmceComplement$initializeBatchData(MachineRecipe recipe,
@@ -96,6 +99,8 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
         mmceComplement$batchBaseMaxParallelism = Math.max(1, maxParallelism);
         mmceComplement$batchEligibleParallelism = mmceComplement$batchBaseMaxParallelism;
         mmceComplement$batchOutputMaxParallelism = this.maxParallelism;
+        mmceComplement$hasModuleRestrictions = ModuleRecipeConditions.hasRestrictions(
+            (ModuleRecipeData) (Object) recipe);
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
@@ -119,6 +124,8 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
             && mmceComplement$batchOutputMaxParallelism
                 != mmceComplement$batchBaseMaxParallelism;
         mmceComplement$maxParallelismExplicitlyUpdated = false;
+        mmceComplement$hasModuleRestrictions = recipe != null
+            && ModuleRecipeConditions.hasRestrictions((ModuleRecipeData) (Object) recipe);
     }
 
     @Inject(method = "serialize", at = @At("RETURN"))
@@ -271,10 +278,14 @@ public abstract class MixinActiveMachineRecipe implements BatchRecipeData {
     @Unique
     private ModuleRecipeConditions.Failure mmceComplement$evaluate(
         TileMultiblockMachineController controller) {
-        Collection<String> activeModules = controller instanceof AttachmentController
-            ? ((AttachmentController) controller).mmceComplement$getActiveAttachmentModules()
-            : Collections.emptySet();
-        return ModuleRecipeConditions.evaluate((ModuleRecipeData) (Object) recipe, activeModules);
+        ModuleRecipeData moduleRecipe = (ModuleRecipeData) (Object) recipe;
+        if (!mmceComplement$hasModuleRestrictions) {
+            return ModuleRecipeConditions.Failure.NONE;
+        }
+        return controller instanceof AttachmentController
+            ? ((AttachmentController) controller)
+                .mmceComplement$getModuleRecipeFailure(moduleRecipe)
+            : ModuleRecipeConditions.evaluate(moduleRecipe, Collections.emptySet());
     }
 
     @Override

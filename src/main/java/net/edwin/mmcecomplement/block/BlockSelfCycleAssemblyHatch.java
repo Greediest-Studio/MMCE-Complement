@@ -1,9 +1,9 @@
 package net.edwin.mmcecomplement.block;
 
-import hellfirepvp.modularmachinery.common.base.Mods;
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
 import net.edwin.mmcecomplement.compat.mekanism.SelfCycleAssemblyHatchMekanismFactory;
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.config.ModConfig;
 import net.edwin.mmcecomplement.tile.TileSelfCycleAssemblyHatch;
 import net.minecraft.client.resources.I18n;
@@ -62,7 +62,7 @@ public class BlockSelfCycleAssemblyHatch extends BlockItemInputAssemblyHatch {
         tooltip.add(TextFormatting.GRAY + I18n.format(
             "tile.mmce_complement.self_cycle_assembly_hatch.tip.fluids",
             tier.getFluidTanks(), ModConfig.getInputAssemblyCapacity(tier)));
-        if (Mods.MEKANISM.isPresent()) tooltip.add(TextFormatting.GRAY
+        if (CompatMods.isMekanismCompatLoaded()) tooltip.add(TextFormatting.GRAY
             + I18n.format("tooltip.fluidhatch.tank.mek"));
         tooltip.add(I18n.format(
             "tile.mmce_complement.self_cycle_assembly_hatch.tip.cycle"));
@@ -112,7 +112,7 @@ public class BlockSelfCycleAssemblyHatch extends BlockItemInputAssemblyHatch {
     }
 
     private static TileEntity createCycleTile() {
-        return Mods.MEKANISM.isPresent()
+        return CompatMods.isMekanismCompatLoaded()
             ? SelfCycleAssemblyHatchMekanismFactory.create()
             : new TileSelfCycleAssemblyHatch();
     }

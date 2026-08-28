@@ -247,7 +247,7 @@ mods.modularmachinery.RecipeBuilder.newBuilder(
     .build();
 ```
 
-Conditions are checked before starting, before restarting, and on every tick while the recipe is running. Losing a required module or gaining a forbidden module during operation immediately returns the corresponding crafting failure instead of ignoring the state change.
+Module state is resolved only by the machine structure-check task. The same structure pass precomputes an immutable result for every module-restricted recipe of that machine. Recipe start, restart, and running ticks only read that result; they no longer copy the active-module set or perform module formation checks. Losing a required module or gaining a forbidden module returns the corresponding crafting failure after the structure check refreshes the snapshot.
 
 ## CraftTweaker controller queries
 

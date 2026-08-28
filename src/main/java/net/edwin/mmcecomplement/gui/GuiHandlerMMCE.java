@@ -2,30 +2,13 @@ package net.edwin.mmcecomplement.gui;
 
 import net.edwin.mmcecomplement.MMCEComplement;
 import net.edwin.mmcecomplement.compat.CompatMods;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEEnergyBus;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEManaBus;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEEnergyBus;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEManaBus;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEOutputAssembly;
+import net.edwin.mmcecomplement.compat.ae.AeEnergyGuiCompat;
+import net.edwin.mmcecomplement.compat.ae.AeGasGuiCompat;
+import net.edwin.mmcecomplement.compat.ae.AeManaGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyBusBase;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEEnergyOutputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaBusBase;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaInputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEManaOutputBus;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEInventoryInputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
-import net.edwin.mmcecomplement.tile.TileFluxHatchBase;
-import net.edwin.mmcecomplement.tile.TileFluxInputHatch;
-import net.edwin.mmcecomplement.tile.TileFluxOutputHatch;
+import net.edwin.mmcecomplement.compat.flux.FluxGuiCompat;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
@@ -44,16 +27,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
-import sonar.fluxnetworks.common.core.ContainerCore;
 
 import javax.annotation.Nullable;
 
 /**
  * GUI handler for MMCE Complement.
  *
- * <p>Reuses Flux Networks' {@link ContainerCore} on the server and
- * {@link GuiFluxHatchHome} on the client for both the input and output
- * hatches — the GUIs are generic over {@link TileFluxHatchBase}.
+ * <p>Optional GUI implementations are delegated only after their dependency
+ * probes succeed, keeping this common Forge entry point safe to load.
  */
 public class GuiHandlerMMCE implements IGuiHandler {
 
@@ -61,40 +42,21 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-        if (id == MMCEComplement.GUI_FLUX_INPUT_HATCH && te instanceof TileFluxInputHatch) {
-            return new ContainerCore(player, (TileFluxInputHatch) te);
+        if (CompatMods.isFluxCompatLoaded()) {
+            Object gui = FluxGuiCompat.getServerGui(id, player, te);
+            if (gui != null) return gui;
         }
-        if (id == MMCEComplement.GUI_FLUX_OUTPUT_HATCH && te instanceof TileFluxOutputHatch) {
-            return new ContainerCore(player, (TileFluxOutputHatch) te);
+        if (CompatMods.isAeEnergyCompatLoaded()) {
+            Object gui = AeEnergyGuiCompat.getServerGui(id, player, te);
+            if (gui != null) return gui;
         }
-        if (CompatMods.isAeEnergyCompatLoaded()
-                && (id == MMCEComplement.GUI_ME_ENERGY_INPUT_BUS || id == MMCEComplement.GUI_ME_ENERGY_OUTPUT_BUS)
-                && te instanceof TileMEEnergyBusBase) {
-            return new ContainerMEEnergyBus(player, (TileMEEnergyBusBase) te);
+        if (CompatMods.isAeManaCompatLoaded()) {
+            Object gui = AeManaGuiCompat.getServerGui(id, player, te);
+            if (gui != null) return gui;
         }
-        if (CompatMods.isAeManaCompatLoaded()
-                && (id == MMCEComplement.GUI_ME_MANA_INPUT_BUS || id == MMCEComplement.GUI_ME_MANA_OUTPUT_BUS)
-                && te instanceof TileMEManaBusBase) {
-            return new ContainerMEManaBus(player, (TileMEManaBusBase) te);
-        }
-        if (CompatMods.isAeGasCompatLoaded()
-                && id == MMCEComplement.GUI_ME_INPUT_ASSEMBLY
-                && te instanceof TileMEInputAssembly) {
-            return new ContainerMEInputAssembly(
-                (TileMEInputAssembly) te, player);
-        }
-        if (CompatMods.isAeGasCompatLoaded()
-                && (id == MMCEComplement.GUI_ME_INVENTORY_INPUT_ASSEMBLY
-                    || id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY)
-                && te instanceof TileMEInputAssembly) {
-            return new ContainerMEInputAssembly(
-                (TileMEInputAssembly) te, player);
-        }
-        if (CompatMods.isAeGasCompatLoaded()
-                && id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
-                && te instanceof TileMEOutputAssembly) {
-            return new ContainerMEOutputAssembly(
-                (TileMEOutputAssembly) te, player);
+        if (CompatMods.isAeGasCompatLoaded()) {
+            Object gui = AeGasGuiCompat.getServerGui(id, player, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isAeItemCompatLoaded()
                 && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
@@ -171,41 +133,21 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Override
     public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-        if ((id == MMCEComplement.GUI_FLUX_INPUT_HATCH || id == MMCEComplement.GUI_FLUX_OUTPUT_HATCH)
-                && te instanceof TileFluxHatchBase) {
-            return new GuiFluxHatchHome(player, (TileFluxHatchBase) te);
+        if (CompatMods.isFluxCompatLoaded()) {
+            Object gui = FluxGuiCompat.getClientGui(id, player, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isAeEnergyCompatLoaded()) {
-            if (id == MMCEComplement.GUI_ME_ENERGY_INPUT_BUS && te instanceof TileMEEnergyInputBus) {
-                return new GuiMEEnergyBus(player, (TileMEEnergyBusBase) te);
-            }
-            if (id == MMCEComplement.GUI_ME_ENERGY_OUTPUT_BUS && te instanceof TileMEEnergyOutputBus) {
-                return new GuiMEEnergyBus(player, (TileMEEnergyBusBase) te);
-            }
+            Object gui = AeEnergyGuiCompat.getClientGui(id, player, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isAeManaCompatLoaded()) {
-            if (id == MMCEComplement.GUI_ME_MANA_INPUT_BUS && te instanceof TileMEManaInputBus) {
-                return new GuiMEManaBus(player, (TileMEManaBusBase) te);
-            }
-            if (id == MMCEComplement.GUI_ME_MANA_OUTPUT_BUS && te instanceof TileMEManaOutputBus) {
-                return new GuiMEManaBus(player, (TileMEManaBusBase) te);
-            }
+            Object gui = AeManaGuiCompat.getClientGui(id, player, te);
+            if (gui != null) return gui;
         }
-        if (CompatMods.isAeGasCompatLoaded()
-                && id == MMCEComplement.GUI_ME_INPUT_ASSEMBLY
-                && te instanceof TileMEInputAssembly) {
-            return new GuiMEInputAssembly((TileMEInputAssembly) te, player);
-        }
-        if (CompatMods.isAeGasCompatLoaded()
-                && (id == MMCEComplement.GUI_ME_INVENTORY_INPUT_ASSEMBLY
-                    || id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY)
-                && te instanceof TileMEInputAssembly) {
-            return new GuiMEInputAssembly((TileMEInputAssembly) te, player);
-        }
-        if (CompatMods.isAeGasCompatLoaded()
-                && id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
-                && te instanceof TileMEOutputAssembly) {
-            return new GuiMEOutputAssembly((TileMEOutputAssembly) te, player);
+        if (CompatMods.isAeGasCompatLoaded()) {
+            Object gui = AeGasGuiCompat.getClientGui(id, player, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isAeItemCompatLoaded()
                 && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
