@@ -1,6 +1,6 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.4.1** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.4.2** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
 
@@ -112,6 +112,20 @@ The registry ID is `me_pattern_provider_ii`. It keeps MMCE's network and memory-
 - the original Default, Blocking, Crafting Lock, Enhanced Blocking, and Enhanced Isolation Input modes;
 - compatibility with MMCE's **ME Mechanical Pattern Mirror** and Whimcraft 0.1.4's **ME Mechanical Pattern Provider Inventory Sharing Bus**. The sharing bus shares the public item/fluid handler; it does not split the 144 pattern slots or the isolated per-pattern inventories.
 
+### ME Connection Share Hatch (1.4.1+)
+
+The **ME Connection Share Hatch** (`me_connection_share_hatch`) lets ME hatches in the same formed machine share one external AE network connection. Put it in the machine structure and connect it to an ME cable. Unwired ME input/output buses, ME machinery assemblies, pattern providers, and ME Channel Input Hatches in that machine will then join the shared network without individual cable runs.
+
+Rules:
+
+1. The share hatch must be part of a formed machine and connected to a valid, powered AE network. It has dense connection capacity and consumes no channel itself.
+2. Sharing only applies to machine-local ME hatches that have no external network connection. A hatch already attached to another external AE network keeps its own connection and is not forcibly merged.
+3. Shared ordinary ME hatches still consume their normal channels. An ME Channel Input Hatch consumes the number requested by the running recipe. The share hatch replaces cabling; it does not provide free channels.
+4. A machine may contain multiple share hatches. They can act as duplicate entry points when connected to the same AE network, with duplicate channel usage accounted for. If they connect to different networks, recipe checks fail and running recipes pause with an ME-network-mismatch message.
+5. Connections refresh automatically after structure checks, disconnects, network rebuilds, or hatch removal. Temporary links created by sharing are removed when the machine is disassembled.
+
+A typical machine definition reserves one `mmce_complement:me_connection_share_hatch` in its casing. Other ME hatches only need to be components of the same structure. The player cables the share hatch, and all otherwise unwired hatches gain access to that network.
+
 ## ME Channel Input Hatch
 
 **ME Channel Input Hatch** (`me_channel_input_hatch`) connects directly to AE2 ME cables. It consumes no channel while idle and requests channels dynamically only while a recipe is running.
@@ -207,13 +221,15 @@ val modules = controller.moduleList;
 
 Attachment structure checks run synchronously with MMCE's main structure check, using the same schedule and thread. There is no independent per-tick attachment scan or change-listener polling path.
 
-## 1.4.0 summary
+## 1.4.x summary
 
 - Added unified marker, active-pulling, and permanent-reserve behavior to the ME item/fluid/gas/ore-dictionary inventory input buses.
 - Added the mixed ME Input, Inventory Input, Output, and Full Exposure Assemblies.
 - Added the ME Channel Input Hatch, JEI support, dynamic channel reservations, and CraftTweaker `.addMEChannelInput(int)`.
 - Added the Redstone Control, Redstone Signal Input, and Redstone Signal Output Hatches with named redstone-interface APIs.
 - Added the 144-slot ME Machinery Pattern Provider II with MMCE pattern-mirror and Whimcraft inventory-sharing compatibility.
+- Added the ME Connection Share Hatch, allowing one external AE network connection to serve otherwise unwired ME hatches in the same machine while preserving channel costs and cross-network conflict protection.
+- Input assemblies can serve item and fluid/gas requirements in the same recipe group; data input assemblies can additionally satisfy smart-data-interface requirements at the same time.
 - Updated Wireless Flux Hatch defaults to a 10,000 FE buffer and 800,000 FE/t transfer rate.
 - Fixed quadruple-fluid save/load capacity, Pattern Provider II GUI/material/interaction issues, ME assembly textures, and Redstone Control Hatch connection/signal handling.
 - Fixed Nova Engineering's optional Astral Sorcery compatibility path, which could query the infusion registry before it had been compiled and cause a startup exception.
