@@ -124,16 +124,21 @@ public abstract class MixinRecipeCraftingContext {
                     continue;
                 }
                 if (!(componentEntry.getKey()
-                    instanceof TileDataItemInputHatch)
-                    || componentEntry.getKey() instanceof TileItemInputAssemblyHatch) {
+                    instanceof TileDataItemInputHatch)) {
                     continue;
                 }
                 TileDataItemInputHatch hatch =
                     (TileDataItemInputHatch) componentEntry.getKey();
                 TileDataItemInputHatch.DataItemInterfaceProvider provider =
                     hatch.getDataProvider();
-                expanded.add(new ProcessingComponent<>(provider, provider,
-                    componentEntry.getValue().getTag()));
+                // The plain item input assembly intentionally has no smart
+                // data channel, but it still exposes the hybrid fluid tanks.
+                // Do not let that marker suppress registration of its fluid
+                // component when an item and fluid requirement share a hatch.
+                if (!(componentEntry.getKey() instanceof TileItemInputAssemblyHatch)) {
+                    expanded.add(new ProcessingComponent<>(provider, provider,
+                        componentEntry.getValue().getTag()));
+                }
                 expanded.add(new ProcessingComponent<>(
                     hatch.getFluidProvider(), hatch,
                     componentEntry.getValue().getTag()));
