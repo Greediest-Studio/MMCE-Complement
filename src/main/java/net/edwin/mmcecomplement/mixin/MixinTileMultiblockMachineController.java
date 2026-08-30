@@ -858,6 +858,24 @@ public abstract class MixinTileMultiblockMachineController
     @Unique
     private void mmceComplement$refreshBatchHatches(
         TileMultiblockMachineController controller) {
+        // Structure checks run on MMCE's worker pool. World/chunk lookups are
+        // main-thread-only in Minecraft 1.12; doing them here can crash while
+        // placing a Pattern Provider II (or any other component) as chunks
+        // are being rebuilt. Defer the scan to the server executor instead.
+        if (controller.getWorld() != null && !controller.getWorld().isRemote) {
+            final TileMultiblockMachineController target = controller;
+            net.minecraft.server.MinecraftServer server =
+                controller.getWorld().getMinecraftServer();
+            if (server != null) {
+                server.addScheduledTask(() ->
+                    mmceComplement$refreshBatchHatchesMainThread(target));
+            }
+        }
+    }
+
+    @Unique
+    private void mmceComplement$refreshBatchHatchesMainThread(
+        TileMultiblockMachineController controller) {
         World world = controller.getWorld();
         if (foundPattern == null || world == null) {
             mmceComplement$maxBatchTime = 0;
