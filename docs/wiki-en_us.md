@@ -241,9 +241,9 @@ mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
 - A modifier must directly follow a fluid or gas output. Multiple modifiers run in declaration order and are applied to output-space checks, parallel amount calculations, and final insertion.
 - See the detailed [fluid output modifier](fluid-output-modifier-zh_cn.md) and [gas output modifier](gas-output-modifier-zh_cn.md) references.
 
-### Fluid/gas preview NBT and gas tooltips
+### Fluid preview NBT and gas tooltips
 
-`.setPreViewNBT(IData)` is MMCE Complement's unified preview-NBT method. It can follow an item, fluid, or gas input/output to attach display-only NBT to its JEI preview:
+`.setPreViewNBT(IData)` can follow an item or fluid input/output to attach display-only NBT to its JEI preview:
 
 ```zenscript
 recipe
@@ -252,11 +252,10 @@ recipe
 
 recipe
     .addGasOutput(<gas:hydrogen> * 1000)
-    .setPreViewNBT({mode: "high_purity"})
     .setGasTooltip("Purity: high", "Compressed");
 ```
 
-Fluid NBT is rendered in the JEI fluid slot. Mekanism `GasStack` has no arbitrary-NBT support, so gas preview NBT is display metadata only and never changes matching or output. `.addGasTooltip(String...)` appends lines, while `.setGasTooltip(String...)` replaces tooltip lines previously added by this extension; both work on gas inputs and outputs. Use the unified `.setPreViewNBT(IData)` spelling; `.setPreviewNBT(IData)` is no longer provided.
+Fluid NBT is rendered in the JEI fluid slot and does not change matching or output. Gas components do not support `.setPreViewNBT(IData)`; Mekanism `GasStack` has no arbitrary-NBT support, so use the gas tooltip methods instead. `.addGasTooltip(String...)` appends lines, while `.setGasTooltip(String...)` replaces tooltip lines previously added by this extension; both work on gas inputs and outputs.
 
 See the detailed [fluid/gas preview NBT](preview-nbt-zh_cn.md) reference.
 

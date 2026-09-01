@@ -1,14 +1,9 @@
 package net.edwin.mmcecomplement.mixin;
 
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas;
-import mekanism.api.gas.GasStack;
-import net.edwin.mmcecomplement.preview.PreviewNBTData;
 import net.edwin.mmcecomplement.preview.GasTooltipData;
-import net.minecraft.nbt.NBTTagCompound;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,30 +12,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.ArrayList;
 
-/** Adds display-only preview NBT to MMCE's Mekanism gas requirement. */
+/** Adds custom JEI tooltip lines to MMCE's Mekanism gas requirement. */
 @Pseudo
 @Mixin(targets =
     "hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas",
     remap = false)
-public abstract class MixinRequirementGasPreviewNBT
-    implements PreviewNBTData, GasTooltipData {
-
-    @Unique
-    private NBTTagCompound mmceComplement$previewNBT;
+public abstract class MixinRequirementGasPreviewNBT implements GasTooltipData {
 
     @Unique
     private final List<String> mmceComplement$gasTooltip = new ArrayList<>();
-
-    @Override
-    public void mmceComplement$setPreviewNBT(NBTTagCompound tag) {
-        mmceComplement$previewNBT = tag == null ? null : tag.copy();
-    }
-
-    @Override
-    public NBTTagCompound mmceComplement$getPreviewNBT() {
-        return mmceComplement$previewNBT == null
-            ? null : mmceComplement$previewNBT.copy();
-    }
 
     @Override
     public void mmceComplement$addGasTooltip(String line) {
@@ -62,10 +42,8 @@ public abstract class MixinRequirementGasPreviewNBT
     @Inject(method = "deepCopyModified(Ljava/util/List;)"
         + "Lhellfirepvp/modularmachinery/common/crafting/requirement/"
         + "RequirementGas;", at = @At("RETURN"))
-    private void mmceComplement$copyPreviewNBT(
+    private void mmceComplement$copyGasTooltip(
         List<?> modifiers, CallbackInfoReturnable<RequirementGas> cir) {
-        PreviewNBTData copy = (PreviewNBTData) (Object) cir.getReturnValue();
-        copy.mmceComplement$setPreviewNBT(mmceComplement$previewNBT);
         GasTooltipData tooltipCopy = (GasTooltipData) (Object) cir.getReturnValue();
         tooltipCopy.mmceComplement$clearGasTooltip();
         for (String line : mmceComplement$gasTooltip) {

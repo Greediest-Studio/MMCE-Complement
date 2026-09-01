@@ -241,9 +241,9 @@ mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
 - 修改器必须紧跟对应的流体或气体输出；多个修改器按声明顺序执行，并参与输出空间预检、并行数量计算和最终写入。
 - 详细说明：[流体输出修改器](fluid-output-modifier-zh_cn.md)、[气体输出修改器](gas-output-modifier-zh_cn.md)。
 
-### 流体/气体预览 NBT 与气体 Tooltip
+### 流体预览 NBT 与气体 Tooltip
 
-`.setPreViewNBT(IData)` 可用于紧随物品、流体或气体输入/输出之后，为 JEI 预览设置显示 NBT：
+`.setPreViewNBT(IData)` 可用于紧随物品或流体输入/输出之后，为 JEI 预览设置显示 NBT：
 
 ```zenscript
 recipe
@@ -252,11 +252,10 @@ recipe
 
 recipe
     .addGasOutput(<gas:hydrogen> * 1000)
-    .setPreViewNBT({mode: "high_purity"})
     .setGasTooltip("纯度：高", "经过压缩处理");
 ```
 
-流体 NBT 会显示在 JEI 流体槽中；Mekanism `GasStack` 不支持任意 NBT，因此气体 NBT 仅作为预览元数据，不影响实际匹配或输出。`.addGasTooltip(String...)` 追加提示行，`.setGasTooltip(String...)` 覆盖此前由本扩展添加的提示行；两者均支持气体输入和输出组件。预览 NBT 统一使用 `.setPreViewNBT(IData)`，不再区分另一种拼写。
+流体 NBT 会显示在 JEI 流体槽中，不改变实际输入匹配或输出内容。气体不支持 `.setPreViewNBT(IData)`；Mekanism `GasStack` 不支持任意 NBT，气体仅提供 Tooltip API。`.addGasTooltip(String...)` 追加提示行，`.setGasTooltip(String...)` 覆盖此前由本扩展添加的提示行；两者均支持气体输入和输出组件。
 
 详细说明：[流体/气体预览 NBT](preview-nbt-zh_cn.md)。
 

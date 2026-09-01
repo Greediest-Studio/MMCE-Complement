@@ -18,7 +18,6 @@ import net.edwin.mmcecomplement.fluid.FluidModifierRequirement;
 import net.edwin.mmcecomplement.gas.GasModifierRequirement;
 import net.edwin.mmcecomplement.integration.crafttweaker.AdvancedGasModifierCT;
 import net.edwin.mmcecomplement.integration.crafttweaker.AdvancedFluidModifierCT;
-import net.edwin.mmcecomplement.preview.PreviewNBTData;
 import net.edwin.mmcecomplement.preview.GasTooltipData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -137,7 +136,7 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
         return (RecipePrimer) (Object) this;
     }
 
-    /** Applies display-only NBT to the most recent fluid or gas component. */
+    /** Applies display-only NBT to the most recent fluid component. */
     @Unique
     private void mmceComplement$applyPreviewNBT(crafttweaker.api.data.IData data) {
         NBTTagCompound tag = CraftTweakerMC.getNBTCompound(data);
@@ -145,14 +144,10 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
             hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid) {
             ((hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid)
                 lastComponent).setDisplayNBTTag(tag);
-        } else if (lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas
-            && lastComponent instanceof PreviewNBTData) {
-            ((PreviewNBTData) (Object) lastComponent).mmceComplement$setPreviewNBT(tag);
         } else {
             crafttweaker.CraftTweakerAPI.logWarning(
                 "[MMCE Complement] setPreViewNBT(IData) can only be applied "
-                    + "to a fluid or gas component.");
+                    + "to a fluid component (or an item component via MMCE).");
         }
     }
 
@@ -194,15 +189,13 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
         return (RecipePrimer) (Object) this;
     }
 
-    /** Extends MMCE's canonical `setPreViewNBT` method to fluid and gas components. */
+    /** Extends MMCE's canonical `setPreViewNBT` method to fluid components. */
     @Inject(method = "setPreViewNBT", at = @At("HEAD"), cancellable = true)
     private void mmceComplement$setPreviewNBT(
         crafttweaker.api.data.IData data,
         org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<RecipePrimer> cir) {
         if (lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid
-            || lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas) {
+            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid) {
             mmceComplement$applyPreviewNBT(data);
             cir.setReturnValue((RecipePrimer) (Object) this);
         }
