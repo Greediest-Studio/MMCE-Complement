@@ -1,6 +1,6 @@
 # MMCE Complement Wiki（中文）
 
-当前文档对应 MMCE Complement **1.4.2**，运行环境为 Minecraft 1.12.2。
+当前文档对应 MMCE Complement **1.4.5**，运行环境为 Minecraft 1.12.2。
 
 [English Wiki](wiki-en_us.md) · [附属模块指南](attachment-modules-zh_cn.md)
 
@@ -218,6 +218,47 @@ val modules = controller.moduleList;
 ```
 
 `addMEChannelInput(int)`、`RedstoneInterface.newRedstone(...).build()`、`controller.getRedstone(...)` 和 `controller.setRedstone(...)` 只在相应集成可用时才有实际效果。
+
+### 配方输出修改器
+
+MMCE Complement 扩展了 `mods.modularmachinery.RecipePrimer`，可在对应输出后立即添加 CraftTweaker 修改器：
+
+```zenscript
+mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
+    .addFluidOutput(<liquid:water> * 1000)
+    .addFluidModifier(function(controller, liquid) {
+        return <liquid:lava> * (liquid.amount * 2);
+    })
+    .addGasOutput(<gas:hydrogen> * 1000)
+    .addGasModifier(function(controller, gas) {
+        return <gas:oxygen> * (gas.amount * 2);
+    })
+    .build();
+```
+
+- `.addFluidModifier(function(controller, liquid) as ILiquidStack)` 修改流体输出的种类、数量和 NBT；返回 `null` 或非正数量会取消该输出。
+- `.addGasModifier(function(controller, gas))` 修改气体输出的种类和数量；气体参数/返回值在 ZenScript 中表现为 `IIngredient`，运行时必须是 Mekanism `IGasStack`。
+- 修改器必须紧跟对应的流体或气体输出；多个修改器按声明顺序执行，并参与输出空间预检、并行数量计算和最终写入。
+- 详细说明：[流体输出修改器](fluid-output-modifier-zh_cn.md)、[气体输出修改器](gas-output-modifier-zh_cn.md)。
+
+### 流体/气体预览 NBT 与气体 Tooltip
+
+`.setPreViewNBT(IData)` 可用于紧随物品、流体或气体输入/输出之后，为 JEI 预览设置显示 NBT：
+
+```zenscript
+recipe
+    .addFluidOutput(<liquid:water> * 1000)
+    .setPreViewNBT({Potion: "healing"});
+
+recipe
+    .addGasOutput(<gas:hydrogen> * 1000)
+    .setPreViewNBT({mode: "high_purity"})
+    .setGasTooltip("纯度：高", "经过压缩处理");
+```
+
+流体 NBT 会显示在 JEI 流体槽中；Mekanism `GasStack` 不支持任意 NBT，因此气体 NBT 仅作为预览元数据，不影响实际匹配或输出。`.addGasTooltip(String...)` 追加提示行，`.setGasTooltip(String...)` 覆盖此前由本扩展添加的提示行；两者均支持气体输入和输出组件。预览 NBT 统一使用 `.setPreViewNBT(IData)`，不再区分另一种拼写。
+
+详细说明：[流体/气体预览 NBT](preview-nbt-zh_cn.md)。
 
 附属模块结构检查与 MMCE 主结构使用相同的同步检查流程、调度和线程，不再存在独立的逐 tick 附属区域扫描或变化监听轮询。
 

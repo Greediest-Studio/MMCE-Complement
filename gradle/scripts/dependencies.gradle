@@ -45,6 +45,8 @@ dependencies {
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
     // API only when Mekanism is installed, matching MMCE's native fluid hatches.
     compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
+    // Compile the gas-modifier tests against the same optional API.
+    testCompileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
     // Optional gas storage channel used by MMCE's ME gas input bus.
     compileOnly rfg.deobf('curse.maven:mekanism-energistics-1027681:5408319')
     // MMCE's public fluid-component hierarchy references Mekanism API types,

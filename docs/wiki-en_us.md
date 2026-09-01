@@ -1,6 +1,6 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.4.2** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.4.5** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
 
@@ -218,6 +218,47 @@ val modules = controller.moduleList;
 ```
 
 `addMEChannelInput(int)`, `RedstoneInterface.newRedstone(...).build()`, `controller.getRedstone(...)`, and `controller.setRedstone(...)` have an effect only when the corresponding integration is available.
+
+### Recipe output modifiers
+
+MMCE Complement extends `mods.modularmachinery.RecipePrimer` with modifiers that must immediately follow the corresponding output:
+
+```zenscript
+mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
+    .addFluidOutput(<liquid:water> * 1000)
+    .addFluidModifier(function(controller, liquid) {
+        return <liquid:lava> * (liquid.amount * 2);
+    })
+    .addGasOutput(<gas:hydrogen> * 1000)
+    .addGasModifier(function(controller, gas) {
+        return <gas:oxygen> * (gas.amount * 2);
+    })
+    .build();
+```
+
+- `.addFluidModifier(function(controller, liquid) as ILiquidStack)` changes the fluid type, amount, and NBT; returning `null` or a non-positive amount cancels that output.
+- `.addGasModifier(function(controller, gas))` changes the gas type and amount. In ZenScript the argument and return value are exposed as `IIngredient` for optional-dependency compatibility, but the runtime value must be Mekanism's `IGasStack`.
+- A modifier must directly follow a fluid or gas output. Multiple modifiers run in declaration order and are applied to output-space checks, parallel amount calculations, and final insertion.
+- See the detailed [fluid output modifier](fluid-output-modifier-zh_cn.md) and [gas output modifier](gas-output-modifier-zh_cn.md) references.
+
+### Fluid/gas preview NBT and gas tooltips
+
+`.setPreViewNBT(IData)` is MMCE Complement's unified preview-NBT method. It can follow an item, fluid, or gas input/output to attach display-only NBT to its JEI preview:
+
+```zenscript
+recipe
+    .addFluidOutput(<liquid:water> * 1000)
+    .setPreViewNBT({Potion: "healing"});
+
+recipe
+    .addGasOutput(<gas:hydrogen> * 1000)
+    .setPreViewNBT({mode: "high_purity"})
+    .setGasTooltip("Purity: high", "Compressed");
+```
+
+Fluid NBT is rendered in the JEI fluid slot. Mekanism `GasStack` has no arbitrary-NBT support, so gas preview NBT is display metadata only and never changes matching or output. `.addGasTooltip(String...)` appends lines, while `.setGasTooltip(String...)` replaces tooltip lines previously added by this extension; both work on gas inputs and outputs. Use the unified `.setPreViewNBT(IData)` spelling; `.setPreviewNBT(IData)` is no longer provided.
+
+See the detailed [fluid/gas preview NBT](preview-nbt-zh_cn.md) reference.
 
 Attachment structure checks run synchronously with MMCE's main structure check, using the same schedule and thread. There is no independent per-tick attachment scan or change-listener polling path.
 
