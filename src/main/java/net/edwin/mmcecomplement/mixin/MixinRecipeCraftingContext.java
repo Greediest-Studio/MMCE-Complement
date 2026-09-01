@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.cycle.CycleComponentHandler;
 import net.edwin.mmcecomplement.cycle.CycleRuntime;
+import net.edwin.mmcecomplement.catalyst.CatalystRuntime;
 import net.edwin.mmcecomplement.mechannel.MEChannelReservationLifecycle;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
@@ -17,6 +18,7 @@ import net.edwin.mmcecomplement.tile.TileSelfCycleAssemblyHatch;
 import net.minecraft.tileentity.TileEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -30,7 +32,30 @@ import java.util.Map;
 
 /** Allows a Batch Hatch to batch recipes that did not opt into normal parallelism. */
 @Mixin(value = RecipeCraftingContext.class, remap = false)
-public abstract class MixinRecipeCraftingContext {
+public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Context {
+
+    @Unique private int mmceComplement$catalystsUsed;
+
+    @Override
+    public boolean tryAcquireCatalyst(int max) {
+        if (max <= 0 || mmceComplement$catalystsUsed >= max) return false;
+        mmceComplement$catalystsUsed++;
+        return true;
+    }
+
+    @Override
+    public void releaseCatalyst() {
+        if (mmceComplement$catalystsUsed > 0) mmceComplement$catalystsUsed--;
+    }
+
+    @Inject(method = {
+        "canStartCrafting()Lhellfirepvp/modularmachinery/common/crafting/helper/RecipeCraftingContext$CraftingCheckResult;",
+        "canRestartCrafting"
+    }, at = @At("HEAD"))
+    private void mmceComplement$beginCatalystSelection(
+        CallbackInfoReturnable<RecipeCraftingContext.CraftingCheckResult> cir) {
+        mmceComplement$catalystsUsed = 0;
+    }
 
     @Shadow
     private TileMultiblockMachineController controller;
@@ -56,6 +81,7 @@ public abstract class MixinRecipeCraftingContext {
     @Inject(method = {"reset", "resetAll"}, at = @At("HEAD"))
     private void mmceComplement$clearResetSelfCycle(
         CallbackInfoReturnable<RecipeCraftingContext> cir) {
+        mmceComplement$catalystsUsed = 0;
         CycleRuntime.clear((RecipeCraftingContext) (Object) this);
         MEChannelReservationLifecycle.release(
             (RecipeCraftingContext) (Object) this);

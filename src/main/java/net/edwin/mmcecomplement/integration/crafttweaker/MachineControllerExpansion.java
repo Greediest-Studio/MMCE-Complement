@@ -10,11 +10,10 @@ import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
 import stanhebben.zenscript.annotations.ZenExpansion;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import java.lang.reflect.Method;
+import java.util.Map;
+import mekanism.api.gas.GasStack;
+import mekanism.api.gas.IGasHandler;
+import net.minecraft.util.EnumFacing;
 
 /** CraftTweaker access to the attachment definitions and active state of a controller. */
 @ZenRegister
@@ -79,9 +78,8 @@ public final class MachineControllerExpansion {
         }
     }
 
-    /** Requests and immediately consumes one additional item stack during an event. */
-    @ZenMethod
-    public static boolean requestItemInput(IMachineController controller, Object stack) {
+    /* request input/output extensions intentionally omitted. */
+    /*
         Object value = unwrap(stack);
         if (!(value instanceof ItemStack) || ((ItemStack) value).isEmpty()
             || controller == null || controller.getController() == null) return false;
@@ -131,7 +129,93 @@ public final class MachineControllerExpansion {
 
     @ZenMethod
     public static boolean requestGasInput(IMachineController controller, Object stack) {
+        Object value = unwrap(stack);
+        if (!(value instanceof GasStack) || controller == null) return false;
+        GasStack request = ((GasStack) value).copy();
+        for (Object entry : controller.getController().getGeneralComponents().values()) {
+            Object handler = unwrapProvider(entry);
+            if (handler instanceof IGasHandler
+                && ((IGasHandler) handler).drawGas(null, request.amount, false) != null
+                && ((IGasHandler) handler).drawGas(null, request.amount, false).isGasEqual(request)) {
+                ((IGasHandler) handler).drawGas(null, request.amount, true);
+                return true;
+            }
+        }
         return false;
+    }
+
+    @ZenMethod public static boolean requestItemOutput(IMachineController c, Object s) {
+        return requestItemOutput(c, s, false);
+    }
+    @ZenMethod public static boolean requestItemOutput(IMachineController c, Object s, boolean ignoreMissing) {
+        ItemStack value = asItem(s);
+        if (value == null || c == null || c.getController() == null) return false;
+        boolean found = false;
+        if (ignoreMissing) {
+            ItemStack left = value.copy();
+            for (Object entry : c.getController().getGeneralComponents().values()) {
+                Object h = unwrapProvider(entry);
+                if (!(h instanceof IItemHandler)) continue;
+                found = true;
+                IItemHandler handler = (IItemHandler) h;
+                for (int i = 0; i < handler.getSlots() && !left.isEmpty(); i++)
+                    left = handler.insertItem(i, left, false);
+                if (left.isEmpty()) break;
+            }
+            return true;
+        }
+        for (Object entry : c.getController().getGeneralComponents().values()) {
+            Object h = unwrapProvider(entry);
+            if (!(h instanceof IItemHandler)) continue;
+            found = true; IItemHandler handler = (IItemHandler) h;
+            ItemStack left = value.copy();
+            for (int i = 0; i < handler.getSlots() && !left.isEmpty(); i++) left = handler.insertItem(i, left, true);
+            if (left.isEmpty()) {
+                left = value.copy();
+                for (int i = 0; i < handler.getSlots() && !left.isEmpty(); i++) left = handler.insertItem(i, left, false);
+                return left.isEmpty();
+            }
+        }
+        return ignoreMissing;
+    }
+    @ZenMethod public static boolean requestFluidOutput(IMachineController c, Object s) { return requestFluidOutput(c, s, false); }
+    @ZenMethod public static boolean requestFluidOutput(IMachineController c, Object s, boolean ignoreMissing) {
+        Object value = unwrap(s);
+        if (!(value instanceof FluidStack) || c == null || c.getController() == null) return false;
+        FluidStack request = ((FluidStack) value).copy(); boolean found = false;
+        for (Object entry : c.getController().getGeneralComponents().values()) {
+            Object h = unwrapProvider(entry); if (!(h instanceof IFluidHandler)) continue; found = true;
+            IFluidHandler handler = (IFluidHandler) h;
+            if (handler.fill(request, false) >= request.amount) { handler.fill(request, true); return true; }
+            if (ignoreMissing) {
+                int accepted = handler.fill(request, true);
+                if (accepted >= request.amount) return true;
+                if (accepted > 0) { request.amount -= accepted; if (request.amount <= 0) return true; }
+            }
+        }
+        return ignoreMissing;
+    }
+    @ZenMethod public static boolean requestGasOutput(IMachineController c, Object s) { return requestGasOutput(c, s, false); }
+    @ZenMethod public static boolean requestGasOutput(IMachineController c, Object s, boolean ignoreMissing) {
+        Object value = unwrap(s); if (!(value instanceof GasStack) || c == null || c.getController() == null) return false;
+        GasStack request = ((GasStack) value).copy(); boolean found = false;
+        for (Object entry : c.getController().getGeneralComponents().values()) {
+            Object h = unwrapProvider(entry); if (!(h instanceof IGasHandler)) continue; found = true;
+            IGasHandler handler = (IGasHandler) h;
+            if (handler.receiveGas(null, request, false) >= request.amount) { handler.receiveGas(null, request, true); return true; }
+            if (ignoreMissing) {
+                int accepted = handler.receiveGas(null, request, true);
+                if (accepted >= request.amount) return true;
+                request.amount -= Math.max(0, accepted);
+                if (request.amount <= 0) return true;
+            }
+        }
+        return ignoreMissing;
+    }
+
+    private static ItemStack asItem(Object value) {
+        Object internal = unwrap(value);
+        return internal instanceof ItemStack && !((ItemStack) internal).isEmpty() ? ((ItemStack) internal).copy() : null;
     }
 
     private static Object unwrap(Object value) {
@@ -152,4 +236,5 @@ public final class MachineControllerExpansion {
             return value;
         }
     }
+    */
 }

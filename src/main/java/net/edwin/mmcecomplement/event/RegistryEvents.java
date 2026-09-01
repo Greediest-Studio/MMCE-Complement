@@ -1,6 +1,7 @@
 package net.edwin.mmcecomplement.event;
 
 import net.edwin.mmcecomplement.Tags;
+import net.edwin.mmcecomplement.catalyst.CatalystTypes;
 import net.edwin.mmcecomplement.block.BlockCasing;
 import net.edwin.mmcecomplement.block.BlockDataItemInputHatch;
 import net.edwin.mmcecomplement.block.BlockItemInputAssemblyHatch;
@@ -98,6 +99,7 @@ public final class RegistryEvents {
     public static void onRequirementTypeRegister(RegistryEvent.Register event) {
         if (event.getGenericType() == RequirementType.class) {
             event.getRegistry().register(ModMEChannelTypes.REQUIREMENT);
+            CatalystTypes.register(event.getRegistry());
         }
     }
 

@@ -19,6 +19,7 @@
 		"MixinRecipeThread",
 		"MixinRecipeModifier",
 		"MixinRequirementItemCycle",
+		"MixinRequirementCatalystLimit",
 		"MixinRequirementFluidCycle",
 		"MixinRequirementGasCycle",
 		"MixinRecipeCraftingContext",
