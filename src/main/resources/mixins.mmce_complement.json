@@ -29,6 +29,7 @@
 	],
 	"server": [],
 	"client": [
+		"MixinGuiUtilRenderComponents",
 		"MixinGuiMEItemInputBusTitle",
 		"MixinGuiMEItemBusMarkerCount",
 		"MixinGuiMEFluidInputBusTitle",
