@@ -3,7 +3,8 @@ package net.edwin.mmcecomplement.compat.ae.block;
 import appeng.api.implementations.items.IMemoryCard;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import net.edwin.mmcecomplement.MMCEComplement;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
+import net.edwin.mmcecomplement.compat.ae.AeFullExposureTileFactory;
+import github.kasuminova.mmce.common.tile.SettingsTransfer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -29,7 +30,7 @@ public class BlockMEFullExposureAssembly extends BlockMEItemInputBus {
     @Override
     public TileEntity createTileEntity(@Nonnull World world,
                                        @Nonnull IBlockState state) {
-        return new TileMEFullExposureAssembly();
+        return AeFullExposureTileFactory.create();
     }
 
     @Override
@@ -38,13 +39,14 @@ public class BlockMEFullExposureAssembly extends BlockMEItemInputBus {
         EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (world.isRemote) return true;
         TileEntity tile = world.getTileEntity(pos);
-        if (!(tile instanceof TileMEFullExposureAssembly)) return true;
-        TileMEFullExposureAssembly assembly =
-            (TileMEFullExposureAssembly) tile;
+        if (tile == null || !AeFullExposureTileFactory.isFullExposureTile(tile)) return true;
         ItemStack held = player.getHeldItem(hand);
         if (held.getItem() instanceof IMemoryCard
-            && handleSettingsTransfer(assembly, (IMemoryCard) held.getItem(),
-                player, held)) return true;
+            && tile instanceof SettingsTransfer
+            && handleSettingsTransfer((SettingsTransfer) tile,
+                (IMemoryCard) held.getItem(), player, held)) {
+            return true;
+        }
         player.openGui(MMCEComplement.instance,
             MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY, world,
             pos.getX(), pos.getY(), pos.getZ());
@@ -61,9 +63,9 @@ public class BlockMEFullExposureAssembly extends BlockMEItemInputBus {
         Item item = Item.getItemFromBlock(this);
         if (item != null) {
             ItemStack drop = new ItemStack(item);
-            if (tile instanceof TileMEFullExposureAssembly) {
+            if (AeFullExposureTileFactory.isFullExposureTile(tile)) {
                 NBTTagCompound tag = new NBTTagCompound();
-                ((TileMEFullExposureAssembly) tile).writeDropNBT(tag);
+                AeFullExposureTileFactory.writeDropNBT(tile, tag);
                 drop.setTagCompound(tag);
             }
             spawnAsEntity(world, pos, drop);
@@ -76,8 +78,8 @@ public class BlockMEFullExposureAssembly extends BlockMEItemInputBus {
         @Nullable EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
         TileEntity tile = world.getTileEntity(pos);
-        if (tile instanceof TileMEFullExposureAssembly && stack.hasTagCompound()) {
-            ((TileMEFullExposureAssembly) tile).readDropNBT(stack.getTagCompound());
+        if (AeFullExposureTileFactory.isFullExposureTile(tile) && stack.hasTagCompound()) {
+            AeFullExposureTileFactory.readDropNBT(tile, stack.getTagCompound());
         }
     }
 }

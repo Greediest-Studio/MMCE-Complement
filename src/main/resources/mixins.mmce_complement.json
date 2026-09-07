@@ -22,10 +22,6 @@
 		"MixinRequirementCatalystLimit",
 		"MixinRequirementFluidCycle",
 		"MixinRequirementFluidModifier",
-		"MixinRequirementGasCycle",
-		"MixinRequirementGasModifier",
-		"MixinRequirementGasPreviewNBT",
-		"MixinJEIComponentGasPreviewNBT",
 		"MixinRecipeCraftingContext",
 		"MixinInfusionRecipeRegistryCompile",
 		"MixinTileFactoryController",
@@ -36,7 +32,6 @@
 		"MixinGuiMEItemInputBusTitle",
 		"MixinGuiMEItemBusMarkerCount",
 		"MixinGuiMEFluidInputBusTitle",
-		"MixinGuiMEGasInputBusTitle",
 		"MixinMachineStructurePreviewPanel",
 		"MixinWorldSceneRendererWidget"
 	]

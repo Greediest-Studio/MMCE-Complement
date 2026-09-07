@@ -1,6 +1,6 @@
 # MMCE Complement Wiki（中文）
 
-当前文档对应 MMCE Complement **1.4.5**，运行环境为 Minecraft 1.12.2。
+当前文档对应 MMCE Complement **1.4.6**，运行环境为 Minecraft 1.12.2。
 
 [English Wiki](wiki-en_us.md) · [附属模块指南](attachment-modules-zh_cn.md)
 

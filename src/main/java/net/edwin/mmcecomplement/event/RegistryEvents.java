@@ -32,6 +32,7 @@ import net.edwin.mmcecomplement.block.BlockNineFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.AeEnergyRegistryCompat;
 import net.edwin.mmcecomplement.compat.ae.AeGasRegistryCompat;
+import net.edwin.mmcecomplement.compat.ae.AeFullExposureRegistryCompat;
 import net.edwin.mmcecomplement.compat.ae.AeManaRegistryCompat;
 import net.edwin.mmcecomplement.compat.flux.FluxRegistryCompat;
 import net.edwin.mmcecomplement.compat.mekanism.MekanismTileRegistryCompat;
@@ -274,6 +275,7 @@ public final class RegistryEvents {
         }
 
         if (CompatMods.isAeItemCompatLoaded()) {
+            AeFullExposureRegistryCompat.registerBlock(event.getRegistry());
             ModBlocks.ME_PATTERN_PROVIDER_II =
                 new BlockMEPatternProviderII();
             ModBlocks.ME_PATTERN_PROVIDER_II.setRegistryName(
@@ -546,6 +548,9 @@ public final class RegistryEvents {
             registerMEItemBlock(event, ModBlocks.ME_INPUT_ASSEMBLY);
             registerMEItemBlock(event, ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
             registerMEItemBlock(event, ModBlocks.ME_OUTPUT_ASSEMBLY);
+        }
+        if (CompatMods.isAeItemCompatLoaded()
+            && ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY != null) {
             registerMEItemBlock(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         }
     }
@@ -613,6 +618,9 @@ public final class RegistryEvents {
             registerBlockItemModel(ModBlocks.ME_INPUT_ASSEMBLY);
             registerBlockItemModel(ModBlocks.ME_INVENTORY_INPUT_ASSEMBLY);
             registerBlockItemModel(ModBlocks.ME_OUTPUT_ASSEMBLY);
+        }
+        if (CompatMods.isAeItemCompatLoaded()
+            && ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY != null) {
             registerBlockItemModel(ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         }
         if (CompatMods.isAeManaCompatLoaded()) {

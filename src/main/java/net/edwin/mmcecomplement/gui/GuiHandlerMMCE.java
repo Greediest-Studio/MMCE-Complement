@@ -8,6 +8,9 @@ import net.edwin.mmcecomplement.compat.ae.AeManaGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssemblyFallback;
+import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEFullExposureFallback;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEFullExposureFallback;
 import net.edwin.mmcecomplement.compat.flux.FluxGuiCompat;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
@@ -42,6 +45,11 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+        if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
+                && te instanceof TileMEFullExposureAssemblyFallback) {
+            return new ContainerMEFullExposureFallback(
+                (TileMEFullExposureAssemblyFallback) te, player);
+        }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getServerGui(id, player, te);
             if (gui != null) return gui;
@@ -133,6 +141,11 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Override
     public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+        if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
+                && te instanceof TileMEFullExposureAssemblyFallback) {
+            return new GuiMEFullExposureFallback(
+                (TileMEFullExposureAssemblyFallback) te, player);
+        }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getClientGui(id, player, te);
             if (gui != null) return gui;

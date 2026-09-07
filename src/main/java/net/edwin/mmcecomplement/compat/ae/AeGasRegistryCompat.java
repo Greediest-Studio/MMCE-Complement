@@ -1,12 +1,10 @@
 package net.edwin.mmcecomplement.compat.ae;
 
 import net.edwin.mmcecomplement.Tags;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEGasInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEInputAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEInventoryInputAssembly;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOutputAssembly;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEGasInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEInputAssembly;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEInventoryInputAssembly;
@@ -41,10 +39,6 @@ public final class AeGasRegistryCompat {
         register(registry, ModBlocks.ME_OUTPUT_ASSEMBLY,
             TileMEOutputAssembly.class, "me_output_assembly");
 
-        ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY =
-            new BlockMEFullExposureAssembly();
-        register(registry, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY,
-            TileMEFullExposureAssembly.class, "me_full_exposure_assembly");
     }
 
     private static void register(IForgeRegistry<Block> registry, Block block,

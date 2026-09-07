@@ -10,19 +10,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
-import mekanism.common.integration.crafttweaker.gas.IGasStack;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.edwin.mmcecomplement.catalyst.RequirementFluidCatalyst;
-import net.edwin.mmcecomplement.catalyst.RequirementGasCatalyst;
 import net.edwin.mmcecomplement.fluid.FluidModifierRequirement;
-import net.edwin.mmcecomplement.gas.GasModifierRequirement;
-import net.edwin.mmcecomplement.integration.crafttweaker.AdvancedGasModifierCT;
 import net.edwin.mmcecomplement.integration.crafttweaker.AdvancedFluidModifierCT;
-import net.edwin.mmcecomplement.preview.GasTooltipData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
-import mekanism.api.gas.GasStack;
-import net.minecraftforge.fml.common.Optional;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -67,18 +60,6 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
         return (RecipePrimer) (Object) this;
     }
 
-    @ZenMethod
-    @Optional.Method(modid = "mekanism")
-    public RecipePrimer addGasCatalystInput(IGasStack gas, String[] tips, RecipeModifier[] mods) {
-        if (gas != null && gas.getInternal() instanceof GasStack) {
-            RequirementGasCatalyst c = new RequirementGasCatalyst((GasStack) gas.getInternal());
-            if (tips != null) for (String tip : tips) c.addTooltip(tip);
-            if (mods != null) for (RecipeModifier mod : mods) c.addModifier(mod);
-            appendComponent(c);
-        }
-        return (RecipePrimer) (Object) this;
-    }
-
     /** Adds a controller-aware modifier to the most recent fluid output. */
     @ZenMethod
     public RecipePrimer addFluidModifier(AdvancedFluidModifierCT modifier) {
@@ -104,38 +85,6 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
         return (RecipePrimer) (Object) this;
     }
 
-    /** Adds a controller-aware modifier to the most recent gas output. */
-    @ZenMethod
-    @Optional.Method(modid = "mekanism")
-    public RecipePrimer addGasModifier(AdvancedGasModifierCT modifier) {
-        if (modifier == null) {
-            crafttweaker.CraftTweakerAPI.logWarning(
-                "[MMCE Complement] addGasModifier requires a non-null "
-                    + "modifier function!");
-        } else if (lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas
-            && lastComponent.getActionType()
-                == hellfirepvp.modularmachinery.common.machine.IOType.OUTPUT) {
-            ((GasModifierRequirement) (Object) lastComponent)
-                .mmceComplement$addGasModifier((controller, stack) -> {
-                    crafttweaker.api.item.IIngredient modified =
-                        modifier.apply(controller,
-                            new mekanism.common.integration.crafttweaker.gas.CraftTweakerGasStack(
-                                stack));
-                    if (modified == null
-                        || !(modified.getInternal() instanceof GasStack)) {
-                        return null;
-                    }
-                    return ((GasStack) modified.getInternal()).copy();
-                });
-        } else {
-            crafttweaker.CraftTweakerAPI.logWarning(
-                "[MMCE Complement] addGasModifier(AdvancedGasModifier) "
-                    + "can only be applied to a gas output!");
-        }
-        return (RecipePrimer) (Object) this;
-    }
-
     /** Applies display-only NBT to the most recent fluid component. */
     @Unique
     private void mmceComplement$applyPreviewNBT(crafttweaker.api.data.IData data) {
@@ -149,44 +98,6 @@ public abstract class MixinRecipePrimer implements ModuleRecipeData {
                 "[MMCE Complement] setPreViewNBT(IData) can only be applied "
                     + "to a fluid component (or an item component via MMCE).");
         }
-    }
-
-    /** Adds custom lines to the JEI tooltip of the most recent gas component. */
-    @ZenMethod
-    @Optional.Method(modid = "mekanism")
-    public RecipePrimer addGasTooltip(String... lines) {
-        if (lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas
-            && lastComponent instanceof GasTooltipData) {
-            GasTooltipData tooltip = (GasTooltipData) (Object) lastComponent;
-            if (lines != null) {
-                for (String line : lines) {
-                    tooltip.mmceComplement$addGasTooltip(line);
-                }
-            }
-        } else {
-            crafttweaker.CraftTweakerAPI.logWarning(
-                "[MMCE Complement] addGasTooltip(String...) can only be "
-                    + "applied to a gas component.");
-        }
-        return (RecipePrimer) (Object) this;
-    }
-
-    /** Replaces existing custom lines on the most recent gas component. */
-    @ZenMethod
-    @Optional.Method(modid = "mekanism")
-    public RecipePrimer setGasTooltip(String... lines) {
-        if (lastComponent instanceof
-            hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas
-            && lastComponent instanceof GasTooltipData) {
-            GasTooltipData tooltip = (GasTooltipData) (Object) lastComponent;
-            tooltip.mmceComplement$clearGasTooltip();
-            return addGasTooltip(lines);
-        }
-        crafttweaker.CraftTweakerAPI.logWarning(
-            "[MMCE Complement] setGasTooltip(String...) can only be applied "
-                + "to a gas component.");
-        return (RecipePrimer) (Object) this;
     }
 
     /** Extends MMCE's canonical `setPreViewNBT` method to fluid components. */
