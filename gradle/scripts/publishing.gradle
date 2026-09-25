@@ -65,7 +65,6 @@ if (propertyBool('publish_to_curseforge')) {
                 }
                 relations {
                     requiredDependency 'modularmachinery-community-edition'
-                    requiredDependency 'ae2-extended-life'
                     optionalDependency 'flux-networks'
                     optionalDependency 'geckolib'
                     optionalDependency 'crazyae'
@@ -100,7 +99,6 @@ if (propertyBool('publish_to_modrinth')) {
         debugMode = propertyBool('modrinth_debug')
         dependencies {
             required.project 'modular-machinery-community-edition'
-            required.project 'ae2-extended-life'
             optional.project 'flux-networks'
             optional.project 'geckolib'
             optional.project 'crazyae'

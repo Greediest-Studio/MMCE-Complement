@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement;
 
+import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.gui.GuiHandlerMMCE;
 import net.edwin.mmcecomplement.network.NetworkHandlerMMCE;
 import net.minecraftforge.fml.common.Mod;
@@ -14,7 +15,7 @@ import org.apache.logging.log4j.Logger;
     name = Tags.MOD_NAME,
     version = Tags.VERSION,
     dependencies = "required-after:modularmachinery;"
-        + "required-after:appliedenergistics2;"
+        + "after:appliedenergistics2;after:ae2;"
         + "after:geckolib3;after:fluxnetworks;after:crazyae;"
         + "after:mekanism;after:mekeng;after:ae2fc;"
         + "after:botania;after:baubles;"
@@ -78,6 +79,9 @@ public class MMCEComplement {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        if (!CompatMods.isAe2Loaded()) {
+            throw new IllegalStateException("MMCE Complement requires AE2 Extended Life or AE2S.");
+        }
         LOGGER.info("Hello From {}!", Tags.MOD_NAME);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandlerMMCE());
         NetworkHandlerMMCE.register();

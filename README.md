@@ -33,7 +33,7 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 - Named redstone signal input/output interfaces and a configurable Redstone Control Hatch.
 - Wireless Flux hatches default to a 10,000 FE buffer and 800,000 FE/t transfer rate.
 - Configurable liquid energizer and high-capacity filtered output hatches.
-- Optional Flux Networks, AE2 Extended Life, CrazyAE, and Modular Magic components.
+- Optional Flux Networks, CrazyAE, and Modular Magic components.
 
 Exact registry names, capacities, configuration keys, and examples are maintained in the [English Wiki overview](docs/wiki-en_us.md) and [中文 Wiki 总览](docs/wiki-zh_cn.md).
 
@@ -42,7 +42,7 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 - Minecraft 1.12.2
 - Minecraft Forge
 - Modular Machinery Community Edition
-- AE2 Extended Life
+- AE2 Extended Life or Applied Energistics 2 - Supergiant (AE2S)
 
 GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. MMCE's bundled Modular Magic API is detected by class availability rather than as a separate Forge mod. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 

@@ -10,7 +10,7 @@ MMCE Complement is an add-on for [Modular Machinery Community Edition (MMCE)](ht
 
 ## Installation and optional dependencies
 
-Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life. MixinBooter remains a required technical loader. Every other integration is optional to this addon and is registered only when its mod and required API classes are present. GeckoLib may still be required transitively by the installed MMCE build, but MMCE Complement no longer declares it as its own hard dependency.
+Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life or Applied Energistics 2 - Supergiant (AE2S). MixinBooter remains a required technical loader. Every other integration is optional to this addon and is registered only when its mod and required API classes are present. GeckoLib may still be required transitively by the installed MMCE build, but MMCE Complement no longer declares it as its own hard dependency.
 
 | Feature | Additional optional dependency |
 | --- | --- |
@@ -276,7 +276,7 @@ Attachment structure checks run synchronously with MMCE's main structure check, 
 
 ## Troubleshooting
 
-**ME or gas blocks are missing.** Verify AE2 Extended Life, CrazyAE, Mekanism, and Mekanism Energistics as appropriate; blocks are registered dynamically from their dependencies.
+**ME or gas blocks are missing.** Verify AE2 Extended Life or AE2S, CrazyAE, Mekanism, and Mekanism Energistics as appropriate; blocks are registered dynamically from their dependencies.
 
 **An ME channel recipe will not start.** Ensure every ME Channel Input Hatch is on the same powered AE network, wait for channel recalculation to finish, and verify enough channels are allocatable.
 

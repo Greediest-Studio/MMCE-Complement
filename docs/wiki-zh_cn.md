@@ -10,7 +10,7 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 
 ## 安装与可选依赖
 
-必需的内容模组依赖为 Minecraft Forge、MMCE 和 AE2 Extended Life；MixinBooter 仍是必需的技术加载器。其他兼容功能对本附属模组均为可选，只有同时检测到对应模组及所需 API 类时才会注册。特定 MMCE 版本自身仍可能传递依赖 GeckoLib，但 MMCE Complement 不再把它声明为自己的强依赖。
+必需的内容模组依赖为 Minecraft Forge、MMCE 和 AE2 Extended Life 或 Applied Energistics 2 - Supergiant (AE2S)；MixinBooter 仍是必需的技术加载器。其他兼容功能对本附属模组均为可选，只有同时检测到对应模组及所需 API 类时才会注册。特定 MMCE 版本自身仍可能传递依赖 GeckoLib，但 MMCE Complement 不再把它声明为自己的强依赖。
 
 | 功能 | 额外可选依赖 |
 | --- | --- |
@@ -276,7 +276,7 @@ recipe
 
 ## 常见问题
 
-**找不到 ME 或气体方块？** 检查 AE2 Extended Life、CrazyAE、Mekanism 和 Mekanism Energistics 是否安装完整；模组会按依赖动态注册方块。
+**找不到 ME 或气体方块？** 检查 AE2 Extended Life 或 AE2S、CrazyAE、Mekanism 和 Mekanism Energistics 是否安装完整；模组会按依赖动态注册方块。
 
 **ME 频道配方无法启动？** 确认所有 ME 频道输入仓接入同一个有电 AE 网络，等待网络完成重算，并检查可分配频道数是否足够。
 

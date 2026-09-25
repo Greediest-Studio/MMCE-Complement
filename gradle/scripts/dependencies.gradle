@@ -25,6 +25,10 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    maven {
+        name 'JitPack'
+        url 'https://jitpack.io'
+    }
     mavenLocal() // Must be last for caching to work
 }
 
@@ -40,8 +44,14 @@ dependencies {
     // Needed only by the Flux hatch unit tests, never by the normal runtime.
     testCompileOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
     testRuntimeOnly rfg.deobf('curse.maven:flux-networks-248020:3178199')
-    // MMCE and AE2 are the two intentional gameplay hard dependencies.
+    // MMCE and one of the supported AE2 branches are the intentional gameplay
+    // hard dependencies. Both branches are available to the dev classpath;
+    // the installed modpack supplies either AE2UEL or AE2S at runtime.
     implementation rfg.deobf('curse.maven:modularmachinery-community-edition-817377:7372951')
+    // AE2UEL API used by the existing appeng integration.
+    compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
+    // AE2S (Applied Energistics 2 - Supergiant) is an alternative AE2 branch.
+    compileOnly 'com.github.FormlessDragon:Applied-Energistics-2-Supergiant:v1.0.15:dev'
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
     // API only when Mekanism is installed, matching MMCE's native fluid hatches.
     compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
@@ -55,13 +65,14 @@ dependencies {
     // MMCE exposes GeckoLib interfaces in its public controller hierarchy, but
     // CurseMaven does not provide MMCE's transitive dependency metadata.
     compileOnly rfg.deobf('curse.maven:geckolib-388172:4020277')
-    compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
     // MMCE's pattern provider recognizes AE2 Fluid Crafting Rework fake
     // fluid/gas ingredients. Provider II mirrors that optional behavior.
     compileOnly rfg.deobf('curse.maven:ae2-fluid-crafting-rework-623955:5751930')
     compileOnly rfg.deobf('curse.maven:crazyae-1111042:6840104')
     compileOnly rfg.deobf('curse.maven:baubles-227083:2518667')
     compileOnly rfg.deobf('curse.maven:botania-225643:3330934')
+    // Keep the established AE2UEL runtime for the default development run;
+    // AE2S can be supplied by a modpack instead.
     runtimeOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
     // MMCE hard-requires CraftTweaker2 at runtime; compile against its ZenScript
     // annotations for this add-on's RecipePrimer and IMachineController expansions.

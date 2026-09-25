@@ -6,6 +6,7 @@ public final class CompatMods {
 
     public static final String MODID_FLUX_NETWORKS = "fluxnetworks";
     public static final String MODID_AE2 = "appliedenergistics2";
+    public static final String MODID_AE2S = "ae2";
     public static final String MODID_CRAZY_AE = "crazyae";
     public static final String MODID_MEKANISM = "mekanism";
     public static final String MODID_MEKENG = "mekeng";
@@ -44,9 +45,8 @@ public final class CompatMods {
 
     public static boolean isAeEnergyCompatLoaded() {
         if (aeEnergyCompatLoaded == null) {
-            aeEnergyCompatLoaded = Loader.isModLoaded(MODID_AE2)
+            aeEnergyCompatLoaded = isAe2Loaded()
                     && Loader.isModLoaded(MODID_CRAZY_AE)
-                    && classExists("appeng.core.AE2ELCore")
                     && classExists("dev.beecube31.crazyae2.core.CrazyAE")
                     && classExists("dev.beecube31.crazyae2.core.api.storage.energy.IEnergyStorageChannel");
         }
@@ -56,8 +56,7 @@ public final class CompatMods {
     /** MMCE's ordinary ME item buses only require AE2, not CrazyAE. */
     public static boolean isAeItemCompatLoaded() {
         if (aeItemCompatLoaded == null) {
-            aeItemCompatLoaded = Loader.isModLoaded(MODID_AE2)
-                && classExists("appeng.core.AE2ELCore")
+            aeItemCompatLoaded = isAe2Loaded()
                 && classExists("github.kasuminova.mmce.common.tile.MEItemInputBus");
         }
         return aeItemCompatLoaded;
@@ -77,9 +76,8 @@ public final class CompatMods {
 
     public static boolean isAeManaCompatLoaded() {
         if (aeManaCompatLoaded == null) {
-            aeManaCompatLoaded = Loader.isModLoaded(MODID_AE2)
+            aeManaCompatLoaded = isAe2Loaded()
                     && Loader.isModLoaded(MODID_CRAZY_AE)
-                    && classExists("appeng.core.AE2ELCore")
                     && classExists("dev.beecube31.crazyae2.core.CrazyAE")
                     && classExists("dev.beecube31.crazyae2.core.api.storage.IManaStorageChannel")
                     && classExists("kport.modularmagic.common.tile.TileManaProvider")
@@ -113,5 +111,22 @@ public final class CompatMods {
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    /** Returns true when either AE2UEL or AE2S is present with its core API. */
+    public static boolean isAe2Loaded() {
+        return (Loader.isModLoaded(MODID_AE2) && classExists("appeng.core.AE2ELCore"))
+                || (Loader.isModLoaded(MODID_AE2S) && classExists("ae2.core.AppEngBase"));
+    }
+
+    /** Returns the loaded branch's mod ID for MMCE requirement metadata. */
+    public static String getLoadedAe2ModId() {
+        if (Loader.isModLoaded(MODID_AE2)) {
+            return MODID_AE2;
+        }
+        if (Loader.isModLoaded(MODID_AE2S)) {
+            return MODID_AE2S;
+        }
+        return MODID_AE2;
     }
 }

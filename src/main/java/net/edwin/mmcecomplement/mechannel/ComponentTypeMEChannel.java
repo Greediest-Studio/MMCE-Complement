@@ -11,6 +11,6 @@ public class ComponentTypeMEChannel extends ComponentType {
     @Nullable
     @Override
     public String requiresModid() {
-        return CompatMods.MODID_AE2;
+        return CompatMods.getLoadedAe2ModId();
     }
 }
