@@ -1,7 +1,7 @@
 # MMCE Complement
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.12.2-62b47a)](https://www.minecraft.net/)
-[![Version](https://img.shields.io/badge/version-1.4.6-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
 [![Wiki](https://img.shields.io/badge/docs-GitHub%20Wiki-8250df)](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 
 MMCE Complement is an add-on for [Modular Machinery Community Edition](https://www.curseforge.com/minecraft/mc-mods/modular-machinery-community-edition) on Minecraft 1.12.2. It adds attachment-module multiblocks, advanced machine hatches, compact item/fluid assemblies, recipe conditions, and optional AE2, Flux Networks, Mekanism, and CrazyAE integrations.
@@ -44,7 +44,7 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 - Modular Machinery Community Edition
 - AE2 Extended Life or Applied Energistics 2 - Supergiant (AE2S)
 
-GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. MMCE's bundled Modular Magic API is detected by class availability rather than as a separate Forge mod. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
+MMCE Addons, The One Probe CE, GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. MMCE's bundled Modular Magic API is detected by class availability rather than as a separate Forge mod. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 
 ## Building
 

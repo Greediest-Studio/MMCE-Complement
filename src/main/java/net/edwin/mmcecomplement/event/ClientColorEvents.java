@@ -33,6 +33,10 @@ public final class ClientColorEvents {
             registerBlock(event, ModBlocks.FLUX_INPUT_HATCH);
             registerBlock(event, ModBlocks.FLUX_OUTPUT_HATCH);
         }
+        if (CompatMods.isMMCEAddonsLoaded()) {
+            registerBlock(event, ModBlocks.CONFIGURABLE_BIOME_PROVIDER);
+            registerBlock(event, ModBlocks.CONFIGURABLE_DIMENSION_PROVIDER);
+        }
         registerBlock(event, ModBlocks.MACHINE_GLASS);
         registerBlock(event, ModBlocks.BLOCK_CASING);
         registerBlock(event, ModBlocks.THREAD_HATCH);
@@ -75,6 +79,10 @@ public final class ClientColorEvents {
         if (CompatMods.isFluxCompatLoaded()) {
             registerItem(event, ModBlocks.FLUX_INPUT_HATCH);
             registerItem(event, ModBlocks.FLUX_OUTPUT_HATCH);
+        }
+        if (CompatMods.isMMCEAddonsLoaded()) {
+            registerItem(event, ModBlocks.CONFIGURABLE_BIOME_PROVIDER);
+            registerItem(event, ModBlocks.CONFIGURABLE_DIMENSION_PROVIDER);
         }
         registerItem(event, ModBlocks.MACHINE_GLASS);
         registerItem(event, ModBlocks.BLOCK_CASING);

@@ -341,6 +341,10 @@ public final class RegistryEvents {
         if (CompatMods.isAeGasCompatLoaded()) {
             AeGasRegistryCompat.registerBlocks(event.getRegistry());
         }
+
+        if (CompatMods.isMMCEAddonsLoaded()) {
+            registerMMCEAddonBlocks(event);
+        }
     }
 
     @SubscribeEvent
@@ -351,6 +355,10 @@ public final class RegistryEvents {
         ModItems.ATTACHMENT_CONSTRUCT_TOOL.setTranslationKey(
             "mmce_complement.attachment_construct_tool");
         event.getRegistry().register(ModItems.ATTACHMENT_CONSTRUCT_TOOL);
+
+        if (CompatMods.isMMCEAddonsLoaded()) {
+            registerMMCEAddonItems(event);
+        }
 
         if (CompatMods.isFluxCompatLoaded()) {
             ItemBlockMachineComponent inItem = new ItemBlockMachineComponent(ModBlocks.FLUX_INPUT_HATCH);
@@ -565,6 +573,67 @@ public final class RegistryEvents {
     }
 
     /**
+     * Registers the optional MMCE Addons detector blocks without resolving
+     * their Addons superclasses while this event subscriber is loaded. Forge
+     * discovers this class even when Addons is absent, so direct references to
+     * those classes would crash the client before the compatibility check ran.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void registerMMCEAddonBlocks(RegistryEvent.Register<Block> event) {
+        try {
+            Block biome = (Block) Class.forName(
+                "net.edwin.mmcecomplement.compat.mmcea.block.BlockConfigurableBiomeProvider")
+                .getDeclaredConstructor().newInstance();
+            biome.setRegistryName(new ResourceLocation(Tags.MOD_ID,
+                "configurable_biome_provider"));
+            event.getRegistry().register(biome);
+            ModBlocks.CONFIGURABLE_BIOME_PROVIDER = biome;
+            GameRegistry.registerTileEntity((Class) Class.forName(
+                "net.edwin.mmcecomplement.compat.mmcea.tile.TileConfigurableBiomeProvider"),
+                new ResourceLocation(Tags.MOD_ID, "configurable_biome_provider"));
+
+            Block dimension = (Block) Class.forName(
+                "net.edwin.mmcecomplement.compat.mmcea.block.BlockConfigurableDimensionProvider")
+                .getDeclaredConstructor().newInstance();
+            dimension.setRegistryName(new ResourceLocation(Tags.MOD_ID,
+                "configurable_dimension_provider"));
+            event.getRegistry().register(dimension);
+            ModBlocks.CONFIGURABLE_DIMENSION_PROVIDER = dimension;
+            GameRegistry.registerTileEntity((Class) Class.forName(
+                "net.edwin.mmcecomplement.compat.mmcea.tile.TileConfigurableDimensionProvider"),
+                new ResourceLocation(Tags.MOD_ID, "configurable_dimension_provider"));
+        } catch (ReflectiveOperationException | ClassCastException e) {
+            throw new IllegalStateException("MMCE Addons detector registration failed", e);
+        }
+    }
+
+    /** Registers the optional Addons binding tool through the same isolation boundary. */
+    private static void registerMMCEAddonItems(RegistryEvent.Register<Item> event) {
+        try {
+            Item tool = (Item) Class.forName(
+                "net.edwin.mmcecomplement.item.ItemMechanicalBindingTool")
+                .getDeclaredConstructor().newInstance();
+            tool.setRegistryName(new ResourceLocation(Tags.MOD_ID,
+                "mechanical_binding_tool"));
+            tool.setTranslationKey("mmce_complement.mechanical_binding_tool");
+            event.getRegistry().register(tool);
+            ModItems.MECHANICAL_BINDING_TOOL = tool;
+
+            registerMachineBlock(event, ModBlocks.CONFIGURABLE_BIOME_PROVIDER);
+            registerMachineBlock(event, ModBlocks.CONFIGURABLE_DIMENSION_PROVIDER);
+        } catch (ReflectiveOperationException | ClassCastException e) {
+            throw new IllegalStateException("MMCE Addons binding tool registration failed", e);
+        }
+    }
+
+    private static void registerMachineBlock(RegistryEvent.Register<Item> event, Block block) {
+        ItemBlockMachineComponent item = new ItemBlockMachineComponent(block);
+        item.setRegistryName(block.getRegistryName());
+        setMachineCreativeTab(item);
+        event.getRegistry().register(item);
+    }
+
+    /**
      * Keep the invocation owner as Minecraft's Item class so the production
      * reobfuscation maps setCreativeTab even for MMCE ItemBlock subclasses.
      */
@@ -577,6 +646,12 @@ public final class RegistryEvents {
     public static void onModelRegister(ModelRegistryEvent event) {
         ModelLoader.setCustomModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL, 0,
             new ModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL.getRegistryName(), "inventory"));
+        if (CompatMods.isMMCEAddonsLoaded()) {
+            ModelLoader.setCustomModelResourceLocation(ModItems.MECHANICAL_BINDING_TOOL, 0,
+                new ModelResourceLocation(ModItems.MECHANICAL_BINDING_TOOL.getRegistryName(), "inventory"));
+            registerBlockItemModel(ModBlocks.CONFIGURABLE_BIOME_PROVIDER);
+            registerBlockItemModel(ModBlocks.CONFIGURABLE_DIMENSION_PROVIDER);
+        }
         if (CompatMods.isFluxCompatLoaded()) {
             registerBlockItemModel(ModBlocks.FLUX_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.FLUX_OUTPUT_HATCH);

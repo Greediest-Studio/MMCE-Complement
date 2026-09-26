@@ -33,6 +33,11 @@ repositories {
 }
 
 dependencies {
+    // Optional MMCE Addons API. Its configurable biome/dimension hatches and
+    // binding tool are registered only when modularmachineryaddons exists.
+    compileOnly files('../MMCE-Addons/build/libs/ModularMachinery-Addons-2.0.3-dev.jar')
+    // Optional TOPCE API used by the configurable detector probe provider.
+    compileOnly files('../The-One-Probe-Community-Edition/build/libs/TheOneProbe-CE-1.12-1.3.8-fix3-dev.jar')
     // Include StripLatestForgeRequirements by default for the dev env, saves everyone a hassle
     runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
@@ -71,9 +76,13 @@ dependencies {
     compileOnly rfg.deobf('curse.maven:crazyae-1111042:6840104')
     compileOnly rfg.deobf('curse.maven:baubles-227083:2518667')
     compileOnly rfg.deobf('curse.maven:botania-225643:3330934')
-    // Keep the established AE2UEL runtime for the default development run;
-    // AE2S can be supplied by a modpack instead.
-    runtimeOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
+    // Keep the established AE2UEL runtime for the default development run.
+    // The AE2S test run opts out with -Puse_ae2s_runtime and supplies its jar
+    // from run/mods instead, so both branches can be tested without loading
+    // two competing AE2 coremods at once.
+    if (!project.hasProperty('use_ae2s_runtime')) {
+        runtimeOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
+    }
     // MMCE hard-requires CraftTweaker2 at runtime; compile against its ZenScript
     // annotations for this add-on's RecipePrimer and IMachineController expansions.
     compileOnly 'curse.maven:crafttweaker-239197:8051578'

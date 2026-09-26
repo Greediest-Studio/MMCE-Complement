@@ -11,6 +11,8 @@ public final class CompatMods {
     public static final String MODID_MEKANISM = "mekanism";
     public static final String MODID_MEKENG = "mekeng";
     public static final String MODID_AE2FCR = "ae2fc";
+    public static final String MODID_MMCE_ADDONS = "modularmachineryaddons";
+    public static final String MODID_TOP = "theoneprobe";
 
     private static Boolean fluxCompatLoaded;
     private static Boolean mekanismCompatLoaded;
@@ -41,6 +43,16 @@ public final class CompatMods {
                 && classExists("mekanism.common.capabilities.Capabilities");
         }
         return mekanismCompatLoaded;
+    }
+
+    public static boolean isMMCEAddonsLoaded() {
+        return Loader.isModLoaded(MODID_MMCE_ADDONS)
+                && classExists("github.alecsio.mmceaddons.ModularMachineryAddons");
+    }
+
+    public static boolean isTopLoaded() {
+        return Loader.isModLoaded(MODID_TOP)
+                && classExists("mcjty.theoneprobe.api.ITheOneProbe");
     }
 
     public static boolean isAeEnergyCompatLoaded() {

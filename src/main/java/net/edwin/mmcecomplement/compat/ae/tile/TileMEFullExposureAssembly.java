@@ -18,6 +18,8 @@ import net.edwin.mmcecomplement.init.ModBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -176,7 +178,25 @@ public class TileMEFullExposureAssembly extends TileMEInventoryInputAssembly {
                                     IMEMonitor<IAEGasStack> gases)
         throws GridAccessException {
         boolean changed = false;
+        // Extraction removes entries from AE2's ItemList. Never iterate that
+        // live chained list while extracting from the same monitor: doing so
+        // invalidates its iterator and crashes the grid tick with a
+        // ConcurrentModificationException. Copies also keep candidate amounts
+        // stable while earlier extractions update the network.
+        List<IAEItemStack> itemCandidates = new ArrayList<>();
         for (IAEItemStack candidate : items.getStorageList()) {
+            itemCandidates.add(candidate.copy());
+        }
+        List<IAEFluidStack> fluidCandidates = new ArrayList<>();
+        for (IAEFluidStack candidate : fluids.getStorageList()) {
+            fluidCandidates.add(candidate.copy());
+        }
+        List<IAEGasStack> gasCandidates = new ArrayList<>();
+        for (IAEGasStack candidate : gases.getStorageList()) {
+            gasCandidates.add(candidate.copy());
+        }
+
+        for (IAEItemStack candidate : itemCandidates) {
             int slot = findEmptySlot();
             if (slot < 0) return changed;
             ItemStack stack = candidate.createItemStack();
@@ -195,7 +215,7 @@ public class TileMEFullExposureAssembly extends TileMEInventoryInputAssembly {
                 changed = true;
             }
         }
-        for (IAEFluidStack candidate : fluids.getStorageList()) {
+        for (IAEFluidStack candidate : fluidCandidates) {
             int slot = findEmptySlot();
             if (slot < 0) return changed;
             IAEFluidStack request = candidate.copy();
@@ -211,7 +231,7 @@ public class TileMEFullExposureAssembly extends TileMEInventoryInputAssembly {
                 changed = true;
             }
         }
-        for (IAEGasStack candidate : gases.getStorageList()) {
+        for (IAEGasStack candidate : gasCandidates) {
             int slot = findEmptySlot();
             if (slot < 0) return changed;
             IAEGasStack request = candidate.copy();

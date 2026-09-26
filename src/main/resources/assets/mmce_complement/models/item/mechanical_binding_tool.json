@@ -1,0 +1,4 @@
+{
+  "parent": "item/generated",
+  "textures": {"layer0": "mmce_complement:items/mechanical_binding_tool"}
+}

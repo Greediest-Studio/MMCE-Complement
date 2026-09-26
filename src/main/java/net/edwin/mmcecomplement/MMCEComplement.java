@@ -1,6 +1,7 @@
 package net.edwin.mmcecomplement;
 
 import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.compat.top.TopIntegration;
 import net.edwin.mmcecomplement.gui.GuiHandlerMMCE;
 import net.edwin.mmcecomplement.network.NetworkHandlerMMCE;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +17,8 @@ import org.apache.logging.log4j.Logger;
     version = Tags.VERSION,
     dependencies = "required-after:modularmachinery;"
         + "after:appliedenergistics2;after:ae2;"
+        + "after:modularmachineryaddons;"
+        + "after:theoneprobe;"
         + "after:geckolib3;after:fluxnetworks;after:crazyae;"
         + "after:mekanism;after:mekeng;after:ae2fc;"
         + "after:botania;after:baubles;"
@@ -85,6 +88,9 @@ public class MMCEComplement {
         LOGGER.info("Hello From {}!", Tags.MOD_NAME);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandlerMMCE());
         NetworkHandlerMMCE.register();
+        if (CompatMods.isTopLoaded() && CompatMods.isMMCEAddonsLoaded()) {
+            TopIntegration.register();
+        }
     }
 
     @Mod.EventHandler

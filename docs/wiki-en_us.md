@@ -1,6 +1,6 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.4.6** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.5.0** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
 
@@ -23,6 +23,8 @@ Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life 
 | Recipe and controller scripts | CraftTweaker 2 |
 | Recipe displays | JEI or HEI, as provided by the MMCE environment |
 | Infusion-registry compatibility fix | Astral Sorcery + Nova Engineering (activated when the adapter is present) |
+| Configurable biome/dimension detector hatches | Modular Machinery: Community Edition Addons |
+| TOPCE binding display for configurable detector hatches | The One Probe CE |
 
 All registry names use the `mmce_complement:` namespace. When an optional dependency is absent, its related IDs are not registered.
 
@@ -34,6 +36,12 @@ All registry names use the `mmce_complement:` namespace. When an optional depend
 - **Overclock Hatch** (`overclock_hatch`), MK I–VI, increases energy use while shortening recipe duration. Multipliers are configurable; only the highest tier applies unless stacking is enabled.
 - **Accelerator Hatch** (`accelerator_hatch`), MK I–VIII, unconditionally shortens recipe duration. Only the highest tier applies in one machine.
 - **Batch Hatch** (`batch_hatch`) sets a maximum batch duration in its GUI and trades processing time for higher per-batch parallelism. If several are installed, the largest configured duration wins.
+
+### Configurable detector hatches (MMCE Addons)
+
+When MMCE Addons is installed, two additional machine components are registered: `configurable_biome_provider` and `configurable_dimension_provider`. Without a binding they read the biome or dimension where the hatch is placed, just like the corresponding MMCE Addons hatch.
+
+Use the `mechanical_binding_tool` while sneaking and right-clicking to capture the player's current dimension and biome. Right-click a configurable hatch with the recorded tool to apply the matching value; the hatch then keeps checking that recorded value even when moved to another dimension or biome.
 
 ### Multi-tank fluid hatches
 

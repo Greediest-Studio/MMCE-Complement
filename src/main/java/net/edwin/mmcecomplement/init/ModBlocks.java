@@ -74,6 +74,8 @@ public final class ModBlocks {
     public static Block ME_CHANNEL_INPUT_HATCH;
     public static BlockMEConnectionShareHatch ME_CONNECTION_SHARE_HATCH;
     public static BlockMEPatternProviderII ME_PATTERN_PROVIDER_II;
+    public static Block CONFIGURABLE_BIOME_PROVIDER;
+    public static Block CONFIGURABLE_DIMENSION_PROVIDER;
 
     private ModBlocks() {}
 }

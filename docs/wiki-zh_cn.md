@@ -1,6 +1,6 @@
 # MMCE Complement Wiki（中文）
 
-当前文档对应 MMCE Complement **1.4.6**，运行环境为 Minecraft 1.12.2。
+当前文档对应 MMCE Complement **1.5.0**，运行环境为 Minecraft 1.12.2。
 
 [English Wiki](wiki-en_us.md) · [附属模块指南](attachment-modules-zh_cn.md)
 
@@ -23,6 +23,8 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 | 配方脚本和控制器脚本 API | CraftTweaker 2 |
 | JEI 配方显示 | JEI 或 HEI（由 MMCE 提供的显示环境决定） |
 | 星辉魔法配方注册表兼容修复 | Astral Sorcery + Nova Engineering（由相关适配器触发时生效） |
+| 可配置生物群系/维度检测仓 | Modular Machinery: Community Edition Addons |
+| 可配置检测仓的 TOPCE 绑定信息显示 | The One Probe CE |
 
 方块的注册 ID 以 `mmce_complement:` 为命名空间。可选依赖未安装时，相应 ID 不会出现在注册表中。
 
@@ -34,6 +36,12 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 - **超频仓**（`overclock_hatch`）：MK1–MK6，同时提高耗能并缩短配方时间，倍率可配置；默认只取最高等级，也可启用叠加。
 - **加速仓**（`accelerator_hatch`）：MK1–MK8，无条件缩短配方时间；同一机器只生效最高等级。
 - **批处理仓**（`batch_hatch`）：在 GUI 中设置最大批处理时间，用运行时间换取更高的单批并行数。多个批处理仓同时存在时取设置时间最大的一个。
+
+### 可配置检测仓（MMCE Addons）
+
+安装 MMCE Addons 后会注册 `configurable_biome_provider` 和 `configurable_dimension_provider` 两种机器组件。未绑定时，它们分别读取仓室所在位置的生物群系或维度，行为与 MMCE Addons 对应的普通检测仓相同。
+
+手持 `mechanical_binding_tool` 潜行右键可记录玩家当前的维度和生物群系；手持已记录数据的工具右键对应的可配置检测仓即可写入匹配的数据。绑定后，即使仓室被放在其他维度或生物群系中，也始终检测记录的值。
 
 ### 多槽流体仓
 
