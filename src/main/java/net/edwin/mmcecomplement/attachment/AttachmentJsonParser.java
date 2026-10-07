@@ -69,8 +69,13 @@ public final class AttachmentJsonParser {
                 ? stringSet(moduleJson, "conflicts-with")
                 : Collections.emptySet();
             boolean asUpgrade = !moduleJson.has("as-upgrade") || requiredBoolean(moduleJson, "as-upgrade");
+            String modelName = null;
+            if (moduleJson.has("model")) {
+                modelName = requiredString(moduleJson, "model");
+            }
             modules.put(id, new AttachmentModule(
-                id, parsedStructure.getPattern(), dependencies, conflicts, asUpgrade));
+                id, parsedStructure.getPattern(), dependencies, conflicts, asUpgrade,
+                modelName));
         }
         validateRelations(modules);
         validateDependencyCycles(modules);

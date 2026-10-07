@@ -1,7 +1,7 @@
 # MMCE Complement
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.12.2-62b47a)](https://www.minecraft.net/)
-[![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
+[![Version](https://img.shields.io/badge/version-1.5.1-blue)](https://github.com/Greediest-Studio/MMCE-Complement/releases)
 [![Wiki](https://img.shields.io/badge/docs-GitHub%20Wiki-8250df)](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 
 MMCE Complement is an add-on for [Modular Machinery Community Edition](https://www.curseforge.com/minecraft/mc-mods/modular-machinery-community-edition) on Minecraft 1.12.2. It adds attachment-module multiblocks, advanced machine hatches, compact item/fluid assemblies, recipe conditions, and optional AE2, Flux Networks, Mekanism, and CrazyAE integrations.
@@ -29,6 +29,8 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 - ME item/fluid/gas inventory buses with fixed markers, active pulling, and permanent stock reserves.
 - Mixed ME input, inventory input, output, and full-exposure assemblies.
 - ME Channel Input Hatch with dynamic recipe-time channel reservations and JEI support.
+- Tier-one ME Data Pattern Provider with per-pattern smart-interface values.
+- Tier-two ME Data Pattern Provider II with 144 pattern slots and per-pattern smart-interface values.
 - ME Machinery Pattern Provider II with 144 pattern slots and MMCE/Whimcraft compatibility.
 - Named redstone signal input/output interfaces and a configurable Redstone Control Hatch.
 - Wireless Flux hatches default to a 10,000 FE buffer and 800,000 FE/t transfer rate.

@@ -14,6 +14,7 @@ public final class AttachmentModule {
     private final Set<String> dependencies;
     private final Set<String> conflicts;
     private final boolean upgrade;
+    private final String modelName;
     private volatile TaggedPositionBlockArray effectivePattern;
     private volatile long effectivePatternMainUid = Long.MIN_VALUE;
 
@@ -22,11 +23,22 @@ public final class AttachmentModule {
                             Set<String> dependencies,
                             Set<String> conflicts,
                             boolean upgrade) {
+        this(id, pattern, dependencies, conflicts, upgrade, null);
+    }
+
+    public AttachmentModule(String id,
+                            TaggedPositionBlockArray pattern,
+                            Set<String> dependencies,
+                            Set<String> conflicts,
+                            boolean upgrade,
+                            String modelName) {
         this.id = id;
         this.pattern = pattern;
         this.dependencies = Collections.unmodifiableSet(new LinkedHashSet<>(dependencies));
         this.conflicts = Collections.unmodifiableSet(new LinkedHashSet<>(conflicts));
         this.upgrade = upgrade;
+        this.modelName = modelName == null || modelName.trim().isEmpty()
+            ? null : modelName.trim();
     }
 
     public String getId() {
@@ -64,5 +76,10 @@ public final class AttachmentModule {
 
     public boolean isUpgrade() {
         return upgrade;
+    }
+
+    /** Optional registered MMCE custom-model name for separate rendering. */
+    public String getModelName() {
+        return modelName;
     }
 }

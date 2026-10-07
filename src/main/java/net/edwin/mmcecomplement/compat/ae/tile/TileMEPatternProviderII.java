@@ -422,6 +422,19 @@ public class TileMEPatternProviderII extends MEPatternProvider {
         return patternsII;
     }
 
+    /** Returns the expanded provider slot matching an AE crafting pattern. */
+    public int findPatternSlot(ICraftingPatternDetails pattern) {
+        if (pattern == null) {
+            return -1;
+        }
+        for (int slot = 0; slot < detailsII.length; slot++) {
+            if (pattern.equals(detailsII[slot])) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
     @Override
     public void setWorkMode(WorkModeSetting nextMode) {
         if (workMode == WorkModeSetting.ISOLATION_INPUT

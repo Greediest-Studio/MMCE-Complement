@@ -6,4 +6,8 @@ import java.util.Map;
 public interface AttachmentMachine {
 
     Map<String, AttachmentModule> mmceComplement$getAttachmentModules();
+
+    AttachmentModelMode mmceComplement$getAttachmentModelMode();
+
+    void mmceComplement$setAttachmentModelMode(AttachmentModelMode mode);
 }

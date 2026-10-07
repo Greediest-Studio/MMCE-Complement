@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "mmce_complement:me_data_pattern_provider" },
+    "inventory": { "model": "mmce_complement:me_data_pattern_provider" }
+  }
+}

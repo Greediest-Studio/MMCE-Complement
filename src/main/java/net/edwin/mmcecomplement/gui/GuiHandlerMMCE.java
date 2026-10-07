@@ -6,8 +6,13 @@ import net.edwin.mmcecomplement.compat.ae.AeEnergyGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.AeGasGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.AeManaGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.gui.GuiMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssemblyFallback;
 import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEFullExposureFallback;
 import net.edwin.mmcecomplement.compat.ae.gui.GuiMEFullExposureFallback;
@@ -49,6 +54,26 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && te instanceof TileMEFullExposureAssemblyFallback) {
             return new ContainerMEFullExposureFallback(
                 (TileMEFullExposureAssemblyFallback) te, player);
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II
+                && te instanceof TileMEDataPatternProviderII) {
+            MMCEComplement.LOGGER.info(
+                "Opening server GUI for data pattern provider II at {}, tile={}",
+                new BlockPos(x, y, z), te.getClass().getName());
+            return new ContainerMEPatternProviderII(
+                (TileMEDataPatternProviderII) te, player);
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
+            MMCEComplement.LOGGER.error(
+                "Rejected server GUI {}: tile at {} is {}", id,
+                new BlockPos(x, y, z),
+                te == null ? "null" : te.getClass().getName());
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
+                && te instanceof TileMEDataPatternProvider) {
+            return new github.kasuminova.mmce.common.container
+                .ContainerMEPatternProvider(
+                    (TileMEDataPatternProvider) te, player);
         }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getServerGui(id, player, te);
@@ -140,11 +165,35 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Nullable
     @Override
     public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
-        TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+        BlockPos pos = new BlockPos(x, y, z);
+        TileEntity te = world.getTileEntity(pos);
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
+            te = BlockMEDataPatternProviderII.upgradeStaleProviderTile(
+                world, pos, te);
+        }
         if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
                 && te instanceof TileMEFullExposureAssemblyFallback) {
             return new GuiMEFullExposureFallback(
                 (TileMEFullExposureAssemblyFallback) te, player);
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II
+                && te instanceof TileMEDataPatternProviderII) {
+            MMCEComplement.LOGGER.info(
+                "Opening client GUI for data pattern provider II at {}, tile={}",
+                new BlockPos(x, y, z), te.getClass().getName());
+            return new GuiMEDataPatternProviderII(
+                (TileMEDataPatternProviderII) te, player);
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
+            MMCEComplement.LOGGER.error(
+                "Rejected client GUI {}: tile at {} is {}", id,
+                new BlockPos(x, y, z),
+                te == null ? "null" : te.getClass().getName());
+        }
+        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
+                && te instanceof TileMEDataPatternProvider) {
+            return new GuiMEDataPatternProvider(
+                (TileMEDataPatternProvider) te, player);
         }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getClientGui(id, player, te);

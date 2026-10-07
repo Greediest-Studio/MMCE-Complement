@@ -34,6 +34,7 @@
 		"MixinGuiMEItemBusMarkerCount",
 		"MixinGuiMEFluidInputBusTitle",
 		"MixinMachineStructurePreviewPanel",
-		"MixinWorldSceneRendererWidget"
+		"MixinWorldSceneRendererWidget",
+		"MixinMachineControllerRenderer"
 	]
 }

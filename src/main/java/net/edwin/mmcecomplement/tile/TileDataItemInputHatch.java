@@ -390,7 +390,8 @@ public class TileDataItemInputHatch extends TileItemInputBus
 
     /** Smart-interface provider backed by this combined hatch's own NBT. */
     public static final class DataItemInterfaceProvider
-        extends TileSmartInterface.SmartInterfaceProvider {
+        extends TileSmartInterface.SmartInterfaceProvider
+        implements PrioritySmartInterfaceProvider {
 
         private final TileDataItemInputHatch owner;
 

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentJsonParser;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
+import net.edwin.mmcecomplement.attachment.AttachmentModelMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,7 +24,18 @@ public abstract class MixinDynamicMachineDeserializer {
                                                        JsonDeserializationContext context,
                                                        CallbackInfoReturnable<DynamicMachine> cir) {
         DynamicMachine machine = cir.getReturnValue();
-        ((AttachmentMachine) (Object) machine).mmceComplement$getAttachmentModules().putAll(
+        AttachmentMachine attachmentMachine = (AttachmentMachine) (Object) machine;
+        attachmentMachine.mmceComplement$getAttachmentModules().putAll(
             AttachmentJsonParser.parse(json.getAsJsonObject(), machine, context));
+        JsonElement modeElement = json.getAsJsonObject().get("attachment-module-model");
+        if (modeElement != null) {
+            if (!modeElement.isJsonPrimitive()
+                || !modeElement.getAsJsonPrimitive().isString()) {
+                throw new com.google.gson.JsonParseException(
+                    "'attachment-module-model' has to be a string!");
+            }
+            attachmentMachine.mmceComplement$setAttachmentModelMode(
+                AttachmentModelMode.parse(modeElement.getAsString()));
+        }
     }
 }

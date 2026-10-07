@@ -1,6 +1,6 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.5.0** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.5.1** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
 
@@ -108,6 +108,24 @@ Rules shared by the buses:
 - **ME Mechanical Full Exposure Assembly** (`me_full_exposure_assembly`) has no filter. When Active pulling is enabled it pulls all items, fluids, and gases from the current AE network, showing at most 16 entries; disabling it stops pulling and pushes buffered contents back.
 
 Assemblies use `§b` dynamic coloring to distinguish them from ordinary buses; their localized names are not independently colorized.
+
+### ME Data Pattern Provider (tier one)
+
+The registry ID is `me_data_pattern_provider`. It retains the normal tier-one ME Machinery Pattern Provider's 36-slot GUI, independent storage, work modes, memory-card protocol, and pattern-mirror compatibility while adding a smart-data interface:
+
+- middle-click an occupied pattern slot to open that slot's data-pattern editor;
+- the interface type is shared by the whole provider, while every pattern slot stores its own floating-point marker value;
+- clicking outside the secondary screen or pressing `Esc` returns to the provider without closing its container;
+- after AE successfully pushes a pattern, the provider changes the same-group data interface to that slot's marker before the machine checks and starts its recipe;
+- Default mode accepts one buffered pattern at a time so a later dispatch cannot overwrite the marker of inputs still waiting to start; marker/type editing is likewise locked while any provider input buffer is occupied;
+- in Isolated Input mode, each data component keeps the recipe group of its corresponding pattern slot;
+- its block material layers the animated cyan smart-interface overlay over the original tier-one provider panel.
+
+The type list comes from the smart-data types declared by the machine currently bound to the provider. The provider therefore needs to be part of a formed machine before selectable types appear in the secondary screen.
+
+### ME Data Pattern Provider II (tier two)
+
+The registry ID is `me_data_pattern_provider_ii`. It provides 144 pattern slots using the expanded tier-two provider GUI and storage while retaining the shared interface type, per-slot marker values, and middle-click secondary editor.
 
 ### ME Machinery Pattern Provider II
 

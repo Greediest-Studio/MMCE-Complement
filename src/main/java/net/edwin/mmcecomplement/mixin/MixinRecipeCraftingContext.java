@@ -6,11 +6,15 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.crafting.helper.RequirementComponents;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementInterfaceNumInput;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.cycle.CycleComponentHandler;
 import net.edwin.mmcecomplement.cycle.CycleRuntime;
 import net.edwin.mmcecomplement.catalyst.CatalystRuntime;
 import net.edwin.mmcecomplement.mechannel.MEChannelReservationLifecycle;
+import net.edwin.mmcecomplement.compat.ae.tile.IMEDataPatternProvider;
+import net.edwin.mmcecomplement.tile.PrioritySmartInterfaceProvider;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
@@ -149,6 +153,42 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                         componentEntry.getValue().getTag()));
                     continue;
                 }
+                if (componentEntry.getKey()
+                    instanceof IMEDataPatternProvider) {
+                    IMEDataPatternProvider provider =
+                        (IMEDataPatternProvider) componentEntry.getKey();
+                    TileSmartInterface.SmartInterfaceProvider primary =
+                        provider.getPrimaryDataProvider();
+                    String registeredType = controller
+                        .getFoundSmartInterfaces().get(primary);
+                    SmartInterfaceData binding = primary.getMachineData(
+                        controller.getPos());
+                    if (registeredType == null || binding == null
+                        || !registeredType.equals(binding.getType())) {
+                        /*
+                         * boundData can retain a pending association so the
+                         * GUI can offer this controller's interface classes.
+                         * It must not become a recipe component until MMCE's
+                         * per-controller uniqueness check has registered the
+                         * physical primary provider.
+                         */
+                        continue;
+                    }
+                    if (!provider.isDataProviderActiveForGroup(
+                        entry.getKey())) {
+                        // Isolation wrappers are registered for every pattern group
+                        // by MMCE.  An unsent slot must not become a numeric
+                        // data candidate or suppress ordinary interfaces.
+                        continue;
+                    }
+                    TileSmartInterface.SmartInterfaceProvider data =
+                        provider.getDataProviderForGroup(entry.getKey());
+                    if (data != null) {
+                        expanded.add(new ProcessingComponent<>(data, data,
+                            componentEntry.getValue().getTag()));
+                    }
+                    continue;
+                }
                 if (!(componentEntry.getKey()
                     instanceof TileDataItemInputHatch)) {
                     continue;
@@ -174,10 +214,10 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
     }
 
     /**
-     * Strong priority: within a recipe group, the presence of any combined
-     * data-item hatch makes ordinary smart interfaces ineligible for numeric
-     * data requirements. Multiple combined hatches in that same group remain
-     * valid alternatives to each other.
+     * Strong priority: within a recipe group, the presence of a combined data
+     * component makes ordinary smart interfaces ineligible for numeric data
+     * requirements. Multiple priority components in that group remain valid
+     * alternatives to each other.
      */
     @Inject(method = "updateRequirementComponents", at = @At("RETURN"))
     private void mmceComplement$prioritizeDataItemComponents(CallbackInfo ci) {
@@ -195,7 +235,9 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                 boolean hasPriorityHatch = false;
                 for (ProcessingComponent<?> component : entry.components()) {
                     if (component.getProvidedComponent()
-                        instanceof TileDataItemInputHatch.DataItemInterfaceProvider) {
+                        instanceof PrioritySmartInterfaceProvider
+                        && ((PrioritySmartInterfaceProvider) component
+                            .getProvidedComponent()).isPriorityActive()) {
                         hasPriorityHatch = true;
                         break;
                     }
@@ -203,7 +245,7 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                 if (hasPriorityHatch) {
                     entry.components().removeIf(component ->
                         !(component.getProvidedComponent()
-                            instanceof TileDataItemInputHatch.DataItemInterfaceProvider));
+                            instanceof PrioritySmartInterfaceProvider));
                 }
             }
         }

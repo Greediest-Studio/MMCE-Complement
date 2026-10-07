@@ -77,6 +77,10 @@ public class MMCEComplement {
     public static final int GUI_REDSTONE_SIGNAL_OUTPUT_HATCH = 24;
     /** GUI id for the expanded 144-slot ME pattern provider. */
     public static final int GUI_ME_PATTERN_PROVIDER_II = 25;
+    /** GUI id for the level-one smart-data ME pattern provider. */
+    public static final int GUI_ME_DATA_PATTERN_PROVIDER = 26;
+    /** GUI id for the tier-two smart-data ME pattern provider. */
+    public static final int GUI_ME_DATA_PATTERN_PROVIDER_II = 27;
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;
 

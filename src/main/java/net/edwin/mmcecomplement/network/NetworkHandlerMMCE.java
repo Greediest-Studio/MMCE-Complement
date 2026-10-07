@@ -7,7 +7,10 @@ import net.edwin.mmcecomplement.compat.ae.AeGasNetworkCompat;
 import net.edwin.mmcecomplement.compat.ae.AeManaNetworkCompat;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.MEInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProviderII;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
+import github.kasuminova.mmce.common.container.ContainerMEPatternProvider;
 import net.edwin.mmcecomplement.compat.flux.FluxNetworkCompat;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
@@ -93,6 +96,8 @@ public final class NetworkHandlerMMCE {
     public static final int FIELD_ME_INVENTORY_RESERVE = 16;
     public static final int FIELD_ME_INPUT_ASSEMBLY_MARKER = 17;
     public static final int FIELD_REDSTONE_INTERFACE_NAME = 18;
+    public static final int FIELD_ME_DATA_PATTERN = 19;
+    public static final int FIELD_ME_DATA_PATTERN_II = 20;
 
     // -- Quad fluid tank interaction -----------------------------------
 
@@ -467,6 +472,48 @@ public final class NetworkHandlerMMCE {
                 net.minecraft.block.state.IBlockState state =
                     world.getBlockState(msg.pos);
                 world.notifyBlockUpdate(msg.pos, state, state, 3);
+                return;
+            }
+
+            if (te instanceof TileMEDataPatternProvider
+                    && msg.fieldId == FIELD_ME_DATA_PATTERN) {
+                if (!(player.openContainer instanceof ContainerMEPatternProvider)
+                    || ((ContainerMEPatternProvider) player.openContainer)
+                        .getOwner() != te) {
+                    return;
+                }
+                TileMEDataPatternProvider provider =
+                    (TileMEDataPatternProvider) te;
+                if (!provider.configurePattern(
+                    nbt.getInteger("slot"), nbt.getString("type"),
+                    nbt.getFloat("value"))) {
+                    return;
+                }
+                net.minecraft.block.state.IBlockState state =
+                    world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                player.openContainer.detectAndSendChanges();
+                return;
+            }
+
+            if (te instanceof TileMEDataPatternProviderII
+                    && msg.fieldId == FIELD_ME_DATA_PATTERN_II) {
+                if (!(player.openContainer instanceof ContainerMEPatternProvider)
+                    || ((ContainerMEPatternProvider) player.openContainer)
+                        .getOwner() != te) {
+                    return;
+                }
+                TileMEDataPatternProviderII provider =
+                    (TileMEDataPatternProviderII) te;
+                if (!provider.configurePattern(
+                    nbt.getInteger("slot"), nbt.getString("type"),
+                    nbt.getFloat("value"))) {
+                    return;
+                }
+                net.minecraft.block.state.IBlockState state =
+                    world.getBlockState(msg.pos);
+                world.notifyBlockUpdate(msg.pos, state, state, 3);
+                player.openContainer.detectAndSendChanges();
                 return;
             }
 

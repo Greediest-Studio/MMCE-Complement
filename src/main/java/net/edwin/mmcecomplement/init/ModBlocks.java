@@ -13,6 +13,8 @@ import net.edwin.mmcecomplement.block.BlockFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFluidInventoryInputBus;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
@@ -73,6 +75,8 @@ public final class ModBlocks {
     public static Block ME_MANA_OUTPUT_BUS;
     public static Block ME_CHANNEL_INPUT_HATCH;
     public static BlockMEConnectionShareHatch ME_CONNECTION_SHARE_HATCH;
+    public static BlockMEDataPatternProvider ME_DATA_PATTERN_PROVIDER;
+    public static BlockMEDataPatternProviderII ME_DATA_PATTERN_PROVIDER_II;
     public static BlockMEPatternProviderII ME_PATTERN_PROVIDER_II;
     public static Block CONFIGURABLE_BIOME_PROVIDER;
     public static Block CONFIGURABLE_DIMENSION_PROVIDER;

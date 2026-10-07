@@ -14,6 +14,8 @@ import net.edwin.mmcecomplement.compat.ae.block.BlockMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEFluidInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEChannelInputHatch;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
@@ -58,6 +60,9 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEFluidInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEChannelInputHatch;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProvider;
+import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProviderII;
+import net.edwin.mmcecomplement.compat.ae.item.ItemBlockMEDataPatternProvider;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEConnectionShareHatch;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
@@ -276,6 +281,28 @@ public final class RegistryEvents {
 
         if (CompatMods.isAeItemCompatLoaded()) {
             AeFullExposureRegistryCompat.registerBlock(event.getRegistry());
+            ModBlocks.ME_DATA_PATTERN_PROVIDER =
+                new BlockMEDataPatternProvider();
+            ModBlocks.ME_DATA_PATTERN_PROVIDER.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_data_pattern_provider"));
+            event.getRegistry().register(
+                ModBlocks.ME_DATA_PATTERN_PROVIDER);
+            GameRegistry.registerTileEntity(
+                TileMEDataPatternProvider.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_data_pattern_provider"));
+
+            ModBlocks.ME_DATA_PATTERN_PROVIDER_II =
+                new BlockMEDataPatternProviderII();
+            ModBlocks.ME_DATA_PATTERN_PROVIDER_II.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_data_pattern_provider_ii"));
+            event.getRegistry().register(ModBlocks.ME_DATA_PATTERN_PROVIDER_II);
+            GameRegistry.registerTileEntity(TileMEDataPatternProviderII.class,
+                new ResourceLocation(Tags.MOD_ID,
+                    "me_data_pattern_provider_ii"));
+
             ModBlocks.ME_PATTERN_PROVIDER_II =
                 new BlockMEPatternProviderII();
             ModBlocks.ME_PATTERN_PROVIDER_II.setRegistryName(
@@ -532,6 +559,18 @@ public final class RegistryEvents {
         }
 
         if (CompatMods.isAeItemCompatLoaded()
+            && ModBlocks.ME_DATA_PATTERN_PROVIDER != null) {
+            registerMEDataPatternProviderItem(event,
+                ModBlocks.ME_DATA_PATTERN_PROVIDER);
+        }
+
+        if (CompatMods.isAeItemCompatLoaded()
+            && ModBlocks.ME_DATA_PATTERN_PROVIDER_II != null) {
+            registerMEDataPatternProviderItem(event,
+                ModBlocks.ME_DATA_PATTERN_PROVIDER_II);
+        }
+
+        if (CompatMods.isAeItemCompatLoaded()
             && ModBlocks.ME_ORE_DICT_INPUT_BUS != null) {
             registerMEItemBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
             registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
@@ -567,6 +606,15 @@ public final class RegistryEvents {
                                             Block block) {
         ItemBlockMEMachineComponent item =
             new ItemBlockMEMachineComponent(block);
+        item.setRegistryName(block.getRegistryName());
+        setMachineCreativeTab(item);
+        event.getRegistry().register(item);
+    }
+
+    private static void registerMEDataPatternProviderItem(
+        RegistryEvent.Register<Item> event, Block block) {
+        ItemBlockMEDataPatternProvider item =
+            new ItemBlockMEDataPatternProvider(block);
         item.setRegistryName(block.getRegistryName());
         setMachineCreativeTab(item);
         event.getRegistry().register(item);
@@ -681,6 +729,8 @@ public final class RegistryEvents {
             registerBlockItemModel(ModBlocks.ME_ENERGY_OUTPUT_BUS);
         }
         if (CompatMods.isAeItemCompatLoaded()) {
+            registerBlockItemModel(ModBlocks.ME_DATA_PATTERN_PROVIDER);
+            registerBlockItemModel(ModBlocks.ME_DATA_PATTERN_PROVIDER_II);
             registerBlockItemModel(ModBlocks.ME_PATTERN_PROVIDER_II);
             registerBlockItemModel(ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.ME_CONNECTION_SHARE_HATCH);
