@@ -32,6 +32,12 @@ public enum AttachmentModelMode {
                 return mode;
             }
         }
+        // Numeric aliases are accepted for compatibility with early drafts of
+        // the machine JSON documentation: 1 hides formed components and 2
+        // renders attachment models independently.
+        if ("0".equals(normalized)) return DEFAULT;
+        if ("1".equals(normalized)) return HIDE;
+        if ("2".equals(normalized)) return SEPARATE;
         throw new JsonParseException("'attachment-module-model' must be one of 'none', 'hide', or 'separate'!");
     }
 }
