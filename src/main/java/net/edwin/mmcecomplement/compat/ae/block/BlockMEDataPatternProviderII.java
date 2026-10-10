@@ -63,6 +63,13 @@ public class BlockMEDataPatternProviderII extends BlockMEPatternProviderII {
                     held.getItem().getRegistryName())) {
                 return false;
             }
+            // The server may still be holding the legacy provider-II tile
+            // (worlds created before the data-provider block was introduced).
+            // It upgrades that tile immediately before opening the GUI.  Do
+            // not gate the client interaction on the local tile class: a
+            // client-side false return prevents Forge from sending the right
+            // click to the server, so the server-side upgrade/open path would
+            // never run and the GUI would appear not to open.
             return true;
         }
         if (hand == EnumHand.MAIN_HAND && !held.isEmpty()) {
