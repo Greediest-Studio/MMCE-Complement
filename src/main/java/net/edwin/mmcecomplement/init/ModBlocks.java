@@ -27,6 +27,9 @@ import net.edwin.mmcecomplement.block.BlockNineFluidOutputHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneControlHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneSignalInputHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneSignalOutputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalInputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalOutputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalCable;
 import net.minecraft.block.Block;
 
 /**
@@ -47,6 +50,11 @@ public final class ModBlocks {
     public static BlockRedstoneControlHatch REDSTONE_CONTROL_HATCH;
     public static BlockRedstoneSignalInputHatch REDSTONE_SIGNAL_INPUT_HATCH;
     public static BlockRedstoneSignalOutputHatch REDSTONE_SIGNAL_OUTPUT_HATCH;
+    public static BlockMachineSignalInputHatch MACHINE_SIGNAL_INPUT_HATCH;
+    public static BlockMachineSignalOutputHatch MACHINE_SIGNAL_OUTPUT_HATCH;
+    public static BlockMachineSignalCable MACHINE_SIGNAL_CABLE;
+    /** Index zero is uncoloured; dye metadata + 1 indexes a coloured cable. */
+    public static BlockMachineSignalCable[] MACHINE_SIGNAL_CABLE_VARIANTS;
     public static BlockLiquidEnergizerHatch LIQUID_ENERGIZER_HATCH;
     public static BlockDataItemInputHatch DATA_INPUT_ASSEMBLY_HATCH;
     public static BlockItemInputAssemblyHatch INPUT_ASSEMBLY_HATCH;

@@ -4,6 +4,9 @@ import hellfirepvp.modularmachinery.common.block.BlockDynamicColor;
 import net.edwin.mmcecomplement.Tags;
 import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.init.ModBlocks;
+import net.edwin.mmcecomplement.init.ModItems;
+import net.edwin.mmcecomplement.block.BlockMachineSignalCable;
+import net.edwin.mmcecomplement.item.ItemBlockMachineSignalCable;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
@@ -46,6 +49,15 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.REDSTONE_CONTROL_HATCH);
         registerBlock(event, ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
         registerBlock(event, ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
+        registerBlock(event, ModBlocks.MACHINE_SIGNAL_INPUT_HATCH);
+        registerBlock(event, ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH);
+        if (ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS != null) {
+            for (BlockMachineSignalCable cable : ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS) {
+                registerBlock(event, cable);
+            }
+        } else {
+            registerBlock(event, ModBlocks.MACHINE_SIGNAL_CABLE);
+        }
         registerBlock(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
         registerBlock(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
         registerBlock(event, ModBlocks.INPUT_ASSEMBLY_HATCH);
@@ -95,6 +107,16 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.REDSTONE_CONTROL_HATCH);
         registerItem(event, ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
         registerItem(event, ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
+        registerItem(event, ModBlocks.MACHINE_SIGNAL_INPUT_HATCH);
+        registerItem(event, ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH);
+        if (ModItems.MACHINE_SIGNAL_CABLE_ITEMS != null) {
+            for (ItemBlockMachineSignalCable cable : ModItems.MACHINE_SIGNAL_CABLE_ITEMS) {
+                if (cable != null) {
+                    event.getItemColors().registerItemColorHandler(
+                        (stack, tintIndex) -> cable.getColorFromItemstack(stack, tintIndex), cable);
+                }
+            }
+        }
         registerItem(event, ModBlocks.LIQUID_ENERGIZER_HATCH);
         registerItem(event, ModBlocks.DATA_INPUT_ASSEMBLY_HATCH);
         registerItem(event, ModBlocks.INPUT_ASSEMBLY_HATCH);

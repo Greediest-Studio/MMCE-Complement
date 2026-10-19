@@ -24,6 +24,9 @@ import net.edwin.mmcecomplement.block.BlockBatchHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneControlHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneSignalInputHatch;
 import net.edwin.mmcecomplement.block.BlockRedstoneSignalOutputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalInputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalOutputHatch;
+import net.edwin.mmcecomplement.block.BlockMachineSignalCable;
 import net.edwin.mmcecomplement.block.BlockMachineGlass;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
 import net.edwin.mmcecomplement.block.BlockThreadHatch;
@@ -41,10 +44,14 @@ import net.edwin.mmcecomplement.compat.mekanism.MekanismTileRegistryCompat;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.init.ModItems;
 import net.edwin.mmcecomplement.item.ItemAttachmentConstructTool;
+import net.edwin.mmcecomplement.item.ItemBlockMachineSignalCable;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalOutputHatch;
+import net.edwin.mmcecomplement.tile.TileMachineSignalInputHatch;
+import net.edwin.mmcecomplement.tile.TileMachineSignalOutputHatch;
+import net.edwin.mmcecomplement.tile.TileMachineSignalCable;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
 import net.edwin.mmcecomplement.tile.TileItemInputAssemblyHatch;
 import net.edwin.mmcecomplement.tile.TileItemOutputAssemblyHatch;
@@ -71,10 +78,15 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.type.Requirement
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -164,6 +176,37 @@ public final class RegistryEvents {
         event.getRegistry().register(ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
         GameRegistry.registerTileEntity(TileRedstoneSignalOutputHatch.class,
             new ResourceLocation(Tags.MOD_ID, "redstone_signal_output_hatch"));
+
+        ModBlocks.MACHINE_SIGNAL_INPUT_HATCH = new BlockMachineSignalInputHatch();
+        ModBlocks.MACHINE_SIGNAL_INPUT_HATCH.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_input_hatch"));
+        event.getRegistry().register(ModBlocks.MACHINE_SIGNAL_INPUT_HATCH);
+        GameRegistry.registerTileEntity(TileMachineSignalInputHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_input_hatch"));
+
+        ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH = new BlockMachineSignalOutputHatch();
+        ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_output_hatch"));
+        event.getRegistry().register(ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH);
+        GameRegistry.registerTileEntity(TileMachineSignalOutputHatch.class,
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_output_hatch"));
+
+        ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS =
+            new BlockMachineSignalCable[EnumDyeColor.values().length + 1];
+        ModBlocks.MACHINE_SIGNAL_CABLE = new BlockMachineSignalCable();
+        ModBlocks.MACHINE_SIGNAL_CABLE.setRegistryName(
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_cable"));
+        event.getRegistry().register(ModBlocks.MACHINE_SIGNAL_CABLE);
+        ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS[0] = ModBlocks.MACHINE_SIGNAL_CABLE;
+        for (EnumDyeColor color : EnumDyeColor.values()) {
+            BlockMachineSignalCable colored = new BlockMachineSignalCable(color);
+            colored.setRegistryName(new ResourceLocation(Tags.MOD_ID,
+                "machine_signal_cable_" + color.getName()));
+            event.getRegistry().register(colored);
+            ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS[color.getMetadata() + 1] = colored;
+        }
+        GameRegistry.registerTileEntity(TileMachineSignalCable.class,
+            new ResourceLocation(Tags.MOD_ID, "machine_signal_cable"));
 
         ModBlocks.LIQUID_ENERGIZER_HATCH =
             new BlockLiquidEnergizerHatch();
@@ -455,6 +498,20 @@ public final class RegistryEvents {
         setMachineCreativeTab(redstoneSignalOutputHatchItem);
         event.getRegistry().register(redstoneSignalOutputHatchItem);
 
+        registerMachineItem(event, ModBlocks.MACHINE_SIGNAL_INPUT_HATCH);
+        registerMachineItem(event, ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH);
+        ModItems.MACHINE_SIGNAL_CABLE_ITEMS = new ItemBlockMachineSignalCable[EnumDyeColor.values().length + 1];
+        for (int i = 0; i < ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS.length; i++) {
+            BlockMachineSignalCable block = ModBlocks.MACHINE_SIGNAL_CABLE_VARIANTS[i];
+            EnumDyeColor color = i == 0 ? null : EnumDyeColor.byMetadata(i - 1);
+            ItemBlockMachineSignalCable cable = new ItemBlockMachineSignalCable(block, color);
+            cable.setRegistryName(block.getRegistryName());
+            setMachineCreativeTab(cable);
+            event.getRegistry().register(cable);
+            ModItems.MACHINE_SIGNAL_CABLE_ITEMS[i] = cable;
+            OreDictionary.registerOre("machineSignalCable", new ItemStack(cable, 1, 0));
+        }
+
         ItemBlockMachineComponentCustomName liquidEnergizerHatchItem =
             new ItemBlockMachineComponentCustomName(
                 ModBlocks.LIQUID_ENERGIZER_HATCH);
@@ -602,10 +659,36 @@ public final class RegistryEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void onRecipeRegister(RegistryEvent.Register<IRecipe> event) {
+        if (ModItems.MACHINE_SIGNAL_CABLE_ITEMS == null) return;
+        String[] dyes = {"White", "Orange", "Magenta", "LightBlue", "Yellow", "Lime", "Pink", "Gray",
+            "LightGray", "Cyan", "Purple", "Blue", "Brown", "Green", "Red", "Black"};
+        EnumDyeColor[] colors = EnumDyeColor.values();
+        for (int i = 0; i < colors.length; i++) {
+            ItemStack output = new ItemStack(ModItems.MACHINE_SIGNAL_CABLE_ITEMS[i + 1], 1);
+            ResourceLocation recipeId = new ResourceLocation(Tags.MOD_ID,
+                "machine_signal_cable_" + colors[i].getName());
+            ShapelessOreRecipe recipe = new ShapelessOreRecipe(
+                recipeId, output, "dye" + dyes[i], "machineSignalCable", "machineSignalCable",
+                "machineSignalCable", "machineSignalCable", "machineSignalCable",
+                "machineSignalCable", "machineSignalCable", "machineSignalCable");
+            recipe.setRegistryName(recipeId);
+            event.getRegistry().register(recipe);
+        }
+    }
+
     private static void registerMEItemBlock(RegistryEvent.Register<Item> event,
                                             Block block) {
         ItemBlockMEMachineComponent item =
             new ItemBlockMEMachineComponent(block);
+        item.setRegistryName(block.getRegistryName());
+        setMachineCreativeTab(item);
+        event.getRegistry().register(item);
+    }
+
+    private static void registerMachineItem(RegistryEvent.Register<Item> event, Block block) {
+        ItemBlockMachineComponent item = new ItemBlockMachineComponent(block);
         item.setRegistryName(block.getRegistryName());
         setMachineCreativeTab(item);
         event.getRegistry().register(item);
@@ -713,6 +796,9 @@ public final class RegistryEvents {
         registerBlockItemModel(ModBlocks.REDSTONE_CONTROL_HATCH);
         registerBlockItemModel(ModBlocks.REDSTONE_SIGNAL_INPUT_HATCH);
         registerBlockItemModel(ModBlocks.REDSTONE_SIGNAL_OUTPUT_HATCH);
+        registerBlockItemModel(ModBlocks.MACHINE_SIGNAL_INPUT_HATCH);
+        registerBlockItemModel(ModBlocks.MACHINE_SIGNAL_OUTPUT_HATCH);
+        registerMachineSignalCableItemModels();
         registerLiquidEnergizerHatchItemModels();
         registerBlockItemModel(ModBlocks.FILTERED_ITEM_OUTPUT_HATCH);
         registerBlockItemModel(ModBlocks.FILTERED_FLUID_OUTPUT_HATCH);
@@ -759,6 +845,17 @@ public final class RegistryEvents {
         Item item = Item.getItemFromBlock(block);
         ModelLoader.setCustomModelResourceLocation(item, 0,
                 new ModelResourceLocation(block.getRegistryName(), "inventory"));
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerMachineSignalCableItemModels() {
+        if (ModItems.MACHINE_SIGNAL_CABLE_ITEMS == null) return;
+        for (ItemBlockMachineSignalCable item : ModItems.MACHINE_SIGNAL_CABLE_ITEMS) {
+            if (item != null) {
+                ModelLoader.setCustomModelResourceLocation(item, 0,
+                    new ModelResourceLocation("mmce_complement:machine_signal_cable", "inventory"));
+            }
+        }
     }
 
     @SideOnly(Side.CLIENT)

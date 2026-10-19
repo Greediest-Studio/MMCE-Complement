@@ -7,6 +7,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.edwin.mmcecomplement.attachment.AttachmentController;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
+import net.edwin.mmcecomplement.machineconnection.MachineConnectionRegistry;
 import stanhebben.zenscript.annotations.ZenExpansion;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -48,6 +49,16 @@ public final class MachineControllerExpansion {
         }
         return ((AttachmentMachine) (Object) machine).mmceComplement$getAttachmentModules()
             .keySet().toArray(new String[0]);
+    }
+
+    @ZenGetter("connectors")
+    public static IMachineController[] getConnectors(IMachineController controller) {
+        return MachineConnectionRegistry.getConnectors(controller);
+    }
+
+    @ZenGetter("connected")
+    public static IMachineController[] getConnected(IMachineController controller) {
+        return MachineConnectionRegistry.getConnected(controller);
     }
 
     /** Reads one registered value from all matching input hatches. */

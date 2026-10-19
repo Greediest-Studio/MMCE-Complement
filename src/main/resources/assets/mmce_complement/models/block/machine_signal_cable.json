@@ -1,0 +1,53 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "mmce_complement:blocks/machine_signal_cable",
+    "cable": "mmce_complement:blocks/machine_signal_cable"
+  },
+  "elements": [
+    {
+      "from": [5, 5, 5], "to": [11, 11, 11],
+      "faces": {
+        "down": {"texture": "#cable", "tintindex": 0},
+        "up": {"texture": "#cable", "tintindex": 0},
+        "north": {"texture": "#cable", "tintindex": 0},
+        "south": {"texture": "#cable", "tintindex": 0},
+        "west": {"texture": "#cable", "tintindex": 0},
+        "east": {"texture": "#cable", "tintindex": 0}
+      }
+    },
+    {
+      "from": [0, 5, 5], "to": [16, 11, 11],
+      "faces": {
+        "down": {"texture": "#cable", "tintindex": 0},
+        "up": {"texture": "#cable", "tintindex": 0},
+        "north": {"texture": "#cable", "tintindex": 0},
+        "south": {"texture": "#cable", "tintindex": 0},
+        "west": {"texture": "#cable", "tintindex": 0},
+        "east": {"texture": "#cable", "tintindex": 0}
+      }
+    },
+    {
+      "from": [5, 0, 5], "to": [11, 16, 11],
+      "faces": {
+        "down": {"texture": "#cable", "tintindex": 0},
+        "up": {"texture": "#cable", "tintindex": 0},
+        "north": {"texture": "#cable", "tintindex": 0},
+        "south": {"texture": "#cable", "tintindex": 0},
+        "west": {"texture": "#cable", "tintindex": 0},
+        "east": {"texture": "#cable", "tintindex": 0}
+      }
+    },
+    {
+      "from": [5, 5, 0], "to": [11, 11, 16],
+      "faces": {
+        "down": {"texture": "#cable", "tintindex": 0},
+        "up": {"texture": "#cable", "tintindex": 0},
+        "north": {"texture": "#cable", "tintindex": 0},
+        "south": {"texture": "#cable", "tintindex": 0},
+        "west": {"texture": "#cable", "tintindex": 0},
+        "east": {"texture": "#cable", "tintindex": 0}
+      }
+    }
+  ]
+}
