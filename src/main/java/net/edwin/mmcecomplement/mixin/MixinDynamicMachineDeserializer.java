@@ -25,6 +25,8 @@ public abstract class MixinDynamicMachineDeserializer {
                                                        CallbackInfoReturnable<DynamicMachine> cir) {
         DynamicMachine machine = cir.getReturnValue();
         AttachmentMachine attachmentMachine = (AttachmentMachine) (Object) machine;
+        ((net.edwin.mmcecomplement.variant.StorageMachine) (Object) machine)
+            .mmceComplement$configureStorageVariant(json.getAsJsonObject());
         attachmentMachine.mmceComplement$getAttachmentModules().putAll(
             AttachmentJsonParser.parse(json.getAsJsonObject(), machine, context));
         JsonElement modeElement = json.getAsJsonObject().get("attachment-module-model");

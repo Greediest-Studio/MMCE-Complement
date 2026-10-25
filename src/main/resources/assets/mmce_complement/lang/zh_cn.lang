@@ -328,7 +328,7 @@ item.mmce_complement.machine_signal_cable_yellow.name=黄色机器信号传输�
 item.mmce_complement.machine_signal_cable_lime.name=黄绿色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_pink.name=粉红色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_gray.name=灰色机器信号传输线缆
-item.mmce_complement.machine_signal_cable_light_gray.name=淡灰色机器信号传输线缆
+item.mmce_complement.machine_signal_cable_silver.name=淡灰色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_cyan.name=青色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_purple.name=紫色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_blue.name=蓝色机器信号传输线缆
@@ -337,3 +337,19 @@ item.mmce_complement.machine_signal_cable_green.name=绿色机器信号传输线
 item.mmce_complement.machine_signal_cable_red.name=红色机器信号传输线缆
 item.mmce_complement.machine_signal_cable_black.name=黑色机器信号传输线缆
 item.mmce_complement.machine_signal_cable.name=机器信号传输线缆
+
+gui.mmce_complement.storage.capacity=容量：%s 格
+gui.mmce_complement.storage.sort=整理
+gui.mmce_complement.storage.items=物品
+gui.mmce_complement.storage.fluids=流体
+gui.mmce_complement.storage.gases=气体
+
+status.mmce_complement.storage.full=内部空间已满
+
+gui.mmce_complement.storage.fluid_capacity=流体：%s 格，每格 %s
+gui.mmce_complement.storage.gas_capacity=气体：%s 格，每格 %s
+
+gui.mmce_complement.storage.empty=空
+gui.mmce_complement.storage.unformed=结构未成型
+
+tile.mmce_complement.ae_storage_access_port.name=ME存储访问端口

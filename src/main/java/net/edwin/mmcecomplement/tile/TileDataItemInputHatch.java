@@ -62,17 +62,7 @@ public class TileDataItemInputHatch extends TileItemInputBus
     public TileDataItemInputHatch(DataInputAssemblyTier tier) {
         super(ItemBusSize.NORMAL);
         configureTier(tier, true);
-        this.fluidProvider = new MachineComponent.FluidHatch(IOType.INPUT) {
-            @Override
-            public IFluidHandler getContainerProvider() {
-                return TileDataItemInputHatch.this;
-            }
-
-            @Override
-            public long getGroupID() {
-                return TileDataItemInputHatch.this.getGroupId();
-            }
-        };
+        this.fluidProvider = new DataFluidProvider(this);
     }
 
     private void configureTier(DataInputAssemblyTier newTier,
@@ -118,12 +108,7 @@ public class TileDataItemInputHatch extends TileItemInputBus
     }
 
     protected HybridTank createTank(int capacity) {
-        return new HybridTank(capacity) {
-            @Override
-            protected void onContentsChanged() {
-                TileDataItemInputHatch.this.onTankContentsChanged();
-            }
-        };
+        return new DataHybridTank(this, capacity);
     }
 
     protected void onTankContentsChanged() {
@@ -285,50 +270,7 @@ public class TileDataItemInputHatch extends TileItemInputBus
 
     public IFluidHandler getTankInteractionHandler(final int index) {
         getTank(index);
-        return new IFluidHandler() {
-            @Override
-            public IFluidTankProperties[] getTankProperties() {
-                return new IFluidTankProperties[] {
-                    new FluidTankProperties(tanks[index].getFluid(),
-                        perTankCapacity, true, true)
-                };
-            }
-
-            @Override
-            public int fill(FluidStack resource, boolean doFill) {
-                if (resource == null || resource.amount <= 0
-                    || !canInsertFluid(resource)) {
-                    return 0;
-                }
-                for (int i = 0; i < tanks.length; i++) {
-                    FluidStack stored = tanks[i].getFluid();
-                    if (stored != null && stored.amount > 0
-                        && stored.isFluidEqual(resource)) {
-                        return i == index
-                            ? tanks[index].fill(resource, doFill) : 0;
-                    }
-                }
-                return isTankOccupied(index)
-                    ? 0 : tanks[index].fill(resource, doFill);
-            }
-
-            @Nullable
-            @Override
-            public FluidStack drain(FluidStack resource, boolean doDrain) {
-                FluidStack stored = tanks[index].getFluid();
-                return resource != null && resource.amount > 0
-                    && stored != null && stored.amount > 0
-                    && stored.isFluidEqual(resource)
-                    ? tanks[index].drain(resource, doDrain) : null;
-            }
-
-            @Nullable
-            @Override
-            public FluidStack drain(int maxDrain, boolean doDrain) {
-                return maxDrain <= 0 ? null
-                    : tanks[index].drain(maxDrain, doDrain);
-            }
-        };
+        return new TankInteractionHandler(this, index);
     }
 
     @Override
@@ -395,7 +337,7 @@ public class TileDataItemInputHatch extends TileItemInputBus
 
         private final TileDataItemInputHatch owner;
 
-        private DataItemInterfaceProvider(TileDataItemInputHatch owner) {
+        DataItemInterfaceProvider(TileDataItemInputHatch owner) {
             // MMCE's provider requires a TileSmartInterface owner. Every
             // stateful method is overridden below, so this inert instance is
             // never attached to a world or used for persistence/sync.
@@ -492,6 +434,94 @@ public class TileDataItemInputHatch extends TileItemInputBus
         @Override
         public long getGroupID() {
             return owner.getGroupId();
+        }
+    }
+
+    /** Named class avoids Foundation's invalidation of generated anonymous
+     * classes while loading optional Mekanism tile subclasses. */
+    static final class DataFluidProvider
+        extends MachineComponent.FluidHatch {
+        private final TileDataItemInputHatch owner;
+
+        DataFluidProvider(TileDataItemInputHatch owner) {
+            super(IOType.INPUT);
+            this.owner = owner;
+        }
+
+        @Override
+        public IFluidHandler getContainerProvider() {
+            return owner;
+        }
+
+        @Override
+        public long getGroupID() {
+            return owner.getGroupId();
+        }
+    }
+
+    static final class DataHybridTank extends HybridTank {
+        private final TileDataItemInputHatch owner;
+
+        DataHybridTank(TileDataItemInputHatch owner, int capacity) {
+            super(capacity);
+            this.owner = owner;
+        }
+
+        @Override
+        protected void onContentsChanged() {
+            owner.onTankContentsChanged();
+        }
+    }
+
+    static final class TankInteractionHandler
+        implements IFluidHandler {
+        private final TileDataItemInputHatch owner;
+        private final int index;
+
+        TankInteractionHandler(TileDataItemInputHatch owner, int index) {
+            this.owner = owner;
+            this.index = index;
+        }
+
+        @Override
+        public IFluidTankProperties[] getTankProperties() {
+            return new IFluidTankProperties[] {
+                new FluidTankProperties(owner.tanks[index].getFluid(),
+                    owner.perTankCapacity, true, true)
+            };
+        }
+
+        @Override
+        public int fill(FluidStack resource, boolean doFill) {
+            if (resource == null || resource.amount <= 0
+                || !owner.canInsertFluid(resource)) return 0;
+            for (int i = 0; i < owner.tanks.length; i++) {
+                FluidStack stored = owner.tanks[i].getFluid();
+                if (stored != null && stored.amount > 0
+                    && stored.isFluidEqual(resource)) {
+                    return i == index
+                        ? owner.tanks[index].fill(resource, doFill) : 0;
+                }
+            }
+            return owner.isTankOccupied(index)
+                ? 0 : owner.tanks[index].fill(resource, doFill);
+        }
+
+        @Nullable
+        @Override
+        public FluidStack drain(FluidStack resource, boolean doDrain) {
+            FluidStack stored = owner.tanks[index].getFluid();
+            return resource != null && resource.amount > 0
+                && stored != null && stored.amount > 0
+                && stored.isFluidEqual(resource)
+                ? owner.tanks[index].drain(resource, doDrain) : null;
+        }
+
+        @Nullable
+        @Override
+        public FluidStack drain(int maxDrain, boolean doDrain) {
+            return maxDrain <= 0 ? null
+                : owner.tanks[index].drain(maxDrain, doDrain);
         }
     }
 }

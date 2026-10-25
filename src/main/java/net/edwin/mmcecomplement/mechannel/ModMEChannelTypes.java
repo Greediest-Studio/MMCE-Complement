@@ -7,6 +7,7 @@ import net.minecraft.util.ResourceLocation;
 public final class ModMEChannelTypes {
     public static final ComponentTypeMEChannel COMPONENT;
     public static final ComponentTypeMEConnectionShare SHARE_COMPONENT;
+    public static final ComponentTypeAEStorageAccess STORAGE_ACCESS_COMPONENT;
     public static final RequirementTypeMEChannel REQUIREMENT;
 
     static {
@@ -16,6 +17,8 @@ public final class ModMEChannelTypes {
         SHARE_COMPONENT = new ComponentTypeMEConnectionShare();
         SHARE_COMPONENT.setRegistryName(new ResourceLocation(Tags.MOD_ID,
             "me_connection_share"));
+        STORAGE_ACCESS_COMPONENT = new ComponentTypeAEStorageAccess();
+        STORAGE_ACCESS_COMPONENT.setRegistryName(new ResourceLocation(Tags.MOD_ID, "ae_storage_access"));
         REQUIREMENT = new RequirementTypeMEChannel();
         REQUIREMENT.setRegistryName(id);
     }

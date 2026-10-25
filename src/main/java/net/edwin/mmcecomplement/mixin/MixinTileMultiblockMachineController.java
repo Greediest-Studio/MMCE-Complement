@@ -7,6 +7,8 @@ import github.kasuminova.mmce.common.event.Phase;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -25,6 +27,7 @@ import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
 import net.edwin.mmcecomplement.accelerator.AcceleratorHatchLogic;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockOverclockHatch;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import net.edwin.mmcecomplement.batch.BatchController;
 import net.edwin.mmcecomplement.config.ModConfig;
 import net.edwin.mmcecomplement.compat.CompatMods;
@@ -34,6 +37,13 @@ import net.edwin.mmcecomplement.redstoneinterface.RedstoneDataController;
 import net.edwin.mmcecomplement.redstoneinterface.RedstoneInterfaceRegistry;
 import net.edwin.mmcecomplement.redstoneinterface.RedstoneSignalLogic;
 import net.edwin.mmcecomplement.redstoneinterface.RedstoneValueDefinition;
+import net.edwin.mmcecomplement.variant.StorageController;
+import net.edwin.mmcecomplement.variant.StorageMachine;
+import net.edwin.mmcecomplement.variant.StorageItemHandler;
+import net.edwin.mmcecomplement.variant.StorageFluidHandler;
+import net.edwin.mmcecomplement.compat.mekanism.StorageGasBridge;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
@@ -48,6 +58,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -72,10 +84,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(value = TileMultiblockMachineController.class, remap = false)
 public abstract class MixinTileMultiblockMachineController
-    implements AttachmentController, BatchController, RedstoneDataController {
+    implements AttachmentController, BatchController, RedstoneDataController,
+        StorageController {
 
     @Unique
     private static final String mmceComplement$NBT_MODULES = "mmceComplementModules";
+
+    @Unique
+    private static final String mmceComplement$NBT_STORAGE = "mmceComplementStorage";
+
+    @Unique
+    private transient StorageItemHandler mmceComplement$storageInventory;
+
+    @Unique
+    private transient NBTTagCompound mmceComplement$pendingStorageNBT;
+    @Unique private transient StorageFluidHandler mmceComplement$fluidStorage;
+    @Unique private transient Object mmceComplement$gasStorage;
+    @Unique private transient NBTTagCompound mmceComplement$pendingFluidNBT;
+    @Unique private transient NBTTagCompound mmceComplement$pendingGasNBT;
 
     @Unique
     private static final String mmceComplement$OVERCLOCK_ENERGY_MODIFIER =
@@ -91,6 +117,9 @@ public abstract class MixinTileMultiblockMachineController
 
     @Shadow
     protected DynamicMachine foundMachine;
+
+    @Shadow
+    protected DynamicMachine parentMachine;
 
     @Shadow
     protected EnumFacing controllerRotation;
@@ -345,11 +374,23 @@ public abstract class MixinTileMultiblockMachineController
     }
 
     /** Run attachment matching synchronously with MMCE's main structure check. */
-    @Inject(method = "checkStructure", at = @At("HEAD"))
-    private void mmceComplement$restoreMainPatternForCheck(CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "checkStructure", at = @At("HEAD"), cancellable = true)
+    private void mmceComplement$restoreMainPatternForCheck(
+        CallbackInfoReturnable<Boolean> cir) {
         mmceComplement$previousStructureCheckTick = lastStructureCheckTick;
         if (foundPattern == mmceComplement$combinedPattern) {
             foundPattern = mmceComplement$mainPattern;
+        }
+        // A storage machine matched through the metadata-tolerant fallback in
+        // matchesRotation must also survive MMCE's subsequent strict
+        // revalidation pass.  The same block-type check is still required.
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        if (foundMachine instanceof StorageMachine && foundPattern != null
+            && controller.getWorld() != null
+            && mmceComplement$matchesStorageBlockTypes(
+                foundPattern, controller.getWorld(), controller.getPos())) {
+            cir.setReturnValue(true);
         }
     }
 
@@ -369,6 +410,74 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$refreshModules(controller);
         mmceComplement$combineActivePatterns();
         mmceComplement$rebuildModuleRecipeConditionCache();
+    }
+
+    /**
+     * Some 1.12 blocks (notably log blocks supplied by older addon versions)
+     * report a different metadata value after placement even though their
+     * block type is the one selected in the machine definition.  MMCE's normal
+     * matcher compares metadata exactly, which made storage-only definitions
+     * appear permanently incomplete in those packs.  Keep the normal matcher
+     * authoritative and use a storage-specific block-type fallback only when
+     * every expected position still contains the declared block type.
+     */
+    @Inject(method = "matchesRotation", at = @At("RETURN"), cancellable = true)
+    private void mmceComplement$matchStorageBlockTypes(
+        TaggedPositionBlockArray pattern, DynamicMachine machine,
+        EnumFacing rotation, CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValue() || !(machine instanceof StorageMachine)
+            || !((StorageMachine) (Object) machine).mmceComplement$isStorageVariant()) {
+            return;
+        }
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        World world = controller.getWorld();
+        if (world == null || pattern == null || !mmceComplement$matchesStorageBlockTypes(
+            pattern, world, controller.getPos())) {
+            return;
+        }
+        foundPattern = pattern;
+        controllerRotation = rotation;
+        foundMachine = machine;
+        foundReplacements = machine.getModifiersAsMatchingReplacements();
+        cir.setReturnValue(true);
+    }
+
+    @Unique
+    private boolean mmceComplement$matchesStorageBlockTypes(
+        TaggedPositionBlockArray pattern, World world, BlockPos center) {
+        for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry
+            : pattern.getPattern().entrySet()) {
+            BlockArray.BlockInformation info = entry.getValue();
+            IBlockState actual = world.getBlockState(center.add(entry.getKey()));
+            boolean blockMatch = false;
+            for (IBlockStateDescriptor descriptor : info.getMatchingStates()) {
+                for (IBlockState expected : descriptor.getApplicable()) {
+                    boolean sameBlock = expected.getBlock() == actual.getBlock()
+                        // Storage controllers have a machine-specific block
+                        // instance (and registry id), while the JSON pattern
+                        // still declares MMCE's generic blockcontroller.
+                        || expected.getBlock() instanceof BlockController
+                        && actual.getBlock() instanceof BlockController;
+                    boolean sameMeta = expected.getBlock().getMetaFromState(expected)
+                        == actual.getBlock().getMetaFromState(actual);
+                    String blockName = expected.getBlock().getRegistryName() == null
+                        ? "" : expected.getBlock().getRegistryName().toString();
+                    // The GreedyCraft livingwood log changes its axis metadata
+                    // during placement; keep all other storage components on
+                    // MMCE's normal exact block-state semantics.
+                    boolean axisMetadataCompat =
+                        "gct_additions:livingwood_log".equals(blockName);
+                    if (sameBlock && (sameMeta || axisMetadataCompat)) {
+                        blockMatch = true;
+                        break;
+                    }
+                }
+                if (blockMatch) break;
+            }
+            if (!blockMatch) return false;
+        }
+        return true;
     }
 
     @Inject(method = "updateComponents", at = @At("RETURN"))
@@ -415,6 +524,11 @@ public abstract class MixinTileMultiblockMachineController
         mmceComplement$redstoneOutputHatches.clear();
         mmceComplement$pendingRedstoneOutputs.clear();
         mmceComplement$redstoneEventTick = false;
+        // A storage controller keeps its contents while the multiblock is
+        // temporarily incomplete.  The inventory is hidden by
+        // getStorageSlots() in that state, but must remain attached to the
+        // controller so rebuilding the structure restores the same contents
+        // and breaking the controller can still drop them.
         MachineConnectionRegistry.clear(
             (TileMultiblockMachineController) (Object) this);
         if (CompatMods.isAeItemCompatLoaded()) {
@@ -482,6 +596,17 @@ public abstract class MixinTileMultiblockMachineController
         // snapshots, so omitting it would leave an already loaded client with a
         // stale module set after the last active module becomes invalid.
         compound.setTag(mmceComplement$NBT_MODULES, list);
+        if (mmceComplement$storageInventory != null) {
+            compound.setTag(mmceComplement$NBT_STORAGE,
+                mmceComplement$storageInventory.serializeNBT());
+        } else if (mmceComplement$pendingStorageNBT != null) {
+            compound.setTag(mmceComplement$NBT_STORAGE,
+                mmceComplement$pendingStorageNBT.copy());
+        }
+        if (mmceComplement$fluidStorage != null) compound.setTag("mmceComplementFluid", mmceComplement$fluidStorage.serializeNBT());
+        else if (mmceComplement$pendingFluidNBT != null) compound.setTag("mmceComplementFluid", mmceComplement$pendingFluidNBT.copy());
+        if (mmceComplement$gasStorage != null) compound.setTag("mmceComplementGas", StorageGasBridge.serialize(mmceComplement$gasStorage));
+        else if (mmceComplement$pendingGasNBT != null) compound.setTag("mmceComplementGas", mmceComplement$pendingGasNBT.copy());
     }
 
     @Inject(method = "readCustomNBT", at = @At("RETURN"))
@@ -499,6 +624,144 @@ public abstract class MixinTileMultiblockMachineController
             }
         }
         mmceComplement$replaceActiveModules(saved, true);
+        mmceComplement$pendingStorageNBT = compound.hasKey(
+            mmceComplement$NBT_STORAGE, 10)
+            ? compound.getCompoundTag(mmceComplement$NBT_STORAGE) : null;
+        mmceComplement$pendingFluidNBT = compound.hasKey("mmceComplementFluid", 10) ? compound.getCompoundTag("mmceComplementFluid") : null;
+        mmceComplement$pendingGasNBT = compound.hasKey("mmceComplementGas", 10) ? compound.getCompoundTag("mmceComplementGas") : null;
+        if (mmceComplement$fluidStorage != null && mmceComplement$pendingFluidNBT != null) {
+            mmceComplement$fluidStorage.deserializeNBT(mmceComplement$pendingFluidNBT);
+            mmceComplement$pendingFluidNBT = null;
+        }
+        if (mmceComplement$gasStorage != null && mmceComplement$pendingGasNBT != null) {
+            StorageGasBridge.deserialize(mmceComplement$gasStorage, mmceComplement$pendingGasNBT);
+            mmceComplement$pendingGasNBT = null;
+        }
+        if (mmceComplement$storageInventory != null
+            && mmceComplement$isStorageController()) {
+            mmceComplement$storageInventory.deserializeNBT(
+                mmceComplement$pendingStorageNBT == null
+                    ? new NBTTagCompound() : mmceComplement$pendingStorageNBT);
+            mmceComplement$pendingStorageNBT = null;
+        }
+    }
+
+    @Override
+    public boolean mmceComplement$isStorageController() {
+        DynamicMachine machine = mmceComplement$getStorageMachine();
+        return machine instanceof StorageMachine
+            && ((StorageMachine) (Object) machine)
+                .mmceComplement$isStorageVariant();
+    }
+
+    @Override
+    public int mmceComplement$getStorageSlots() {
+        // Capacity is exposed to the GUI only while the multiblock is
+        // formed.  The backing handler itself remains available while the
+        // structure is broken so its contents stay safely sealed in the
+        // controller.
+        if (!mmceComplement$isStorageController()
+            || !((TileMultiblockMachineController) (Object) this)
+                .isStructureFormed()) {
+            return 0;
+        }
+        return mmceComplement$getConfiguredStorageSlots();
+    }
+
+    @Unique
+    private int mmceComplement$getConfiguredStorageSlots() {
+        DynamicMachine machine = mmceComplement$getStorageMachine();
+        if (!(machine instanceof StorageMachine)
+            || !((StorageMachine) (Object) machine)
+                .mmceComplement$isStorageVariant()) {
+            return 0;
+        }
+        return Math.max(0, ((StorageMachine) (Object) machine)
+            .mmceComplement$getStorageSlots());
+    }
+
+    @Unique
+    private DynamicMachine mmceComplement$getStorageMachine() {
+        return foundMachine != null ? foundMachine : parentMachine;
+    }
+
+    @Override
+    public ItemStackHandler mmceComplement$getStorageInventory() {
+        // Do not use the formed-only public capacity here: this method is
+        // also used when the controller is broken or being harvested.
+        int slots = mmceComplement$getConfiguredStorageSlots();
+        if (slots <= 0) {
+            return null;
+        }
+        if (mmceComplement$storageInventory == null
+            || mmceComplement$storageInventory.getSlots() != slots) {
+            StorageItemHandler old = mmceComplement$storageInventory;
+            World ownerWorld = ((TileEntity) (Object) this).getWorld();
+            if (old != null && old.getSlots() > slots && ownerWorld != null
+                && !ownerWorld.isRemote) {
+                for (int i = slots; i < old.getSlots(); i++) {
+                    ItemStack stack = old.getStackInSlot(i);
+                    if (stack != null && !stack.isEmpty()) {
+                        mmceComplement$dropResizedStorageStack(stack);
+                    }
+                }
+            }
+            StorageItemHandler replacement = new StorageItemHandler(
+                (TileMultiblockMachineController) (Object) this, slots);
+            if (old != null) {
+                int copy = Math.min(old.getSlots(), slots);
+                for (int i = 0; i < copy; i++) {
+                    replacement.setStackInSlot(i, old.getStackInSlot(i).copy());
+                }
+            }
+            mmceComplement$storageInventory = replacement;
+            if (mmceComplement$pendingStorageNBT != null) {
+                replacement.deserializeNBT(mmceComplement$pendingStorageNBT);
+                mmceComplement$pendingStorageNBT = null;
+            }
+        }
+        return mmceComplement$storageInventory;
+    }
+
+    @Override public boolean mmceComplement$hasFluidStorage() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine && ((StorageMachine)(Object)m).mmceComplement$hasFluidStorage(); }
+    @Override public int mmceComplement$getFluidStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getFluidStorageSlots() : 0; }
+    @Override public int mmceComplement$getFluidStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getFluidStorageCapacity() : 0; }
+    @Override public IFluidHandler mmceComplement$getFluidStorage() {
+        if (!mmceComplement$hasFluidStorage()) return null;
+        int slots=mmceComplement$getFluidStorageSlots(), cap=mmceComplement$getFluidStorageCapacity();
+        if (mmceComplement$fluidStorage==null || mmceComplement$fluidStorage.getSlots()!=slots || mmceComplement$fluidStorage.getCapacity()!=cap) {
+            mmceComplement$fluidStorage=new StorageFluidHandler((TileEntity)(Object)this,slots,cap);
+            if(mmceComplement$pendingFluidNBT!=null){mmceComplement$fluidStorage.deserializeNBT(mmceComplement$pendingFluidNBT);mmceComplement$pendingFluidNBT=null;}
+        }
+        return mmceComplement$fluidStorage;
+    }
+    @Override public IFluidHandler mmceComplement$getFluidTank(int index) { mmceComplement$getFluidStorage(); return mmceComplement$fluidStorage==null ? null : mmceComplement$fluidStorage.getTankInteractionHandler(index); }
+    @Override public boolean mmceComplement$hasGasStorage() { DynamicMachine m=mmceComplement$getStorageMachine(); return CompatMods.isMekanismCompatLoaded() && m instanceof StorageMachine && ((StorageMachine)(Object)m).mmceComplement$hasGasStorage(); }
+    @Override public int mmceComplement$getGasStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getGasStorageSlots() : 0; }
+    @Override public int mmceComplement$getGasStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getGasStorageCapacity() : 0; }
+    @Override public Object mmceComplement$getGasStorage() {
+        if (!mmceComplement$hasGasStorage()) return null;
+        if (mmceComplement$gasStorage==null) { mmceComplement$gasStorage=StorageGasBridge.create((TileEntity)(Object)this,mmceComplement$getGasStorageSlots(),mmceComplement$getGasStorageCapacity()); if(mmceComplement$pendingGasNBT!=null){StorageGasBridge.deserialize(mmceComplement$gasStorage,mmceComplement$pendingGasNBT);mmceComplement$pendingGasNBT=null;} }
+        return mmceComplement$gasStorage;
+    }
+
+    @Unique
+    private void mmceComplement$dropResizedStorageStack(ItemStack stack) {
+        World ownerWorld = ((TileEntity) (Object) this).getWorld();
+        if (ownerWorld == null || ownerWorld.isRemote || stack == null
+            || stack.isEmpty()) return;
+        EnumFacing facing = controllerRotation == null
+            ? EnumFacing.NORTH : controllerRotation;
+        BlockPos front = ((TileEntity) (Object) this).getPos().offset(facing);
+        EntityItem entity = new EntityItem(ownerWorld,
+            front.getX() + 0.5D, front.getY() + 0.5D, front.getZ() + 0.5D,
+            stack.copy());
+        entity.motionX = facing.getXOffset() * 0.18D
+            + (ownerWorld.rand.nextDouble() - 0.5D) * 0.05D;
+        entity.motionY = 0.12D + ownerWorld.rand.nextDouble() * 0.08D;
+        entity.motionZ = facing.getZOffset() * 0.18D
+            + (ownerWorld.rand.nextDouble() - 0.5D) * 0.05D;
+        ownerWorld.spawnEntity(entity);
     }
 
     @Unique

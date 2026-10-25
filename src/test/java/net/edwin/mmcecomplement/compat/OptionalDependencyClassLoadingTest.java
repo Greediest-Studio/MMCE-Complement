@@ -29,6 +29,8 @@ class OptionalDependencyClassLoadingTest {
         assertLoadable(loader, "net.edwin.mmcecomplement.init.ModBlocks");
         assertLoadable(loader,
             "net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII");
+        assertLoadable(loader,
+            "net.edwin.mmcecomplement.compat.ae.tile.TileAEStorageAccessPort");
     }
 
     @Test
@@ -42,6 +44,12 @@ class OptionalDependencyClassLoadingTest {
         assertNoOptionalSymbols(
             "net.edwin.mmcecomplement.network.NetworkHandlerMMCE");
         assertNoOptionalSymbols("net.edwin.mmcecomplement.init.ModBlocks");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.variant.StorageAutomation");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.variant.StorageTransfer");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.variant.StorageAccessPorts");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.ae.tile.TileAEStorageAccessPort");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.ae.storage.StorageMEGasBridge");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.mekanism.StorageGasBridge");
         assertNoOptionalSymbols(
             "net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII");
     }

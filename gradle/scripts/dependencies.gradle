@@ -55,6 +55,7 @@ dependencies {
     implementation rfg.deobf('curse.maven:modularmachinery-community-edition-817377:7372951')
     // AE2UEL API used by the existing appeng integration.
     compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
+    testCompileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
     // AE2S (Applied Energistics 2 - Supergiant) is an alternative AE2 branch.
     compileOnly 'com.github.FormlessDragon:Applied-Energistics-2-Supergiant:v1.0.15:dev'
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
@@ -64,6 +65,11 @@ dependencies {
     testCompileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')
     // Optional gas storage channel used by MMCE's ME gas input bus.
     compileOnly rfg.deobf('curse.maven:mekanism-energistics-1027681:5408319')
+    testCompileOnly rfg.deobf('curse.maven:mekanism-energistics-1027681:5408319')
+    // Opt-in gas adapter tests keep the ordinary optional-dependency audit intact.
+    if (project.hasProperty('test_ae_storage_gas')) {
+        testRuntimeOnly rfg.deobf('curse.maven:mekanism-energistics-1027681:5408319')
+    }
     // MMCE's public fluid-component hierarchy references Mekanism API types,
     // so tests that instantiate a fluid hatch need the optional API at runtime.
     testRuntimeOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')

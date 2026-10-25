@@ -18,6 +18,7 @@ import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProvider;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.block.BlockMEConnectionShareHatch;
+import net.edwin.mmcecomplement.compat.ae.block.BlockAEStorageAccessPort;
 import net.edwin.mmcecomplement.block.prop.DataInputAssemblyTier;
 import net.edwin.mmcecomplement.block.BlockAcceleratorHatch;
 import net.edwin.mmcecomplement.block.BlockBatchHatch;
@@ -63,6 +64,8 @@ import net.edwin.mmcecomplement.tile.TileQuadFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileQuadFluidOutputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileStorageController;
+import net.edwin.mmcecomplement.registry.StorageControllerRegistry;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEOreDictInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEItemInventoryInputBus;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEFluidInventoryInputBus;
@@ -72,15 +75,19 @@ import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.item.ItemBlockMEDataPatternProvider;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
 import net.edwin.mmcecomplement.compat.ae.tile.TileMEConnectionShareHatch;
+import net.edwin.mmcecomplement.compat.ae.tile.TileAEStorageAccessPort;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
@@ -89,6 +96,9 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -96,6 +106,10 @@ import hellfirepvp.modularmachinery.common.item.ItemBlockMEMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
+import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import net.minecraftforge.event.RegistryEvent.MissingMappings;
 
 /**
  * Handles Forge registry events for MMCE Complement.
@@ -105,11 +119,108 @@ public final class RegistryEvents {
 
     private RegistryEvents() {}
 
+    /** Handles legacy generic controller blocks already present in a world. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onStorageControllerRightClick(
+        PlayerInteractEvent.RightClickBlock event) {
+        if (event.getWorld() == null || event.getEntityPlayer() == null) return;
+        if (event.getEntityPlayer().isSneaking()) {
+            // Preserve vanilla's sneaking interaction path (including block
+            // placement) for legacy storage controller blocks as well.
+            return;
+        }
+        net.minecraft.tileentity.TileEntity tile = event.getWorld()
+            .getTileEntity(event.getPos());
+        // Newly registered storage blocks handle activation themselves. Let
+        // Block.onBlockActivated run so Forge/vanilla can complete its normal
+        // interaction path and avoid cancelling the hand animation.
+        if (tile != null && (tile.getBlockType()
+            instanceof net.edwin.mmcecomplement.block.BlockStorageController
+            || tile.getBlockType()
+            instanceof net.edwin.mmcecomplement.block.BlockStorageFactoryController)) {
+            // RightClickBlock is fired before the block callback.  Trigger the
+            // local animation here as well, because opening a custom GUI can
+            // prevent vanilla's normal interaction path from doing it.
+            if (event.getWorld().isRemote) {
+                event.getEntityPlayer().swingArm(event.getHand());
+            }
+            // Explicitly allow the block callback.  A number of integration
+            // handlers set USE_BLOCK to DENY for generic MMCE controllers;
+            // that would otherwise skip the dedicated storage block entirely.
+            event.setUseBlock(Event.Result.ALLOW);
+            return;
+        }
+        if (!(tile instanceof net.edwin.mmcecomplement.variant.StorageController)
+            || !((net.edwin.mmcecomplement.variant.StorageController) tile)
+                .mmceComplement$isStorageController()) {
+            return;
+        }
+        // The handler consumes the interaction before vanilla can animate it.
+        // Trigger the same hand swing explicitly so storage controllers retain
+        // the normal right-click feedback.
+        event.getEntityPlayer().swingArm(event.getHand());
+        if (!event.getWorld().isRemote) {
+            int gui = tile instanceof net.edwin.mmcecomplement.tile.TileStorageController
+                && ((net.edwin.mmcecomplement.tile.TileStorageController) tile)
+                    .isStructureFormed()
+                ? net.edwin.mmcecomplement.MMCEComplement.GUI_STORAGE
+                : net.edwin.mmcecomplement.MMCEComplement.GUI_STORAGE_UNFORMED;
+            event.getEntityPlayer().openGui(net.edwin.mmcecomplement.MMCEComplement.instance,
+                gui,
+                event.getWorld(), event.getPos().getX(), event.getPos().getY(),
+                event.getPos().getZ());
+        }
+        event.setCanceled(true);
+    }
+
+    /** Keep worlds made before storage controllers received their dedicated id loadable. */
+    @SubscribeEvent
+    public static void onBlockMissingMappings(MissingMappings<Block> event) {
+        for (MissingMappings.Mapping<Block> mapping : event.getAllMappings()) {
+            ResourceLocation key = mapping.key;
+            String path = key.getPath();
+            DynamicMachine machine = null;
+            if (path.startsWith("storage_") && path.endsWith("_controller")) {
+                String machinePath = path.substring("storage_".length(),
+                    path.length() - "_controller".length());
+                machine = MachineRegistry.getRegistry().getMachine(
+                    new ResourceLocation(key.getNamespace(), machinePath));
+            } else if (path.endsWith("_storage_controller")) {
+                // Previous builds used a suffix; keep placed blocks/items
+                // loadable when upgrading to the storage_ prefix.
+                machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(
+                    key.getNamespace(), path.substring(0,
+                        path.length() - "_storage_controller".length())));
+            } else if (path.endsWith("_factory_controller")) {
+                machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(
+                    key.getNamespace(), path.substring(0,
+                        path.length() - "_factory_controller".length())));
+            } else if (path.endsWith("_controller")) {
+                machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(
+                    key.getNamespace(), path.substring(0,
+                        path.length() - "_controller".length())));
+            }
+            if (!(machine instanceof net.edwin.mmcecomplement.variant.StorageMachine)
+                || !((net.edwin.mmcecomplement.variant.StorageMachine) (Object) machine)
+                    .mmceComplement$isStorageVariant()) {
+                continue;
+            }
+            // Storage variants deliberately have no factory/integrated
+            // controller. Legacy ordinary and factory ids both migrate to
+            // the one registered storage controller block.
+            Block replacement = BlockController.MACHINE_CONTROLLERS.get(machine);
+            if (replacement != null) {
+                mapping.remap(replacement);
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onComponentTypeRegister(
         RegistryEvent.Register<ComponentType> event) {
         event.getRegistry().register(ModMEChannelTypes.COMPONENT);
         event.getRegistry().register(ModMEChannelTypes.SHARE_COMPONENT);
+        event.getRegistry().register(ModMEChannelTypes.STORAGE_ACCESS_COMPONENT);
     }
 
     @SubscribeEvent
@@ -121,8 +232,13 @@ public final class RegistryEvents {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onBlockRegister(RegistryEvent.Register<Block> event) {
+        StorageControllerRegistry.registerBlocks(event.getRegistry());
+        // Storage controllers are registered by StorageControllerRegistry;
+        // they still need one explicit Forge TileEntity id for NBT packets.
+        GameRegistry.registerTileEntity(TileStorageController.class,
+            new ResourceLocation(Tags.MOD_ID, "storage_controller"));
         if (CompatMods.isFluxCompatLoaded()) {
             FluxRegistryCompat.registerBlocks(event.getRegistry());
         }
@@ -376,6 +492,12 @@ public final class RegistryEvents {
                 new ResourceLocation(Tags.MOD_ID,
                     "me_connection_share_hatch"));
 
+            ModBlocks.AE_STORAGE_ACCESS_PORT = new BlockAEStorageAccessPort();
+            ModBlocks.AE_STORAGE_ACCESS_PORT.setRegistryName(new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
+            event.getRegistry().register(ModBlocks.AE_STORAGE_ACCESS_PORT);
+            GameRegistry.registerTileEntity(TileAEStorageAccessPort.class,
+                new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
+
             ModBlocks.ME_ORE_DICT_INPUT_BUS = new BlockMEOreDictInputBus();
             ModBlocks.ME_ORE_DICT_INPUT_BUS.setRegistryName(
                 new ResourceLocation(Tags.MOD_ID, "me_ore_dict_input_bus"));
@@ -417,8 +539,9 @@ public final class RegistryEvents {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onItemRegister(RegistryEvent.Register<Item> event) {
+        StorageControllerRegistry.registerItems(event.getRegistry());
         ModItems.ATTACHMENT_CONSTRUCT_TOOL = new ItemAttachmentConstructTool();
         ModItems.ATTACHMENT_CONSTRUCT_TOOL.setRegistryName(
             new ResourceLocation(Tags.MOD_ID, "attachment_construct_tool"));
@@ -632,6 +755,7 @@ public final class RegistryEvents {
             registerMEItemBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
             registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerMEItemBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
+            registerMEItemBlock(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
             ItemBlockMEMachineComponent mineralItem =
                 new ItemBlockMEMachineComponent(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             mineralItem.setRegistryName(
@@ -772,9 +896,12 @@ public final class RegistryEvents {
         item.setCreativeTab(hellfirepvp.modularmachinery.common.CommonProxy.creativeTabModularMachinery);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     @SideOnly(Side.CLIENT)
     public static void onModelRegister(ModelRegistryEvent event) {
+        for (net.edwin.mmcecomplement.block.BlockStorageController block : StorageControllerRegistry.getControllers()) {
+            registerStorageControllerModels(block);
+        }
         ModelLoader.setCustomModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL, 0,
             new ModelResourceLocation(ModItems.ATTACHMENT_CONSTRUCT_TOOL.getRegistryName(), "inventory"));
         if (CompatMods.isMMCEAddonsLoaded()) {
@@ -820,6 +947,7 @@ public final class RegistryEvents {
             registerBlockItemModel(ModBlocks.ME_PATTERN_PROVIDER_II);
             registerBlockItemModel(ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.ME_CONNECTION_SHARE_HATCH);
+            registerBlockItemModel(ModBlocks.AE_STORAGE_ACCESS_PORT);
             registerBlockItemModel(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
@@ -845,6 +973,34 @@ public final class RegistryEvents {
         Item item = Item.getItemFromBlock(block);
         ModelLoader.setCustomModelResourceLocation(item, 0,
                 new ModelResourceLocation(block.getRegistryName(), "inventory"));
+    }
+
+    /**
+     * Storage controllers have machine-specific registry ids, while MMCE's
+     * controller mesh is shared by every controller.  Point both the held
+     * item and world states at that shared model; otherwise Forge searches for
+     * nonexistent blockstoragecontroller/<machine-id> model files.
+     */
+    @SideOnly(Side.CLIENT)
+    private static void registerStorageControllerModels(Block block) {
+        Item item = Item.getItemFromBlock(block);
+        if (item != null) {
+            ModelLoader.setCustomModelResourceLocation(item, 0,
+                new ModelResourceLocation(
+                    "modularmachinery:blockcontroller", "inventory"));
+        }
+        ModelLoader.setCustomStateMapper(block, new StateMapperBase() {
+            @Override
+            protected ModelResourceLocation getModelResourceLocation(
+                IBlockState state) {
+                EnumFacing facing = state.getValue(BlockController.FACING);
+                boolean formed = state.getValue(BlockController.FORMED);
+                String variant = "facing=" + facing.getName()
+                    + ",formed=" + formed;
+                return new ModelResourceLocation(
+                    "modularmachinery:blockcontroller", variant);
+            }
+        });
     }
 
     @SideOnly(Side.CLIENT)
@@ -1025,3 +1181,5 @@ public final class RegistryEvents {
         }
     }
 }
+
+

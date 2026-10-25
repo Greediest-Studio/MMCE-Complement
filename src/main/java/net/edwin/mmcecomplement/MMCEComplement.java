@@ -81,6 +81,10 @@ public class MMCEComplement {
     public static final int GUI_ME_DATA_PATTERN_PROVIDER = 26;
     /** GUI id for the tier-two smart-data ME pattern provider. */
     public static final int GUI_ME_DATA_PATTERN_PROVIDER_II = 27;
+    /** GUI id for storage variant controllers. */
+    public static final int GUI_STORAGE = 28;
+    /** Short status GUI shown when a storage controller is not formed. */
+    public static final int GUI_STORAGE_UNFORMED = 29;
     @Mod.Instance(Tags.MOD_ID)
     public static MMCEComplement instance;
 

@@ -30,6 +30,9 @@ import net.edwin.mmcecomplement.tile.TileNineFluidInputHatch;
 import net.edwin.mmcecomplement.tile.TileNineFluidOutputHatch;
 import net.edwin.mmcecomplement.tile.TileFilteredItemOutputHatch;
 import net.edwin.mmcecomplement.tile.TileFilteredFluidOutputHatch;
+import net.edwin.mmcecomplement.tile.TileStorageController;
+import net.edwin.mmcecomplement.variant.StorageController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -50,6 +53,16 @@ public class GuiHandlerMMCE implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+        if (id == MMCEComplement.GUI_STORAGE_UNFORMED
+                && te instanceof TileStorageController) {
+            return new ContainerStorageUnformed();
+        }
+        if (id == MMCEComplement.GUI_STORAGE
+                && te instanceof TileMultiblockMachineController
+                && te instanceof StorageController
+                && ((StorageController) te).mmceComplement$isStorageController()) {
+            return new ContainerStorage((StorageController) te, player);
+        }
         if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
                 && te instanceof TileMEFullExposureAssemblyFallback) {
             return new ContainerMEFullExposureFallback(
@@ -167,6 +180,16 @@ public class GuiHandlerMMCE implements IGuiHandler {
     public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         BlockPos pos = new BlockPos(x, y, z);
         TileEntity te = world.getTileEntity(pos);
+        if (id == MMCEComplement.GUI_STORAGE_UNFORMED) {
+            return te instanceof StorageController
+                ? new GuiStorageUnformed((StorageController) te) : null;
+        }
+        if (id == MMCEComplement.GUI_STORAGE
+                && te instanceof TileMultiblockMachineController
+                && te instanceof StorageController
+                && ((StorageController) te).mmceComplement$isStorageController()) {
+            return new GuiStorage(player, (StorageController) te);
+        }
         if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
             te = BlockMEDataPatternProviderII.upgradeStaleProviderTile(
                 world, pos, te);

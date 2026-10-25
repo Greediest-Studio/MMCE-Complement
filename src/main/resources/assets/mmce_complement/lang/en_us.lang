@@ -337,3 +337,21 @@ item.mmce_complement.machine_signal_cable_green.name=Green Machine Signal Cable
 item.mmce_complement.machine_signal_cable_red.name=Red Machine Signal Cable
 item.mmce_complement.machine_signal_cable_black.name=Black Machine Signal Cable
 item.mmce_complement.machine_signal_cable.name=Machine Signal Cable
+gui.mmce_complement.storage.title=Storage
+gui.mmce_complement.storage.page=Page %s / %s
+
+gui.mmce_complement.storage.capacity=Capacity: %s slots
+gui.mmce_complement.storage.sort=Sort
+gui.mmce_complement.storage.items=Items
+gui.mmce_complement.storage.fluids=Fluids
+gui.mmce_complement.storage.gases=Gases
+
+status.mmce_complement.storage.full=Internal storage is full
+
+gui.mmce_complement.storage.fluid_capacity=Fluid: %s slots, %s each
+gui.mmce_complement.storage.gas_capacity=Gas: %s slots, %s each
+
+gui.mmce_complement.storage.empty=Empty
+gui.mmce_complement.storage.unformed=Structure is not formed
+
+tile.mmce_complement.ae_storage_access_port.name=ME Storage Access Port

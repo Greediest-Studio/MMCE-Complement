@@ -83,6 +83,7 @@ public final class ClientColorEvents {
         registerBlock(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         registerBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
         registerBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
+        registerBlock(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
         registerBlock(event, ModBlocks.ME_DATA_PATTERN_PROVIDER);
         registerBlock(event, ModBlocks.ME_DATA_PATTERN_PROVIDER_II);
         registerBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
@@ -142,6 +143,7 @@ public final class ClientColorEvents {
         registerItem(event, ModBlocks.ME_FULL_EXPOSURE_ASSEMBLY);
         registerItem(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
         registerItem(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
+        registerItem(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
         registerItem(event, ModBlocks.ME_DATA_PATTERN_PROVIDER);
         registerItem(event, ModBlocks.ME_DATA_PATTERN_PROVIDER_II);
         registerItem(event, ModBlocks.ME_PATTERN_PROVIDER_II);

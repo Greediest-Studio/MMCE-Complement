@@ -1,10 +1,10 @@
 {
   "parent": "block/block",
-  "textures": {"particle": "mmce_complement:blocks/machine_signal_cable_up", "cable": "mmce_complement:blocks/machine_signal_cable_up"},
+  "textures": {"particle": "mmce_complement:blocks/machine_signal_cable_up", "cable": "mmce_complement:blocks/machine_signal_cable_up", "cap": "mmce_complement:blocks/machine_signal_cable_core"},
   "elements": [{
     "from": [5, 11, 5], "to": [11, 16, 11],
     "faces": {
-      "down": {"texture": "#cable", "tintindex": 0}, "up": {"texture": "#cable", "tintindex": 0},
+      "down": {"texture": "#cap", "tintindex": 0}, "up": {"texture": "#cap", "tintindex": 0},
       "north": {"texture": "#cable", "tintindex": 0}, "south": {"texture": "#cable", "tintindex": 0},
       "west": {"texture": "#cable", "tintindex": 0}, "east": {"texture": "#cable", "tintindex": 0}
     }

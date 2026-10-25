@@ -321,6 +321,13 @@ tasks.withType(JavaCompile).configureEach {
 // the protected BlockMachineComponent invocation explicitly, otherwise MCP names
 // such as setHardness/onBlockActivated leak into the production jar.
 def inheritedMinecraftMethodMappings = [
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockAEStorageAccessPort', 'onBlockActivated', 'func_180639_a', '(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/util/EnumHand;Lnet/minecraft/util/EnumFacing;FFF)Z'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockAEStorageAccessPort', 'createNewTileEntity', 'func_149915_a', '(Lnet/minecraft/world/World;I)Lnet/minecraft/tileentity/TileEntity;'],
+        ['net/edwin/mmcecomplement/compat/ae/block/BlockAEStorageAccessPort', 'addInformation', 'func_190948_a', '(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Ljava/util/List;Lnet/minecraft/client/util/ITooltipFlag;)V'],
+        ['net/edwin/mmcecomplement/compat/ae/tile/TileAEStorageAccessPort', 'getWorld', 'func_145831_w', '()Lnet/minecraft/world/World;'],
+        ['net/edwin/mmcecomplement/compat/ae/tile/TileAEStorageAccessPort', 'getPos', 'func_174877_v', '()Lnet/minecraft/util/math/BlockPos;'],
+        ['net/edwin/mmcecomplement/compat/ae/tile/TileAEStorageAccessPort', 'isInvalid', 'func_145837_r', '()Z'],
+        ['net/edwin/mmcecomplement/compat/ae/tile/TileAEStorageAccessPort', 'markDirty', 'func_70296_d', '()V'],
         ['hellfirepvp/modularmachinery/common/block/BlockMachineComponent', 'setSoundType', 'func_149672_a', '(Lnet/minecraft/block/SoundType;)Lnet/minecraft/block/Block;'],
 
         // Calls whose bytecode owner is a Minecraft subclass while the mapped

@@ -83,6 +83,7 @@ public final class ModBlocks {
     public static Block ME_MANA_OUTPUT_BUS;
     public static Block ME_CHANNEL_INPUT_HATCH;
     public static BlockMEConnectionShareHatch ME_CONNECTION_SHARE_HATCH;
+    public static Block AE_STORAGE_ACCESS_PORT;
     public static BlockMEDataPatternProvider ME_DATA_PATTERN_PROVIDER;
     public static BlockMEDataPatternProviderII ME_DATA_PATTERN_PROVIDER_II;
     public static BlockMEPatternProviderII ME_PATTERN_PROVIDER_II;

@@ -27,6 +27,7 @@ import net.edwin.mmcecomplement.tile.TileFilteredItemOutputHatch;
 import net.edwin.mmcecomplement.tile.TileFilteredFluidOutputHatch;
 import net.edwin.mmcecomplement.gui.ContainerFilteredItemOutputHatch;
 import net.edwin.mmcecomplement.gui.ContainerFilteredFluidOutputHatch;
+import net.edwin.mmcecomplement.gui.ContainerStorage;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.nbt.NBTTagCompound;
@@ -45,6 +46,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraft.item.ItemStack;
+import net.edwin.mmcecomplement.compat.mekanism.StorageGasBridge;
 
 import io.netty.buffer.ByteBuf;
 
@@ -74,6 +76,104 @@ public final class NetworkHandlerMMCE {
                 SetHatchFieldMessage.class, 1, Side.SERVER);
         CHANNEL.registerMessage(InteractQuadFluidTankHandler.class,
                 InteractQuadFluidTankMessage.class, 2, Side.SERVER);
+        CHANNEL.registerMessage(StoragePageHandler.class,
+                StoragePageMessage.class, 3, Side.SERVER);
+        CHANNEL.registerMessage(StorageSortHandler.class,
+                StorageSortMessage.class, 4, Side.SERVER);
+        CHANNEL.registerMessage(StorageTabHandler.class, StorageTabMessage.class, 5, Side.SERVER);
+        CHANNEL.registerMessage(StorageTankHandler.class, StorageTankMessage.class, 6, Side.SERVER);
+    }
+
+    public static final class StorageTabMessage implements IMessage {
+        public int mode; public StorageTabMessage() {} public StorageTabMessage(int mode){this.mode=mode;}
+        @Override public void fromBytes(ByteBuf b){mode=b.readByte();} @Override public void toBytes(ByteBuf b){b.writeByte(mode);}
+    }
+    public static final class StorageTabHandler implements IMessageHandler<StorageTabMessage,IMessage> {
+        @Override public IMessage onMessage(StorageTabMessage m, MessageContext c){ EntityPlayerMP p=c.getServerHandler().player; if(p!=null)p.getServerWorld().addScheduledTask(()->{if(p.openContainer instanceof ContainerStorage){ContainerStorage x=(ContainerStorage)p.openContainer;if(x.canInteractWith(p))x.setMode(m.mode);}}); return null; }
+    }
+    public static final class StorageTankMessage implements IMessage {
+        public int tank; public StorageTankMessage(){} public StorageTankMessage(int tank){this.tank=tank;}
+        @Override public void fromBytes(ByteBuf b){tank=b.readInt();} @Override public void toBytes(ByteBuf b){b.writeInt(tank);}
+    }
+    public static final class StorageTankHandler implements IMessageHandler<StorageTankMessage,IMessage> {
+        @Override public IMessage onMessage(StorageTankMessage m, MessageContext c){ EntityPlayerMP p=c.getServerHandler().player; if(p!=null)p.getServerWorld().addScheduledTask(()->apply(p,m.tank)); return null; }
+        private static void apply(EntityPlayerMP player, int tank) {
+            if (!(player.openContainer instanceof ContainerStorage)) return;
+            ContainerStorage container = (ContainerStorage) player.openContainer;
+            if (!container.canInteractWith(player) || tank < 0 || tank >= container.getTankCount()) return;
+            boolean changed = false;
+            if (container.getMode() == ContainerStorage.MODE_FLUIDS) {
+                net.minecraftforge.fluids.FluidActionResult result =
+                    net.edwin.mmcecomplement.variant.StorageFluidInteraction.interact(
+                        player.inventory.getItemStack(), container.getFluidTank(tank),
+                        new net.minecraftforge.items.wrapper.PlayerMainInvWrapper(player.inventory), player);
+                if (result.isSuccess()) {
+                    player.inventory.setItemStack(result.getResult());
+                    changed = true;
+                }
+            } else if (container.getMode() == ContainerStorage.MODE_GASES) {
+                changed = StorageGasBridge.interact(container.getGasStorage(), player, tank);
+            }
+            if (changed) {
+                player.inventory.markDirty();
+                player.inventoryContainer.detectAndSendChanges();
+                container.detectAndSendChanges();
+                // A custom GUI packet bypasses vanilla's click acknowledgement.
+                player.connection.sendPacket(new net.minecraft.network.play.server.SPacketSetSlot(
+                    -1, -1, player.inventory.getItemStack()));
+            }
+        }
+    }
+
+    public static final class StoragePageMessage implements IMessage {
+        public int page;
+        public StoragePageMessage() {}
+        public StoragePageMessage(int page) { this.page = page; }
+        @Override public void fromBytes(ByteBuf buf) { page = buf.readInt(); }
+        @Override public void toBytes(ByteBuf buf) { buf.writeInt(page); }
+    }
+
+    public static final class StoragePageHandler
+        implements IMessageHandler<StoragePageMessage, IMessage> {
+        @Override public IMessage onMessage(StoragePageMessage msg, MessageContext ctx) {
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player != null) player.getServerWorld().addScheduledTask(() -> {
+                if (player.openContainer instanceof ContainerStorage) {
+                    ContainerStorage container = (ContainerStorage) player.openContainer;
+                    if (msg.page >= 0 && msg.page < container.getPageCount()
+                        && container.canInteractWith(player)) {
+                        container.setPage(msg.page);
+                    }
+                }
+            });
+            return null;
+        }
+    }
+
+    /** Middle mouse action used by Inventory Sorter and supported natively by
+     * the storage variant.  The packet carries no client supplied inventory
+     * data; the server sorts the controller's real handler. */
+    public static final class StorageSortMessage implements IMessage {
+        @Override public void fromBytes(ByteBuf buf) {}
+        @Override public void toBytes(ByteBuf buf) {}
+    }
+
+    public static final class StorageSortHandler
+        implements IMessageHandler<StorageSortMessage, IMessage> {
+        @Override public IMessage onMessage(StorageSortMessage msg,
+                                            MessageContext ctx) {
+            EntityPlayerMP player = ctx.getServerHandler().player;
+            if (player != null) player.getServerWorld().addScheduledTask(() -> {
+                if (player.openContainer instanceof ContainerStorage) {
+                    ContainerStorage container =
+                        (ContainerStorage) player.openContainer;
+                    if (container.canInteractWith(player)) {
+                        container.sortStorage();
+                    }
+                }
+            });
+            return null;
+        }
     }
 
     // -- Field IDs ------------------------------------------------------
