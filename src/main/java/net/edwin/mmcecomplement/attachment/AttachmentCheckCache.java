@@ -7,7 +7,8 @@ package net.edwin.mmcecomplement.attachment;
  */
 public final class AttachmentCheckCache {
 
-    public static final int DEFAULT_FALLBACK_INTERVAL = 100;
+    /** Two seconds at Minecraft's 20 TPS server tick rate. */
+    public static final int DEFAULT_FALLBACK_INTERVAL = 40;
 
     private final int fallbackInterval;
     private boolean dirty = true;
@@ -33,6 +34,11 @@ public final class AttachmentCheckCache {
         if (areaChanged || isFallbackDue(worldTime)) {
             dirty = true;
         }
+    }
+
+    /** Marks the cache dirty without requiring a world-time sample. */
+    public void markDirty() {
+        dirty = true;
     }
 
     public void markRefreshed(long worldTime, boolean allAreasLoaded) {

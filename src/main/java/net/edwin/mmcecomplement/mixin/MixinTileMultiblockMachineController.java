@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.edwin.mmcecomplement.attachment.AttachmentController;
+import net.edwin.mmcecomplement.attachment.AttachmentCheckCache;
 import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentModule;
 import net.edwin.mmcecomplement.attachment.AttachmentPatternResolver;
@@ -136,6 +137,10 @@ public abstract class MixinTileMultiblockMachineController
     @Shadow
     protected Map<String, List<MachineUpgrade>> foundUpgrades;
 
+    /** MMCE's casing-color pass, rerun after the attachment pattern is merged. */
+    @Shadow
+    protected abstract void distributeCasingColor();
+
     @Unique
     private volatile Set<String> mmceComplement$activeModules = Collections.emptySet();
 
@@ -167,6 +172,24 @@ public abstract class MixinTileMultiblockMachineController
 
     @Unique
     private int mmceComplement$previousStructureCheckTick = -1;
+
+    /** Independent attachment invalidation; MMCE's main structure check is delayed. */
+    @Unique
+    private final AttachmentCheckCache mmceComplement$attachmentCheckCache =
+        new AttachmentCheckCache();
+
+    @Unique
+    private DynamicMachine mmceComplement$attachmentContextMachine;
+
+    @Unique
+    private EnumFacing mmceComplement$attachmentContextRotation;
+
+    @Unique
+    private TaggedPositionBlockArray mmceComplement$attachmentContextPattern;
+
+    @Unique
+    private volatile List<StructureBoundingBox> mmceComplement$attachmentBounds =
+        Collections.emptyList();
 
     @Unique
     private volatile int mmceComplement$maxBatchTime;
@@ -373,6 +396,32 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
     }
 
+    /**
+     * MMCE can postpone checkStructure for several seconds.  Attachment
+     * modules have their own invalidation path so a placed/replaced block is
+     * observed on the next controller tick, with a 40 tick safety fallback.
+     */
+    @Inject(method = "doRestrictedTick", at = @At("HEAD"))
+    private void mmceComplement$pollAttachmentChanges(CallbackInfo ci) {
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        World world = controller.getWorld();
+        if (world == null || world.isRemote) {
+            return;
+        }
+        long worldTime = world.getTotalWorldTime();
+        boolean contextChanged = mmceComplement$attachmentContextMachine != foundMachine
+            || mmceComplement$attachmentContextRotation != controllerRotation
+            || mmceComplement$attachmentContextPattern != mmceComplement$mainPattern;
+        if (contextChanged) {
+            mmceComplement$attachmentCheckCache.reset();
+            mmceComplement$attachmentContextMachine = foundMachine;
+            mmceComplement$attachmentContextRotation = controllerRotation;
+            mmceComplement$attachmentContextPattern = mmceComplement$mainPattern;
+        }
+        mmceComplement$refreshAttachmentsIfDue(controller, worldTime, contextChanged);
+    }
+
     /** Run attachment matching synchronously with MMCE's main structure check. */
     @Inject(method = "checkStructure", at = @At("HEAD"), cancellable = true)
     private void mmceComplement$restoreMainPatternForCheck(
@@ -407,9 +456,11 @@ public abstract class MixinTileMultiblockMachineController
         }
         TaggedPositionBlockArray mainPattern = foundPattern;
         mmceComplement$mainPattern = mainPattern;
-        mmceComplement$refreshModules(controller);
-        mmceComplement$combineActivePatterns();
-        mmceComplement$rebuildModuleRecipeConditionCache();
+        mmceComplement$attachmentContextMachine = foundMachine;
+        mmceComplement$attachmentContextRotation = controllerRotation;
+        mmceComplement$attachmentContextPattern = mainPattern;
+        mmceComplement$refreshAttachmentsNow(controller,
+            controller.getWorld().getTotalWorldTime());
     }
 
     /**
@@ -495,6 +546,10 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$refreshMachineSignalHatches(
             (TileMultiblockMachineController) (Object) this);
+        // Attachment blocks are appended after MMCE's native structure pass.
+        // Run the same casing-color propagation once the combined pattern is
+        // published so their ColorableMachineTile state matches the machine.
+        distributeCasingColor();
         if (CompatMods.isAeItemCompatLoaded()) {
             MEConnectionShareManager.scheduleRefresh(
                 (TileMultiblockMachineController) (Object) this);
@@ -505,6 +560,11 @@ public abstract class MixinTileMultiblockMachineController
     private void mmceComplement$resetAttachmentModules(boolean clearData, CallbackInfo ci) {
         mmceComplement$mainPattern = null;
         mmceComplement$combinedPattern = null;
+        mmceComplement$attachmentContextMachine = null;
+        mmceComplement$attachmentContextRotation = null;
+        mmceComplement$attachmentContextPattern = null;
+        mmceComplement$attachmentBounds = Collections.emptyList();
+        mmceComplement$attachmentCheckCache.reset();
         mmceComplement$moduleRecipeConditionCache.clear();
         mmceComplement$moduleRecipes = Collections.emptyList();
         mmceComplement$moduleRecipeCandidates = null;
@@ -764,10 +824,84 @@ public abstract class MixinTileMultiblockMachineController
         ownerWorld.spawnEntity(entity);
     }
 
+    @Override
+    public void mmceComplement$markAttachmentDirty(BlockPos changedPosition) {
+        TileMultiblockMachineController controller =
+            (TileMultiblockMachineController) (Object) this;
+        World world = controller.getWorld();
+        if (world == null || world.isRemote) {
+            return;
+        }
+        // If the machine context is not available yet, retain the dirty flag;
+        // the first formed tick will establish the module bounds.
+        if (changedPosition == null || foundMachine == null
+            || controllerRotation == null) {
+            mmceComplement$attachmentCheckCache.markDirty();
+            return;
+        }
+        Map<String, AttachmentModule> definitions = mmceComplement$getDefinitions();
+        if (definitions.isEmpty()) {
+            return;
+        }
+        for (StructureBoundingBox bounds : mmceComplement$attachmentBounds) {
+            if (bounds.isVecInside(changedPosition)) {
+                mmceComplement$attachmentCheckCache.markDirty();
+                return;
+            }
+        }
+        // A module may not have been matched yet (for example immediately
+        // after loading a saved chunk), so do not miss its first placement.
+        if (mmceComplement$attachmentBounds.isEmpty()) {
+            mmceComplement$attachmentCheckCache.markDirty();
+        }
+    }
+
+    @Unique
+    private void mmceComplement$refreshAttachmentsIfDue(
+        TileMultiblockMachineController controller, long worldTime,
+        boolean contextChanged) {
+        mmceComplement$attachmentCheckCache.observeWorldChange(worldTime, false);
+        if (!mmceComplement$attachmentCheckCache.shouldRefresh(
+            worldTime, contextChanged)) {
+            return;
+        }
+        mmceComplement$refreshAttachmentsNow(controller, worldTime);
+    }
+
+    @Unique
+    private void mmceComplement$refreshAttachmentsNow(
+        TileMultiblockMachineController controller, long worldTime) {
+        if (foundMachine == null || foundPattern == null
+            || controllerRotation == null) {
+            mmceComplement$replaceActiveModules(Collections.emptySet(), false);
+            mmceComplement$attachmentCheckCache.markRefreshed(worldTime, true);
+            return;
+        }
+        // checkStructure publishes the native pattern before this method. If
+        // a later poll sees the combined pattern, keep the original as the
+        // matching base and never append modules to an already combined copy.
+        if (mmceComplement$mainPattern == null
+            || foundPattern != mmceComplement$combinedPattern) {
+            mmceComplement$mainPattern = foundPattern;
+        }
+        mmceComplement$refreshModules(controller);
+        mmceComplement$combineActivePatterns();
+        mmceComplement$rebuildModuleRecipeConditionCache();
+        distributeCasingColor();
+        // An unloaded module area cannot be matched yet. Keep the cache on
+        // its normal 40 tick cadence instead of rematching every tick; once
+        // the chunk is loaded the next fallback pass observes it within two
+        // seconds. Block events still force an immediate pass for loaded
+        // replacements.
+        mmceComplement$attachmentCheckCache.markRefreshed(
+            worldTime, true);
+    }
+
     @Unique
     private void mmceComplement$refreshModules(TileMultiblockMachineController controller) {
         Map<String, AttachmentModule> definitions = mmceComplement$getDefinitions();
         if (foundMachine == null || controllerRotation == null || definitions.isEmpty()) {
+            mmceComplement$attachmentBounds = Collections.emptyList();
             mmceComplement$replaceActiveModules(Collections.emptySet(), false);
             return;
         }
@@ -775,6 +909,8 @@ public abstract class MixinTileMultiblockMachineController
         LinkedHashSet<String> matched = new LinkedHashSet<>();
         Map<String, Collection<String>> dependencies = new LinkedHashMap<>();
         Map<String, Collection<String>> conflicts = new LinkedHashMap<>();
+        List<StructureBoundingBox> attachmentBounds = new ArrayList<>();
+        mmceComplement$attachmentBounds = Collections.emptyList();
         for (AttachmentModule module : definitions.values()) {
             dependencies.put(module.getId(), module.getDependencies());
             conflicts.put(module.getId(), module.getConflicts());
@@ -786,6 +922,7 @@ public abstract class MixinTileMultiblockMachineController
                 continue;
             }
             StructureBoundingBox patternBounds = pattern.getPatternBoundingBox(controller.getPos());
+            attachmentBounds.add(patternBounds);
             if (!controller.getWorld().isAreaLoaded(patternBounds)) {
                 if (mmceComplement$activeModules.contains(module.getId())) {
                     matched.add(module.getId());
@@ -806,6 +943,7 @@ public abstract class MixinTileMultiblockMachineController
         }
         mmceComplement$replaceActiveModules(
             AttachmentResolver.resolve(matched, dependencies, conflicts), false);
+        mmceComplement$attachmentBounds = Collections.unmodifiableList(attachmentBounds);
     }
 
     @Unique
