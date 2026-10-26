@@ -18,6 +18,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -95,15 +97,23 @@ public final class MachineConnectionRegistry {
         if (world == null || world.isRemote) return;
         clearWorld(world);
         List<TileMachineSignalInputHatch> inputs = new ArrayList<>();
-        List<TileMachineSignalOutputHatch> outputs = new ArrayList<>();
+        List<TileMachineSignalCable> cables = new ArrayList<>();
         for (TileEntity tile : world.loadedTileEntityList) {
             if (tile instanceof TileMachineSignalInputHatch) inputs.add((TileMachineSignalInputHatch) tile);
-            if (tile instanceof TileMachineSignalOutputHatch) outputs.add((TileMachineSignalOutputHatch) tile);
+            if (tile instanceof TileMachineSignalCable
+                && isCable(world, tile.getPos())) {
+                cables.add((TileMachineSignalCable) tile);
+            }
         }
+
+        // Resolve each physical cable component exactly once. The old path
+        // performed a complete BFS for every input hatch, which made a large
+        // network quadratic in the number of inputs.
+        Map<BlockPos, NetworkEndpoints> networks = buildCableNetworks(world, cables);
         for (TileMachineSignalInputHatch input : inputs) {
             TileMultiblockMachineController host = input.getBoundController();
             if (host == null || host.getFoundMachine() == null) continue;
-            NetworkEndpoints endpoints = findEndpoints(world, input.getPos());
+            NetworkEndpoints endpoints = endpointsForInput(world, input.getPos(), networks);
             if (endpoints.inputs.size() != 1 || endpoints.outputs.size() != 1
                 || endpoints.inputs.get(0) != input) continue;
             TileMachineSignalOutputHatch output = endpoints.outputs.get(0);
@@ -113,6 +123,69 @@ public final class MachineConnectionRegistry {
                               child.getFoundMachine().getRegistryName())) continue;
             CONNECTORS.computeIfAbsent(host, ignored -> new LinkedHashSet<>()).add(child);
             CONNECTED.computeIfAbsent(child, ignored -> new LinkedHashSet<>()).add(host);
+        }
+    }
+
+    private static Map<BlockPos, NetworkEndpoints> buildCableNetworks(
+        World world, List<TileMachineSignalCable> cables) {
+        Map<BlockPos, NetworkEndpoints> networks = new HashMap<>();
+        Set<BlockPos> visited = new HashSet<>();
+        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        for (TileMachineSignalCable tile : cables) {
+            BlockPos start = tile.getPos();
+            if (!visited.add(start)) continue;
+            NetworkEndpoints endpoints = new NetworkEndpoints();
+            queue.add(start);
+            while (!queue.isEmpty()) {
+                BlockPos pos = queue.removeFirst();
+                TileMachineSignalCable cable = cableAt(world, pos);
+                if (cable == null) continue;
+                networks.put(pos, endpoints);
+                int cableColor = cableColorAt(world, pos);
+                for (net.minecraft.util.EnumFacing facing
+                    : net.minecraft.util.EnumFacing.values()) {
+                    BlockPos next = pos.offset(facing);
+                    if (isCable(world, next)) {
+                        TileMachineSignalCable other = cableAt(world, next);
+                        if (other != null
+                            && colorsConnect(cableColor,
+                                cableColorAt(world, next))
+                            && visited.add(next)) {
+                            queue.addLast(next);
+                        }
+                    } else {
+                        collectEndpoint(world, next, endpoints);
+                    }
+                }
+            }
+        }
+        return networks;
+    }
+
+    private static NetworkEndpoints endpointsForInput(
+        World world, BlockPos start,
+        Map<BlockPos, NetworkEndpoints> networks) {
+        NetworkEndpoints result = new NetworkEndpoints();
+        for (net.minecraft.util.EnumFacing facing
+            : net.minecraft.util.EnumFacing.values()) {
+            BlockPos next = start.offset(facing);
+            if (isCable(world, next)) {
+                NetworkEndpoints component = networks.get(next);
+                if (component != null) mergeEndpoints(result, component);
+            } else {
+                collectEndpoint(world, next, result);
+            }
+        }
+        return result;
+    }
+
+    private static void mergeEndpoints(NetworkEndpoints target,
+                                       NetworkEndpoints source) {
+        for (TileMachineSignalInputHatch input : source.inputs) {
+            if (!target.inputs.contains(input)) target.inputs.add(input);
+        }
+        for (TileMachineSignalOutputHatch output : source.outputs) {
+            if (!target.outputs.contains(output)) target.outputs.add(output);
         }
     }
 
