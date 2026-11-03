@@ -105,7 +105,7 @@ public class TileMEInputAssembly extends MEItemInputBus
         // The item GUI normally binds the real inventory directly. This GUI
         // binds a type-neutral display inventory, so mirror recipe consumption
         // immediately instead of waiting for the next grid tick.
-        inventory.setListener(slot -> {
+        IOInventoryListenerCompat.setListener(inventory, slot -> {
             markNoUpdate();
             refreshDisplay(slot);
             if (!inTick) wakeGridTicking();
