@@ -25,6 +25,7 @@
                    "MixinRecipeCraftingContext",
                    "MixinInfusionRecipeRegistryCompile",
                    "MixinTileFactoryController",
+                   "MixinTileEnergyHatchRedstoneCompat",
                    "MixinBlockControllerStorageFallback",
                    "AccessorTileMachineController",
                    "MixinTileMultiblockMachineController",

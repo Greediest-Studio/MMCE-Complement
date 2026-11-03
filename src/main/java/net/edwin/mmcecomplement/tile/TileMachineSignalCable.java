@@ -1,6 +1,5 @@
 package net.edwin.mmcecomplement.tile;
 
-import net.edwin.mmcecomplement.machineconnection.MachineConnectionRegistry;
 import net.minecraft.nbt.NBTTagCompound;
 
 /** Cable node. A negative color means uncolored and connects to every color. */
@@ -26,10 +25,6 @@ public class TileMachineSignalCable extends hellfirepvp.modularmachinery.common.
             world.notifyBlockUpdate(pos, state, state, 3);
             world.markBlockRangeForRenderUpdate(pos.add(-1, -1, -1),
                 pos.add(1, 1, 1));
-            if (!world.isRemote && world.getMinecraftServer() != null) {
-                world.getMinecraftServer().addScheduledTask(() ->
-                    MachineConnectionRegistry.refresh(world));
-            }
         }
     }
 

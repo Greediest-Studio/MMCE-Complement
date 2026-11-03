@@ -2,7 +2,6 @@ package net.edwin.mmcecomplement.block;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
-import net.edwin.mmcecomplement.machineconnection.MachineConnectionRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -36,20 +35,11 @@ public abstract class BlockMachineSignalHatch extends BlockMachineComponent {
     @Override public void onBlockAdded(World world, net.minecraft.util.math.BlockPos pos,
                                        IBlockState state) {
         super.onBlockAdded(world, pos, state);
-        scheduleRefresh(world);
     }
 
     @Override public void breakBlock(World world, net.minecraft.util.math.BlockPos pos,
                                      IBlockState state) {
         super.breakBlock(world, pos, state);
-        scheduleRefresh(world);
-    }
-
-    private static void scheduleRefresh(World world) {
-        if (!world.isRemote && world.getMinecraftServer() != null) {
-            world.getMinecraftServer().addScheduledTask(() ->
-                MachineConnectionRegistry.refresh(world));
-        }
     }
 
     @Override @Nullable public TileEntity createTileEntity(@Nonnull World world, @Nonnull IBlockState state) {

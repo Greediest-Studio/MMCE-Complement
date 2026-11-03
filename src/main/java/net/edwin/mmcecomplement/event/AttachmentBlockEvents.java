@@ -9,6 +9,8 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.ArrayList;
+
 /**
  * Invalidates attachment matching when a block in a loaded world changes.
  * MMCE's own area listener only drives its delayed main-structure check, so
@@ -43,7 +45,11 @@ public final class AttachmentBlockEvents {
         // Block changes are infrequent compared with controller ticks. The
         // controller performs the cheap bounding-box test before setting its
         // dirty bit, so this remains safe even with many loaded machines.
-        for (TileEntity tile : world.loadedTileEntityList) {
+        // Block notifications can be delivered while another handler is
+        // loading or unloading tile entities.  Iterate over a snapshot so a
+        // re-entrant list update cannot invalidate the iterator and crash the
+        // server tick.
+        for (TileEntity tile : new ArrayList<>(world.loadedTileEntityList)) {
             if (tile instanceof AttachmentController) {
                 ((AttachmentController) tile)
                     .mmceComplement$markAttachmentDirty(changedPosition);

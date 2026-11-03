@@ -5,7 +5,6 @@ import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import net.edwin.mmcecomplement.tile.TileMachineSignalCable;
 import net.edwin.mmcecomplement.item.ItemBlockMachineSignalCable;
 import net.edwin.mmcecomplement.init.ModItems;
-import net.edwin.mmcecomplement.machineconnection.MachineConnectionRegistry;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -148,7 +147,6 @@ public class BlockMachineSignalCable extends BlockMachineComponent {
 
     @Override public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
         super.onBlockAdded(world, pos, state);
-        scheduleRefresh(world);
     }
 
     @Override
@@ -171,7 +169,6 @@ public class BlockMachineSignalCable extends BlockMachineComponent {
 
     @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {
         super.breakBlock(world, pos, state);
-        scheduleRefresh(world);
     }
 
     /** Drop the registry item matching the placed cable's dye, rather than the
@@ -203,13 +200,6 @@ public class BlockMachineSignalCable extends BlockMachineComponent {
                                           Block blockIn, BlockPos fromPos) {
         super.neighborChanged(state, world, pos, blockIn, fromPos);
         world.markBlockRangeForRenderUpdate(pos, pos);
-        scheduleRefresh(world);
-    }
-
-    private static void scheduleRefresh(World world) {
-        if (!world.isRemote && world.getMinecraftServer() != null) {
-            world.getMinecraftServer().addScheduledTask(() -> MachineConnectionRegistry.refresh(world));
-        }
     }
 
     private static AxisAlignedBB pipeBounds(IBlockAccess world, BlockPos pos) {

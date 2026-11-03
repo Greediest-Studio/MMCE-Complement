@@ -7,6 +7,7 @@ import net.edwin.mmcecomplement.block.BlockMachineSignalCable;
 import net.edwin.mmcecomplement.tile.TileMachineSignalInputHatch;
 import net.edwin.mmcecomplement.tile.TileMachineSignalOutputHatch;
 import net.edwin.mmcecomplement.tile.TileMachineSignalCable;
+import net.edwin.mmcecomplement.tile.TileMachineSignalHatch;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.item.EnumDyeColor;
@@ -17,9 +18,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,11 +28,6 @@ import java.util.Set;
 public final class MachineConnectionRegistry {
     private static final Map<ResourceLocation, Set<ResourceLocation>> COMPATIBILITY =
         new LinkedHashMap<>();
-    private static final Map<TileMultiblockMachineController, Set<TileMultiblockMachineController>> CONNECTORS =
-        Collections.synchronizedMap(new IdentityHashMap<>());
-    private static final Map<TileMultiblockMachineController, Set<TileMultiblockMachineController>> CONNECTED =
-        Collections.synchronizedMap(new IdentityHashMap<>());
-
     private MachineConnectionRegistry() {}
 
     public static synchronized void addMachineConnection(String machineId,
@@ -78,13 +71,43 @@ public final class MachineConnectionRegistry {
     }
 
     public static synchronized IMachineController[] getConnectors(@Nullable IMachineController controller) {
-        if (controller == null || controller.getController() == null) return new IMachineController[0];
-        return asControllers(CONNECTORS.get(controller.getController()));
+        if (controller == null || controller.getController() == null
+            || controller.getController().getWorld() == null) {
+            return new IMachineController[0];
+        }
+        TileMultiblockMachineController host = controller.getController();
+        Set<TileMultiblockMachineController> result =
+            Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        // The query is the only place where the controller reads endpoint
+        // state. Endpoint ticks maintain their own connection snapshot.
+        for (TileEntity tile : host.getWorld().loadedTileEntityList) {
+            if (!(tile instanceof TileMachineSignalInputHatch)) continue;
+            TileMachineSignalInputHatch input = (TileMachineSignalInputHatch) tile;
+            if (input.getBoundController() == host) {
+                TileMultiblockMachineController child = input.getConnectedController();
+                if (child != null) result.add(child);
+            }
+        }
+        return asControllers(result);
     }
 
     public static synchronized IMachineController[] getConnected(@Nullable IMachineController controller) {
-        if (controller == null || controller.getController() == null) return new IMachineController[0];
-        return asControllers(CONNECTED.get(controller.getController()));
+        if (controller == null || controller.getController() == null
+            || controller.getController().getWorld() == null) {
+            return new IMachineController[0];
+        }
+        TileMultiblockMachineController child = controller.getController();
+        Set<TileMultiblockMachineController> result =
+            Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        for (TileEntity tile : child.getWorld().loadedTileEntityList) {
+            if (!(tile instanceof TileMachineSignalOutputHatch)) continue;
+            TileMachineSignalOutputHatch output = (TileMachineSignalOutputHatch) tile;
+            if (output.getBoundController() == child) {
+                TileMultiblockMachineController host = output.getConnectedController();
+                if (host != null) result.add(host);
+            }
+        }
+        return asControllers(result);
     }
 
     private static IMachineController[] asControllers(Set<TileMultiblockMachineController> set) {
@@ -92,108 +115,32 @@ public final class MachineConnectionRegistry {
         return set.toArray(new IMachineController[0]);
     }
 
-    /** Re-resolves all cable networks touching the supplied world. Must run on the server thread. */
-    public static synchronized void refresh(World world) {
-        if (world == null || world.isRemote) return;
-        clearWorld(world);
-        List<TileMachineSignalInputHatch> inputs = new ArrayList<>();
-        List<TileMachineSignalCable> cables = new ArrayList<>();
-        for (TileEntity tile : world.loadedTileEntityList) {
-            if (tile instanceof TileMachineSignalInputHatch) inputs.add((TileMachineSignalInputHatch) tile);
-            if (tile instanceof TileMachineSignalCable
-                && isCable(world, tile.getPos())) {
-                cables.add((TileMachineSignalCable) tile);
-            }
-        }
-
-        // Resolve each physical cable component exactly once. The old path
-        // performed a complete BFS for every input hatch, which made a large
-        // network quadratic in the number of inputs.
-        Map<BlockPos, NetworkEndpoints> networks = buildCableNetworks(world, cables);
-        for (TileMachineSignalInputHatch input : inputs) {
-            TileMultiblockMachineController host = input.getBoundController();
-            if (host == null || host.getFoundMachine() == null) continue;
-            NetworkEndpoints endpoints = endpointsForInput(world, input.getPos(), networks);
-            if (endpoints.inputs.size() != 1 || endpoints.outputs.size() != 1
-                || endpoints.inputs.get(0) != input) continue;
-            TileMachineSignalOutputHatch output = endpoints.outputs.get(0);
-            TileMultiblockMachineController child = output.getBoundController();
-            if (child == null || child == host || child.getFoundMachine() == null) continue;
-            if (!isCompatible(host.getFoundMachine().getRegistryName(),
-                              child.getFoundMachine().getRegistryName())) continue;
-            CONNECTORS.computeIfAbsent(host, ignored -> new LinkedHashSet<>()).add(child);
-            CONNECTED.computeIfAbsent(child, ignored -> new LinkedHashSet<>()).add(host);
-        }
-    }
-
-    private static Map<BlockPos, NetworkEndpoints> buildCableNetworks(
-        World world, List<TileMachineSignalCable> cables) {
-        Map<BlockPos, NetworkEndpoints> networks = new HashMap<>();
-        Set<BlockPos> visited = new HashSet<>();
-        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
-        for (TileMachineSignalCable tile : cables) {
-            BlockPos start = tile.getPos();
-            if (!visited.add(start)) continue;
-            NetworkEndpoints endpoints = new NetworkEndpoints();
-            queue.add(start);
-            while (!queue.isEmpty()) {
-                BlockPos pos = queue.removeFirst();
-                TileMachineSignalCable cable = cableAt(world, pos);
-                if (cable == null) continue;
-                networks.put(pos, endpoints);
-                int cableColor = cableColorAt(world, pos);
-                for (net.minecraft.util.EnumFacing facing
-                    : net.minecraft.util.EnumFacing.values()) {
-                    BlockPos next = pos.offset(facing);
-                    if (isCable(world, next)) {
-                        TileMachineSignalCable other = cableAt(world, next);
-                        if (other != null
-                            && colorsConnect(cableColor,
-                                cableColorAt(world, next))
-                            && visited.add(next)) {
-                            queue.addLast(next);
-                        }
-                    } else {
-                        collectEndpoint(world, next, endpoints);
-                    }
-                }
-            }
-        }
-        return networks;
-    }
-
-    private static NetworkEndpoints endpointsForInput(
-        World world, BlockPos start,
-        Map<BlockPos, NetworkEndpoints> networks) {
-        NetworkEndpoints result = new NetworkEndpoints();
-        for (net.minecraft.util.EnumFacing facing
-            : net.minecraft.util.EnumFacing.values()) {
-            BlockPos next = start.offset(facing);
-            if (isCable(world, next)) {
-                NetworkEndpoints component = networks.get(next);
-                if (component != null) mergeEndpoints(result, component);
-            } else {
-                collectEndpoint(world, next, result);
-            }
-        }
-        return result;
-    }
-
-    private static void mergeEndpoints(NetworkEndpoints target,
-                                       NetworkEndpoints source) {
-        for (TileMachineSignalInputHatch input : source.inputs) {
-            if (!target.inputs.contains(input)) target.inputs.add(input);
-        }
-        for (TileMachineSignalOutputHatch output : source.outputs) {
-            if (!target.outputs.contains(output)) target.outputs.add(output);
-        }
+    /** Resolves one endpoint from its own tile tick. */
+    public static synchronized void refreshPort(TileMachineSignalHatch port) {
+        if (port == null || port.getWorld() == null || port.getWorld().isRemote) return;
+        World world = port.getWorld();
+        port.clearConnectedController();
+        NetworkEndpoints endpoints = findEndpoints(world, port.getPos());
+        if (endpoints.inputs.size() != 1 || endpoints.outputs.size() != 1) return;
+        TileMachineSignalInputHatch input = endpoints.inputs.get(0);
+        TileMachineSignalOutputHatch output = endpoints.outputs.get(0);
+        input.clearConnectedController();
+        output.clearConnectedController();
+        TileMultiblockMachineController host = input.getBoundController();
+        TileMultiblockMachineController child = output.getBoundController();
+        if (host == null || child == null || host == child
+            || !isCompatible(host.getFoundMachine().getRegistryName(),
+                child.getFoundMachine().getRegistryName())) return;
+        input.setConnectedController(child);
+        output.setConnectedController(host);
     }
 
     private static NetworkEndpoints findEndpoints(World world, BlockPos start) {
         NetworkEndpoints result = new NetworkEndpoints();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         Set<BlockPos> visited = new LinkedHashSet<>();
-        for (net.minecraft.util.EnumFacing facing : net.minecraft.util.EnumFacing.values()) {
+        for (net.minecraft.util.EnumFacing facing
+            : net.minecraft.util.EnumFacing.values()) {
             BlockPos next = start.offset(facing);
             if (isCable(world, next)) queue.add(next);
             else collectEndpoint(world, next, result);
@@ -252,18 +199,8 @@ public final class MachineConnectionRegistry {
     }
 
     public static synchronized void clear(TileMultiblockMachineController controller) {
-        CONNECTORS.remove(controller);
-        CONNECTED.remove(controller);
-        for (Set<TileMultiblockMachineController> set : CONNECTORS.values()) set.remove(controller);
-        for (Set<TileMultiblockMachineController> set : CONNECTED.values()) set.remove(controller);
-    }
-
-    private static void clearWorld(World world) {
-        Set<TileMultiblockMachineController> loaded = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (TileEntity tile : world.loadedTileEntityList) {
-            if (tile instanceof TileMultiblockMachineController) loaded.add((TileMultiblockMachineController) tile);
-        }
-        for (TileMultiblockMachineController controller : loaded) clear(controller);
+        // Endpoint state is owned by the endpoint tile. This method remains
+        // as a compatibility no-op for older lifecycle hooks.
     }
 
     private static final class NetworkEndpoints {

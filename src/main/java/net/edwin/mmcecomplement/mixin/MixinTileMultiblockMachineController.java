@@ -50,8 +50,6 @@ import net.edwin.mmcecomplement.tile.TileRedstoneControlHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalInputHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneSignalOutputHatch;
-import net.edwin.mmcecomplement.tile.TileMachineSignalHatch;
-import net.edwin.mmcecomplement.machineconnection.MachineConnectionRegistry;
 import net.edwin.mmcecomplement.compat.ae.tile.MEConnectionShareManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -544,8 +542,6 @@ public abstract class MixinTileMultiblockMachineController
             (TileMultiblockMachineController) (Object) this);
         mmceComplement$refreshRedstoneInterfaceHatches(
             (TileMultiblockMachineController) (Object) this);
-        mmceComplement$refreshMachineSignalHatches(
-            (TileMultiblockMachineController) (Object) this);
         // Attachment blocks are appended after MMCE's native structure pass.
         // Run the same casing-color propagation once the combined pattern is
         // published so their ColorableMachineTile state matches the machine.
@@ -589,8 +585,6 @@ public abstract class MixinTileMultiblockMachineController
         // getStorageSlots() in that state, but must remain attached to the
         // controller so rebuilding the structure restores the same contents
         // and breaking the controller can still drop them.
-        MachineConnectionRegistry.clear(
-            (TileMultiblockMachineController) (Object) this);
         if (CompatMods.isAeItemCompatLoaded()) {
             MEConnectionShareManager.scheduleClear(
                 (TileMultiblockMachineController) (Object) this);
@@ -600,8 +594,6 @@ public abstract class MixinTileMultiblockMachineController
     @Inject(method = "onChunkUnload", at = @At("TAIL"))
     private void mmceComplement$clearMEConnectionShareOnUnload(
         CallbackInfo ci) {
-        MachineConnectionRegistry.clear(
-            (TileMultiblockMachineController) (Object) this);
         if (CompatMods.isAeItemCompatLoaded()) {
             MEConnectionShareManager.clear(
                 (TileMultiblockMachineController) (Object) this);
@@ -611,8 +603,6 @@ public abstract class MixinTileMultiblockMachineController
     @Inject(method = "invalidate", at = @At("TAIL"))
     private void mmceComplement$clearMEConnectionShareOnInvalidate(
         CallbackInfo ci) {
-        MachineConnectionRegistry.clear(
-            (TileMultiblockMachineController) (Object) this);
         if (CompatMods.isAeItemCompatLoaded()) {
             MEConnectionShareManager.clear(
                 (TileMultiblockMachineController) (Object) this);
@@ -1304,51 +1294,6 @@ public abstract class MixinTileMultiblockMachineController
                 (TileRedstoneSignalOutputHatch) tile;
             output.setOutputSignal(mmceComplement$pendingRedstoneOutputs
                 .getOrDefault(output.getSelectedName(), 0));
-        }
-    }
-
-    @Unique
-    private void mmceComplement$refreshMachineSignalHatches(
-        TileMultiblockMachineController controller) {
-        World world = controller.getWorld();
-        if (world == null || world.isRemote || foundPattern == null || foundMachine == null) {
-            mmceComplement$unbindMachineSignalHatches(controller);
-            MachineConnectionRegistry.clear(controller);
-            return;
-        }
-        net.minecraft.server.MinecraftServer server = world.getMinecraftServer();
-        if (server == null) return;
-        server.addScheduledTask(() -> {
-            World current = controller.getWorld();
-            if (current == null || controller.isInvalid() || !controller.isStructureFormed()) {
-                mmceComplement$unbindMachineSignalHatches(controller);
-                MachineConnectionRegistry.clear(controller);
-                return;
-            }
-            mmceComplement$unbindMachineSignalHatches(controller);
-            BlockPos origin = controller.getPos();
-            for (BlockPos relative : foundPattern.getPattern().keySet()) {
-                TileEntity tile = current.getTileEntity(origin.add(relative));
-                if (tile instanceof TileMachineSignalHatch) {
-                    ((TileMachineSignalHatch) tile).bindToController(controller);
-                }
-            }
-            MachineConnectionRegistry.refresh(current);
-        });
-    }
-
-    @Unique
-    private void mmceComplement$unbindMachineSignalHatches(
-        TileMultiblockMachineController controller) {
-        World world = controller.getWorld();
-        if (world == null) {
-            return;
-        }
-        BlockPos controllerPos = controller.getPos();
-        for (TileEntity tile : world.loadedTileEntityList) {
-            if (tile instanceof TileMachineSignalHatch) {
-                ((TileMachineSignalHatch) tile).unbindFromController(controllerPos);
-            }
         }
     }
 
