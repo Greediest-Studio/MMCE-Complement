@@ -102,9 +102,10 @@ public class TileMEOutputAssembly extends MEItemOutputBus
         // as well; otherwise a freshly loaded tile could inherit the field's
         // JVM default (zero) and reject all item output.
         setConfiguredStackSize(CAPACITY);
-        inventory.setListener(slot -> {
+        IOInventoryListenerCompat.setListener(inventory, slot -> {
             markNoUpdate();
-            refreshDisplay(slot);
+            if (slot < 0) refreshDisplay();
+            else refreshDisplay(slot);
             if (!inTick) wakeGridTicking();
         });
     }
