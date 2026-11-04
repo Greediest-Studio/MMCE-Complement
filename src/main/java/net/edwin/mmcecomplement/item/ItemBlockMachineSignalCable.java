@@ -13,7 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.World;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.translation.I18n;
 
 /** Item form of the signal cable.  The dye is kept in the stack so crafted
  * variants retain their colour when placed. */
@@ -52,7 +52,7 @@ public class ItemBlockMachineSignalCable extends ItemBlockMachineComponent {
 
     @Override
     public String getItemStackDisplayName(ItemStack stack) {
-        return I18n.format(getTranslationKey(stack) + ".name").trim();
+        return I18n.translateToLocal(getTranslationKey(stack) + ".name").trim();
     }
 
     public EnumDyeColor getDefaultDyeColor() { return defaultColor; }
