@@ -1,0 +1,39 @@
+{
+  "registryname": "mmce_complement_verification_storage",
+  "localizedname": "MMCE Complement AE2S storage",
+  "requires-blueprint": false,
+  "color": "557799",
+  "parts": [
+    {
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "mmce_complement:ae_storage_access_port"
+      ]
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "mmce_complement:ae_storage_access_port"
+      ]
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "elements": [
+        "minecraft:stone"
+      ]
+    }
+  ],
+  "storage": {
+    "slots": 9,
+    "fluid": {
+      "slots": 2,
+      "capacity": 16000
+    }
+  }
+}

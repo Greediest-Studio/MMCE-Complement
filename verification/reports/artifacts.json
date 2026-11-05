@@ -1,0 +1,65 @@
+{
+  "project": "MMCE Complement",
+  "version": "1.6.1",
+  "branch": "codex/ae2s-compat",
+  "base": "e293441a08b096f35624b26bdc18d8e60f16b9df",
+  "cleanroom_minimum": "0.6.8-alpha",
+  "runtime_dependencies": "official, unmodified",
+  "mmce_runtime_version": "2.3.2 (CurseForge file 7372951)",
+  "mmce_2_3_3": "source API checked; public release jar not found; no installed-jar runtime claim",
+  "integrated_pr": {
+    "url": "https://github.com/Greediest-Studio/MMCE-Complement/pull/1",
+    "author": "Butterfly-Kiyo",
+    "commits": [
+      "9c6a5ac611b65dafa7dc7caa9dc883be1a11315e",
+      "d6687a11b67956a4242bc45cb5116bdb9b883aa9"
+    ]
+  },
+  "artifacts": {
+    "build/libs/mmce_complement-1.6.1.jar": "c578dfa7b91da019119af7c647ecd659254bfd72997fd76eb17f72dade897af1",
+    "build/libs/mmce_complement-1.6.1-sources.jar": "d89c54264e0bd1e8e1c05aeddf5b90e080409ea35870c60753f5918e47936ec8",
+    "build/verification/mmce-complement-verification-srg.jar": "132051cad90082b0776b671a8090d58f788f331a5b5b18246b78416f1560403f"
+  },
+  "regressions": {
+    "tests": 151,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "runtime_matrix": [
+    {
+      "cleanroom": "0.6.13-alpha",
+      "combination": "gas",
+      "side": "server",
+      "result": "FUNCTIONAL_PASS",
+      "ticks": 439,
+      "checks": 27,
+      "gui_checks": 0,
+      "gas_gui_checks": 0,
+      "language": null,
+      "report": "ui-fix-cr-0.6.13-alpha-gas/server/result.json",
+      "foundation_loadsall": "false"
+    },
+    {
+      "cleanroom": "0.6.13-alpha",
+      "combination": "gas",
+      "side": "client",
+      "result": "FUNCTIONAL_PASS",
+      "ticks": 904,
+      "checks": 27,
+      "gui_checks": 6,
+      "gas_gui_checks": 7,
+      "language": "zh_cn",
+      "report": "ui-fix-cr-0.6.13-alpha-gas/client/result.json",
+      "foundation_loadsall": "false"
+    }
+  ],
+  "ui_fix": {
+    "output_panel_height": 204,
+    "player_inventory_top": 123,
+    "player_hotbar_top": 181,
+    "inventory_label_top": 111,
+    "previous_product_sha256": "311aa550925fbbc6872971b04bf502c2e3a63919d906493afffb07c4181cc4ec"
+  },
+  "previous_runtime_manifest": "before-output-ui-artifacts.json"
+}

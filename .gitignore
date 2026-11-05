@@ -22,3 +22,6 @@ eclipse
 run
 /logs/
 /.tmp-mmce-src
+
+# Raw local runtime captures; reviewed summaries live in verification/reports/.
+/verification/evidence/
