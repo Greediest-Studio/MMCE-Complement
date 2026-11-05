@@ -152,13 +152,6 @@ public class BlockMEDataPatternProviderII extends BlockMEPatternProviderII {
         return new TileMEDataPatternProviderII();
     }
 
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull World world,
-                                       @Nonnull IBlockState state) {
-        return new TileMEDataPatternProviderII();
-    }
-
     @Override
     public void dropBlockAsItemWithChance(@Nonnull World world,
                                           @Nonnull BlockPos pos,

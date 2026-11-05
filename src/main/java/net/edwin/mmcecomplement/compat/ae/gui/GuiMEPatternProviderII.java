@@ -117,7 +117,7 @@ public class GuiMEPatternProviderII extends GuiMEPatternProvider {
                 RIGHT_PANEL_X + 61,
                 ContainerMEPatternProviderII.SUB_STORAGE_Y + slot * 18,
                 16, 16);
-            if (Mods.AE2EL.isPresent()) {
+            if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded() || Mods.AE2EL.isPresent()) {
                 guiSlots.add(tank);
             } else {
                 ObfuscationReflectionHelper.setPrivateValue(

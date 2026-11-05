@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeTickEvent;
@@ -25,7 +26,9 @@ public class TileMEConnectionShareHatch extends MEMachineComponent
     public TileMEConnectionShareHatch() {
         // The share endpoint itself is a dense-capacity node and therefore
         // never consumes a channel.  The hatches it replaces still do.
-        proxy.setFlags(GridFlags.DENSE_CAPACITY);
+        if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded())
+            net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork.configureChannelHatch(this);
+        else proxy.setFlags(GridFlags.DENSE_CAPACITY);
     }
 
     @Override

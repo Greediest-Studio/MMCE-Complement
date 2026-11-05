@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -106,17 +107,17 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
     @Override
     public TickRateModulation tickingRequest(IGridNode node,
                                               int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         Lock lock = getInternalInventory().getRWLock().writeLock();
         lock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEItemStack> items =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             IMEMonitor<IAEFluidStack> fluids =
-                proxy.getStorage().getInventory(fluidChannel);
+                AeNetworkCompat.inventory(this, fluidChannel);
             IMEMonitor<IAEGasStack> gases =
-                proxy.getStorage().getInventory(gasChannel);
+                AeNetworkCompat.inventory(this, gasChannel);
             boolean changed = synchronize(items, fluids, gases);
             if (!activePull && !hasBufferedContents()) {
                 return TickRateModulation.SLEEP;
@@ -176,7 +177,7 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
         if (stored == null || (type == MixedMEInputMarker.TYPE_FLUID
             && configured != null
             && stored.getFluidStack().isFluidEqual(configured))) return false;
-        IAEFluidStack remainder = Platform.poweredInsert(proxy.getEnergy(),
+        IAEFluidStack remainder = AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this),
             monitor, stored.copy(), source);
         getFluidTanks().setFluidInSlot(slot, remainder);
         return remainder == null
@@ -194,7 +195,7 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
         }
         IAEGasStack request = AEGasStack.of(stored.copy());
         if (request == null) return false;
-        IAEGasStack remainder = Platform.poweredInsert(proxy.getEnergy(),
+        IAEGasStack remainder = AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this),
             monitor, request, source);
         getGasTanks().setGas(slot,
             remainder == null ? null : remainder.getGasStack());
@@ -217,8 +218,8 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
             permanentReserve, room);
         if (amount <= 0L) return false;
         request.setStackSize(amount);
-        IAEItemStack extracted = Platform.poweredExtraction(
-            proxy.getEnergy(), monitor, request, source);
+        IAEItemStack extracted = AeNetworkCompat.poweredExtraction(this,
+            AeNetworkCompat.energy(this), monitor, request, source);
         if (extracted == null || extracted.getStackSize() <= 0L) return false;
         ItemStack pulled = extracted.createItemStack();
         if (stored.isEmpty()) getInternalInventory().setStackInSlot(slot, pulled);
@@ -244,8 +245,8 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
             permanentReserve, Integer.MAX_VALUE - current);
         if (amount <= 0L) return false;
         request.setStackSize(amount);
-        IAEFluidStack extracted = Platform.poweredExtraction(
-            proxy.getEnergy(), monitor, request, source);
+        IAEFluidStack extracted = AeNetworkCompat.poweredExtraction(this,
+            AeNetworkCompat.energy(this), monitor, request, source);
         if (extracted == null || extracted.getStackSize() <= 0L) return false;
         IAEFluidStack stored = getFluidTanks().getFluidInSlot(slot);
         if (stored == null) getFluidTanks().setFluidInSlot(slot, extracted);
@@ -273,8 +274,8 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
             permanentReserve, Integer.MAX_VALUE - current);
         if (amount <= 0L) return false;
         request.setStackSize(amount);
-        IAEGasStack extracted = Platform.poweredExtraction(
-            proxy.getEnergy(), monitor, request, source);
+        IAEGasStack extracted = AeNetworkCompat.poweredExtraction(this,
+            AeNetworkCompat.energy(this), monitor, request, source);
         if (extracted == null || extracted.getStackSize() <= 0L) return false;
         GasStack pulled = extracted.getGasStack();
         if (stored == null) getGasTanks().setGas(slot, pulled);
@@ -293,21 +294,21 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
         IAEItemStack request = channel.createStack(stack);
         if (request == null) return stack;
         request.setStackSize(stack.getCount());
-        IAEItemStack remainder = Platform.poweredInsert(proxy.getEnergy(),
+        IAEItemStack remainder = AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this),
             monitor, request, source);
         return remainder == null ? ItemStack.EMPTY
             : remainder.createItemStack();
     }
 
     private void pushAllToNetwork() {
-        if (!proxy.isActive()) return;
+        if (!isActive()) return;
         try {
             IMEMonitor<IAEItemStack> items =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             IMEMonitor<IAEFluidStack> fluids =
-                proxy.getStorage().getInventory(fluidChannel);
+                AeNetworkCompat.inventory(this, fluidChannel);
             IMEMonitor<IAEGasStack> gases =
-                proxy.getStorage().getInventory(gasChannel);
+                AeNetworkCompat.inventory(this, gasChannel);
             for (int slot = 0; slot < SLOT_COUNT; slot++) {
                 ItemStack item = getInternalInventory().getStackInSlot(slot);
                 if (!item.isEmpty()) {
@@ -316,13 +317,13 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
                 }
                 IAEFluidStack fluid = getFluidTanks().getFluidInSlot(slot);
                 if (fluid != null) getFluidTanks().setFluidInSlot(slot,
-                    Platform.poweredInsert(proxy.getEnergy(), fluids,
+                    AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this), fluids,
                         fluid.copy(), source));
                 GasStack gas = getGasTanks().getGasStack(slot);
                 if (gas != null) {
                     IAEGasStack request = AEGasStack.of(gas.copy());
                     IAEGasStack remainder = request == null ? null
-                        : Platform.poweredInsert(proxy.getEnergy(), gases,
+                        : AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this), gases,
                             request, source);
                     getGasTanks().setGas(slot,
                         remainder == null ? null : remainder.getGasStack());
@@ -345,8 +346,8 @@ public class TileMEInventoryInputAssembly extends TileMEInputAssembly
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            IGridNode node = proxy.getNode();
-            if (node != null) proxy.getTick().alertDevice(node);
+            IGridNode node = AeNetworkCompat.getNode(this);
+            if (node != null) AeNetworkCompat.alert(this);
         } catch (GridAccessException ignored) { }
     }
 

@@ -20,11 +20,15 @@ public final class AeGasGuiCompat {
     public static Object getServerGui(int id, EntityPlayer player,
                                       TileEntity tile) {
         if (isInputAssembly(id) && tile instanceof TileMEInputAssembly) {
+            if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded())
+                return new net.edwin.mmcecomplement.compat.ae2s.mekeng.AE2SAssemblyContainer((TileMEInputAssembly) tile, player);
             return new ContainerMEInputAssembly(
                 (TileMEInputAssembly) tile, player);
         }
         if (id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
                 && tile instanceof TileMEOutputAssembly) {
+            if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded())
+                return new net.edwin.mmcecomplement.compat.ae2s.mekeng.AE2SAssemblyContainer((TileMEOutputAssembly) tile, player);
             return new ContainerMEOutputAssembly(
                 (TileMEOutputAssembly) tile, player);
         }
@@ -35,10 +39,14 @@ public final class AeGasGuiCompat {
     public static Object getClientGui(int id, EntityPlayer player,
                                       TileEntity tile) {
         if (isInputAssembly(id) && tile instanceof TileMEInputAssembly) {
+            if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded())
+                return new net.edwin.mmcecomplement.compat.ae2s.client.AE2SAssemblyGui((TileMEInputAssembly) tile, player);
             return new GuiMEInputAssembly((TileMEInputAssembly) tile, player);
         }
         if (id == MMCEComplement.GUI_ME_OUTPUT_ASSEMBLY
                 && tile instanceof TileMEOutputAssembly) {
+            if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded())
+                return new net.edwin.mmcecomplement.compat.ae2s.client.AE2SAssemblyGui((TileMEOutputAssembly) tile, player);
             return new GuiMEOutputAssembly((TileMEOutputAssembly) tile, player);
         }
         return null;

@@ -63,8 +63,16 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && ((StorageController) te).mmceComplement$isStorageController()) {
             return new ContainerStorage((StorageController) te, player);
         }
+        if (CompatMods.isAe2sLoaded()
+            && (id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II || id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
+                || id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II)
+            && te instanceof github.kasuminova.mmce.common.tile.MEPatternProvider) {
+            return new net.edwin.mmcecomplement.compat.ae2s.AE2SPatternProviderContainer((github.kasuminova.mmce.common.tile.MEPatternProvider) te, player);
+        }
         if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
                 && te instanceof TileMEFullExposureAssemblyFallback) {
+            if (CompatMods.isAe2sLoaded()) return new github.formlessdragon.appcompat.common.container.mmce.ContainerMEItemInputBus(
+                (TileMEFullExposureAssemblyFallback) te, player);
             return new ContainerMEFullExposureFallback(
                 (TileMEFullExposureAssemblyFallback) te, player);
         }
@@ -194,8 +202,18 @@ public class GuiHandlerMMCE implements IGuiHandler {
             te = BlockMEDataPatternProviderII.upgradeStaleProviderTile(
                 world, pos, te);
         }
+        if (CompatMods.isAe2sLoaded()
+            && (id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II || id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
+                || id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II)
+            && te instanceof github.kasuminova.mmce.common.tile.MEPatternProvider) {
+            if (te instanceof net.edwin.mmcecomplement.compat.ae.tile.IMEDataPatternProvider)
+                return new net.edwin.mmcecomplement.compat.ae2s.client.AE2SDataPatternProviderGui((github.kasuminova.mmce.common.tile.MEPatternProvider) te, player);
+            return new net.edwin.mmcecomplement.compat.ae2s.client.AE2SPatternProviderGui((github.kasuminova.mmce.common.tile.MEPatternProvider) te, player);
+        }
         if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
                 && te instanceof TileMEFullExposureAssemblyFallback) {
+            if (CompatMods.isAe2sLoaded()) return new github.formlessdragon.appcompat.client.gui.mmce.GuiMEItemInputBus(
+                (TileMEFullExposureAssemblyFallback) te, player);
             return new GuiMEFullExposureFallback(
                 (TileMEFullExposureAssemblyFallback) te, player);
         }

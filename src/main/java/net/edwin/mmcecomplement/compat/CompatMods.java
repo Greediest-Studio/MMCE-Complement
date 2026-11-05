@@ -127,12 +127,24 @@ public final class CompatMods {
 
     /** Returns true when either AE2UEL or AE2S is present with its core API. */
     public static boolean isAe2Loaded() {
-        return (Loader.isModLoaded(MODID_AE2) && classExists("appeng.core.AE2ELCore"))
-                || (Loader.isModLoaded(MODID_AE2S) && classExists("ae2.core.AppEngBase"));
+        if (isAe2sLoaded()) {
+            // MMCE itself uses appeng. AE2S alone does not supply that API.
+            return classExists("github.formlessdragon.appcompat.AppliedCompatibility")
+                && classExists("appeng.me.helpers.AENetworkProxy");
+        }
+        return Loader.isModLoaded(MODID_AE2) && classExists("appeng.core.AE2ELCore");
+    }
+
+    public static boolean isAe2sLoaded() {
+        return Loader.isModLoaded(MODID_AE2S) && classExists("ae2.core.AppEngBase");
     }
 
     /** Returns the loaded branch's mod ID for MMCE requirement metadata. */
     public static String getLoadedAe2ModId() {
+        // AppliedCompatibility intentionally also registers appliedenergistics2.
+        if (isAe2sLoaded()) {
+            return MODID_AE2S;
+        }
         if (Loader.isModLoaded(MODID_AE2)) {
             return MODID_AE2;
         }

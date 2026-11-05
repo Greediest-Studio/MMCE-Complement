@@ -1,0 +1,15 @@
+The AE2S pattern-provider container and GUI are adapted from AppliedCompatibility
+1.0.1, commit 52470006c38a4e0e7278d62c1f4664b6e6b1f224:
+https://github.com/FormlessDragon/AppliedCompatibility
+
+Adapted source files (LGPL-3.0-or-later, including modifications):
+net/edwin/mmcecomplement/compat/ae2s/AE2SPatternProviderContainer.java
+net/edwin/mmcecomplement/compat/ae2s/client/AE2SPatternProviderGui.java
+
+Changes: Complement's 144-slot layout, three independent fluid slots, native
+container actions, synchronization, and the expanded cache display.
+Corresponding source is included in the MMCE Complement sources jar.
+See META-INF/licenses/AppliedCompatibility-LGPL-3.0.txt and GPL-3.0.txt.
+
+Other MMCE Complement code retains the project's original MIT license and
+authorship. Runtime dependencies are not embedded.

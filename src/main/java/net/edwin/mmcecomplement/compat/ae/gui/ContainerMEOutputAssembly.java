@@ -15,7 +15,7 @@ public class ContainerMEOutputAssembly extends AEBaseContainer {
                                      EntityPlayer player) {
         super(player.inventory, owner);
         this.owner = owner;
-        bindPlayerInventory(getInventoryPlayer(), 0, 105);
+        bindPlayerInventory(getInventoryPlayer(), 0, 123);
         IItemHandlerModifiable display =
             owner.getDisplayInventory().asGUIAccess();
         for (int row = 0; row < 4; row++) {

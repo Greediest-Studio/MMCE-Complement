@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -90,11 +91,11 @@ public class TileMEGasInventoryInputBus extends MEGasInputBus
     @Override
     public TickRateModulation tickingRequest(IGridNode node,
                                               int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         inTick = true;
         try {
             IMEMonitor<IAEGasStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             synchronized (tanks) {
                 boolean changed = syncConfiguredGas(monitor, activePull);
                 if (!activePull && !hasBufferedGas()) {
@@ -147,8 +148,8 @@ public class TileMEGasInventoryInputBus extends MEGasInputBus
                 permanentReserve, room);
             if (amount <= 0L) continue;
             request.setStackSize(amount);
-            IAEGasStack extracted = Platform.poweredExtraction(
-                proxy.getEnergy(), monitor, request, source);
+            IAEGasStack extracted = AeNetworkCompat.poweredExtraction(this,
+                AeNetworkCompat.energy(this), monitor, request, source);
             if (extracted == null || extracted.getStackSize() <= 0L) continue;
             GasStack pulled = extracted.getGasStack();
             if (stored == null) {
@@ -168,17 +169,17 @@ public class TileMEGasInventoryInputBus extends MEGasInputBus
         throws GridAccessException {
         IAEGasStack request = AEGasStack.of(stack.copy());
         if (request == null) return stack;
-        IAEGasStack remainder = Platform.poweredInsert(
-            proxy.getEnergy(), monitor, request, source);
+        IAEGasStack remainder = AeNetworkCompat.poweredInsert(this,
+            AeNetworkCompat.energy(this), monitor, request, source);
         return remainder == null ? null : remainder.getGasStack();
     }
 
     private void pushAllToNetwork() {
-        if (!proxy.isActive()) return;
+        if (!isActive()) return;
         inTick = true;
         try {
             IMEMonitor<IAEGasStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             synchronized (tanks) {
                 for (int slot = 0; slot < tanks.size(); slot++) {
                     GasStack stored = tanks.getGasStack(slot);
@@ -205,8 +206,8 @@ public class TileMEGasInventoryInputBus extends MEGasInputBus
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            IGridNode node = proxy.getNode();
-            if (node != null) proxy.getTick().alertDevice(node);
+            IGridNode node = AeNetworkCompat.getNode(this);
+            if (node != null) AeNetworkCompat.alert(this);
         } catch (GridAccessException ignored) { }
     }
 
@@ -243,13 +244,18 @@ public class TileMEGasInventoryInputBus extends MEGasInputBus
     public void onChangeInventory(IItemHandler inventory, int slot,
                                   InvOperation operation, ItemStack removed,
                                   ItemStack added) {
-        super.onChangeInventory(inventory, slot, operation, removed, added);
+        // The base bus recalculates a small upgrade-based capacity and clamps
+        // its contents. Inventory buses keep their full capacity at all times.
         tanks.setCap(INVENTORY_CAPACITY);
+        markNoUpdateSync();
     }
 
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        // MEGasBus restores its upgrade capacity after loading, which may have
+        // truncated a large inventory buffer. Restore from the unchanged save.
+        tanks.load(compound.getCompoundTag("tanks"));
         tanks.setCap(INVENTORY_CAPACITY);
         normalizeMarkers();
         activePull = compound.getBoolean(TAG_ACTIVE_PULL);

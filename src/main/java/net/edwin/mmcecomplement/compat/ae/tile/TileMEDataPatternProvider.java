@@ -111,6 +111,7 @@ public class TileMEDataPatternProvider extends MEPatternProvider
     private volatile boolean activeSharedPattern;
 
     public TileMEDataPatternProvider() {
+        net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.attachCrafting(this);
         primaryDataProvider = new DataPatternInterfaceProvider(
             this, -1L, -1, false);
         /*
@@ -358,6 +359,7 @@ public class TileMEDataPatternProvider extends MEPatternProvider
             if (stack.isEmpty()) {
                 continue;
             }
+            if (net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.appendPatternInput(stack, target)) continue;
             if (CompatMods.isAe2FcrCompatLoaded()
                 && Ae2FcrPatternCompat.appendFakeFluid(stack, target)) {
                 continue;
@@ -394,7 +396,7 @@ public class TileMEDataPatternProvider extends MEPatternProvider
     }
 
     private void returnItemsWithIsolation() {
-        if (!shouldReturnItems || !proxy.isActive() || !proxy.isPowered()) {
+        if (!shouldReturnItems || !isActive() || !isPowered()) {
             return;
         }
         shouldReturnItems = false;
@@ -417,6 +419,10 @@ public class TileMEDataPatternProvider extends MEPatternProvider
     }
 
     private void returnHandlerToNetwork(InfItemFluidHandler target) {
+        if (CompatMods.isAe2sLoaded()) {
+            net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.returnItems(this, target);
+            return;
+        }
         try {
             IItemStorageChannel itemChannel = AEApi.instance().storage()
                 .getStorageChannel(IItemStorageChannel.class);
@@ -735,7 +741,7 @@ public class TileMEDataPatternProvider extends MEPatternProvider
     private boolean canAcceptPatternBeforeDispatch(
         ICraftingPatternDetails patternDetails, InfItemFluidHandler target) {
         if (patternDetails.isCraftable()
-            || !getProxy().isActive() || !getProxy().isPowered()) {
+            || !isActive() || !isPowered()) {
             return false;
         }
         return workMode != WorkModeSetting.ENHANCED_BLOCKING_MODE
