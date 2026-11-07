@@ -353,3 +353,4 @@ gui.mmce_complement.storage.empty=空
 gui.mmce_complement.storage.unformed=结构未成型
 
 tile.mmce_complement.ae_storage_access_port.name=ME存储访问端口
+tile.mmce_complement.storage_interaction_assembly.name=存储交互总成

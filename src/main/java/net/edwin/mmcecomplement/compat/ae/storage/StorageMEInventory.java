@@ -14,21 +14,26 @@ import java.util.List;
 public abstract class StorageMEInventory<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
     private final IStorageChannel<T> channel;
     private IItemList<T> announced;
+    private IMEInventoryHandler<T> networkView = this;
 
     protected StorageMEInventory(IStorageChannel<T> channel) {
         this.channel = channel;
         announced = channel.createList();
     }
 
-    public final void resetSnapshot() { announced = getAvailableItems(channel.createList()); }
+    public final IMEInventoryHandler<T> getNetworkView() { return networkView; }
 
-    /** AE already reports its own transfers; retain only changes made outside AE. */
-    protected final void networkChange(T prototype, long delta) {
-        announced.add(prototype.copy().setStackSize(delta));
+    public final void setNetworkView(IMEInventoryHandler<T> view) {
+        networkView = view;
     }
 
+    public final void resetSnapshot() { announced = networkView.getAvailableItems(channel.createList()); }
+
+    // ICellContainer handlers do NOT automatically announce their own AE
+    // transfers. Keep the last announced snapshot until the delta is posted,
+    // including changes made by injectItems/extractItems through this handler.
     public final List<T> pollChanges() {
-        IItemList<T> current = getAvailableItems(channel.createList());
+        IItemList<T> current = networkView.getAvailableItems(channel.createList());
         IItemList<T> difference = channel.createList();
         for (T stack : current) difference.add(stack.copy());
         for (T stack : announced) difference.add(stack.copy().setStackSize(-stack.getStackSize()));

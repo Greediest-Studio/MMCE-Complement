@@ -1,6 +1,10 @@
 apply from: 'gradle/scripts/helpers.gradle'
 
 repositories {
+    exclusiveContent {
+        forRepository { maven { name 'CraftTweaker'; url 'https://maven.blamejared.com' } }
+        filter { includeGroup 'CraftTweaker2' }
+    }
     // Other repositories described by default:
     // CleanroomMC: https://maven.cleanroommc.com
     exclusiveContent {
@@ -92,6 +96,11 @@ dependencies {
     // MMCE hard-requires CraftTweaker2 at runtime; compile against its ZenScript
     // annotations for this add-on's RecipePrimer and IMachineController expansions.
     compileOnly 'curse.maven:crafttweaker-239197:8051578'
+    // Exercise the actual ZenScript interface registration and stack conversions.
+    // The Curse jar repeats its access-transformer ZIP entry and cannot be remapped.
+    // Use the upstream split artifacts for native Minecraft stack conversion tests.
+    testImplementation rfg.deobf('CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.698')
+    testImplementation rfg.deobf('curse.maven:geckolib-388172:4020277')
     // Development runtime for exercising MMCE's JEI structure preview.
     compileOnly rfg.deobf('curse.maven:had-enough-items-557549:4543375')
 

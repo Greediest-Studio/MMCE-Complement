@@ -50,6 +50,9 @@ class OptionalDependencyClassLoadingTest {
         assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.ae.tile.TileAEStorageAccessPort");
         assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.ae.storage.StorageMEGasBridge");
         assertNoOptionalSymbols("net.edwin.mmcecomplement.compat.mekanism.StorageGasBridge");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.integration.crafttweaker.IMachineStorageController");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.integration.crafttweaker.StorageScriptAccess");
+        assertNoOptionalSymbols("net.edwin.mmcecomplement.integration.crafttweaker.StorageScriptGasBridge");
         assertNoOptionalSymbols(
             "net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII");
     }

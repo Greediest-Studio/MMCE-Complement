@@ -1,6 +1,12 @@
 package net.edwin.mmcecomplement.compat.ae.storage;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.StorageFilter;
+import appeng.api.config.IncludeExclude;
+import appeng.api.storage.data.IItemList;
+import appeng.me.storage.MEInventoryHandler;
+import appeng.util.prioritylist.PrecisePriorityList;
 import appeng.api.storage.channels.IFluidStorageChannel;
 import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
@@ -58,6 +64,70 @@ class StorageMEInventoryTest {
     private static StorageFluidHandler tanks(int slots, int capacity) {
         return new StorageFluidHandler(new TileEntity() { }, slots, capacity);
     }
+    @Test void singleItemAeRemovalAndInsertionUpdateTerminalWithoutExternalChanges() {
+        ItemStackHandler backing = new ItemStackHandler(1);
+        backing.setStackInSlot(0, new ItemStack(Items.DIAMOND));
+        StorageMEItemInventory inventory = new StorageMEItemInventory(items, () -> backing);
+        inventory.resetSnapshot();
+        // This models the terminal's cached list: it is updated by the cell
+        // provider's notifications, not by rereading getAvailableItems.
+        IItemList<IAEItemStack> terminal = inventory.getAvailableItems(items.createList());
+        for (int iteration = 0; iteration < 3; iteration++) {
+            assertEquals(1, terminal.findPrecise(diamonds(1)).getStackSize());
+            assertEquals(1, inventory.extractItems(diamonds(1), Actionable.MODULATE, null).getStackSize());
+            assertNull(inventory.extractItems(diamonds(1), Actionable.MODULATE, null));
+            List<IAEItemStack> removed = inventory.pollChanges();
+            assertEquals(1, removed.size());
+            assertEquals(-1, removed.get(0).getStackSize());
+            removed.forEach(terminal::addStorage);
+            assertTrue(terminal.isEmpty(), "No unextractable ghost item may remain");
+            assertTrue(inventory.pollChanges().isEmpty(), "Do not announce the same transfer twice");
+
+            assertNull(inventory.injectItems(diamonds(1), Actionable.MODULATE, null));
+            List<IAEItemStack> inserted = inventory.pollChanges();
+            assertEquals(1, inserted.size());
+            assertEquals(1, inserted.get(0).getStackSize());
+            inserted.forEach(terminal::addStorage);
+            assertEquals(1, terminal.findPrecise(diamonds(1)).getStackSize());
+            assertTrue(inventory.pollChanges().isEmpty());
+        }
+    }
+
+    @Test void filteredNetworkViewReportsAccessAndFilterChangesAndNeverHidesRawStock() {
+        ItemStackHandler backing = new ItemStackHandler(2);
+        backing.setStackInSlot(0, new ItemStack(Items.DIAMOND, 4));
+        backing.setStackInSlot(1, new ItemStack(Items.EMERALD, 7));
+        StorageMEItemInventory inventory = new StorageMEItemInventory(items, () -> backing);
+        MEInventoryHandler<IAEItemStack> view = new MEInventoryHandler<>(inventory, items);
+        view.setStorageFilter(StorageFilter.EXTRACTABLE_ONLY);
+        inventory.setNetworkView(view);
+        inventory.resetSnapshot();
+        IItemList<IAEItemStack> filter = items.createList();
+        filter.add(diamonds(1));
+        view.setPartitionList(new PrecisePriorityList<>(filter));
+        List<IAEItemStack> hidden = inventory.pollChanges();
+        assertEquals(1, hidden.size());
+        assertEquals(-7, hidden.get(0).getStackSize());
+        assertTrue(hidden.get(0).isSameType(new ItemStack(Items.EMERALD)));
+        assertFalse(view.canAccept(items.createStack(new ItemStack(Items.EMERALD))));
+        assertNull(view.extractItems(items.createStack(new ItemStack(Items.EMERALD)), Actionable.MODULATE, null));
+        assertEquals(7, backing.getStackInSlot(1).getCount());
+        view.setPriority(123);
+        assertEquals(123, view.getPriority());
+        assertTrue(view.isPrioritized(diamonds(1)));
+        view.setBaseAccess(AccessRestriction.WRITE);
+        assertEquals(-4, inventory.pollChanges().get(0).getStackSize());
+        assertNull(view.extractItems(diamonds(1), Actionable.MODULATE, null));
+        assertNull(view.injectItems(diamonds(1), Actionable.MODULATE, null));
+        assertTrue(inventory.pollChanges().isEmpty(), "Write-only contents are hidden from AE");
+        view.setBaseAccess(AccessRestriction.READ);
+        assertEquals(5, inventory.pollChanges().get(0).getStackSize());
+        assertEquals(1, view.injectItems(diamonds(1), Actionable.MODULATE, null).getStackSize());
+        view.setWhitelist(IncludeExclude.BLACKLIST);
+        List<IAEItemStack> swapped = inventory.pollChanges();
+        assertEquals(2, swapped.size());
+        assertEquals(2, inventory.getAvailableItems(items.createList()).size());
+    }
     @Test void itemSimulationAndPartialTransfersNeverModifyRequestOrLoseOverflow() {
         ItemStackHandler backing = new ItemStackHandler(2);
         StorageMEItemInventory inventory = new StorageMEItemInventory(items, () -> backing);
@@ -68,12 +138,14 @@ class StorageMEInventoryTest {
         assertEquals(72, inventory.injectItems(request, Actionable.MODULATE, null).getStackSize());
         assertEquals(200, request.getStackSize());
         assertEquals(128, inventory.getAvailableItems(items.createList()).getFirstItem().getStackSize());
-        assertTrue(inventory.pollChanges().isEmpty(), "AE already announced the insertion");
+        assertEquals(128, inventory.pollChanges().get(0).getStackSize());
+        assertTrue(inventory.pollChanges().isEmpty());
         assertEquals(100, inventory.extractItems(diamonds(100), Actionable.SIMULATE, null).getStackSize());
         assertEquals(64, backing.getStackInSlot(0).getCount());
         assertEquals(100, inventory.extractItems(diamonds(100), Actionable.MODULATE, null).getStackSize());
         assertEquals(28, backing.getStackInSlot(1).getCount());
-        assertTrue(inventory.pollChanges().isEmpty(), "AE already announced the extraction");
+        assertEquals(-100, inventory.pollChanges().get(0).getStackSize());
+        assertTrue(inventory.pollChanges().isEmpty());
         assertEquals(28, inventory.extractItems(diamonds(Long.MAX_VALUE), Actionable.MODULATE, null).getStackSize());
         assertNull(inventory.extractItems(diamonds(1), Actionable.MODULATE, null));
     }
@@ -82,7 +154,7 @@ class StorageMEInventoryTest {
         StorageMEItemInventory inventory = new StorageMEItemInventory(items, () -> backing);
         backing.setStackInSlot(0, new ItemStack(Items.DIAMOND, 20));
         assertNull(inventory.injectItems(diamonds(10), Actionable.MODULATE, null));
-        assertEquals(20, inventory.pollChanges().get(0).getStackSize());
+        assertEquals(30, inventory.pollChanges().get(0).getStackSize());
         assertTrue(inventory.pollChanges().isEmpty());
         backing.extractItem(0, 7, false);
         assertEquals(-7, inventory.pollChanges().get(0).getStackSize());
@@ -133,12 +205,14 @@ class StorageMEInventoryTest {
         assertEquals(500, inventory.injectItems(request, Actionable.MODULATE, null).getStackSize());
         assertEquals(2500, request.getStackSize());
         assertEquals(2000, inventory.getAvailableItems(fluids.createList()).getFirstItem().getStackSize());
+        assertEquals(2000, inventory.pollChanges().get(0).getStackSize());
         assertTrue(inventory.pollChanges().isEmpty());
         assertNull(inventory.extractItems(water(1000, "other"), Actionable.MODULATE, null));
         assertEquals(1500, inventory.extractItems(water(1500, "pure"), Actionable.SIMULATE, null).getStackSize());
         assertEquals(1000, backing.getTank(0).getFluidAmount());
         assertEquals(1500, inventory.extractItems(water(1500, "pure"), Actionable.MODULATE, null).getStackSize());
         assertEquals(500, backing.getTank(1).getFluidAmount());
+        assertEquals(-1500, inventory.pollChanges().get(0).getStackSize());
         assertTrue(inventory.pollChanges().isEmpty());
     }
     @Test void fluidTotalsAndAeRequestsLargerThanIntegerRangeDoNotOverflow() {
@@ -148,6 +222,7 @@ class StorageMEInventoryTest {
         assertEquals(2147483647L, inventory.injectItems(request, Actionable.MODULATE, null).getStackSize());
         assertNull(inventory.injectItems(water(Integer.MAX_VALUE, null), Actionable.MODULATE, null));
         assertEquals(4294967294L, inventory.getAvailableItems(fluids.createList()).getFirstItem().getStackSize());
+        assertEquals(4294967294L, inventory.pollChanges().get(0).getStackSize());
         assertTrue(inventory.pollChanges().isEmpty());
         assertEquals(2147483647L, inventory.extractItems(request, Actionable.MODULATE, null).getStackSize());
         assertEquals(2147483647L, inventory.getAvailableItems(fluids.createList()).getFirstItem().getStackSize());

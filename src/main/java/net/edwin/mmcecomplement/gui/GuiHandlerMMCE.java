@@ -5,17 +5,6 @@ import net.edwin.mmcecomplement.compat.CompatMods;
 import net.edwin.mmcecomplement.compat.ae.AeEnergyGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.AeGasGuiCompat;
 import net.edwin.mmcecomplement.compat.ae.AeManaGuiCompat;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEDataPatternProvider;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEDataPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProvider;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEDataPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.block.BlockMEDataPatternProviderII;
-import net.edwin.mmcecomplement.compat.ae.tile.TileMEFullExposureAssemblyFallback;
-import net.edwin.mmcecomplement.compat.ae.gui.ContainerMEFullExposureFallback;
-import net.edwin.mmcecomplement.compat.ae.gui.GuiMEFullExposureFallback;
 import net.edwin.mmcecomplement.compat.flux.FluxGuiCompat;
 import net.edwin.mmcecomplement.tile.TileBatchHatch;
 import net.edwin.mmcecomplement.tile.TileRedstoneInterfaceHatch;
@@ -63,30 +52,9 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && ((StorageController) te).mmceComplement$isStorageController()) {
             return new ContainerStorage((StorageController) te, player);
         }
-        if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
-                && te instanceof TileMEFullExposureAssemblyFallback) {
-            return new ContainerMEFullExposureFallback(
-                (TileMEFullExposureAssemblyFallback) te, player);
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II
-                && te instanceof TileMEDataPatternProviderII) {
-            MMCEComplement.LOGGER.info(
-                "Opening server GUI for data pattern provider II at {}, tile={}",
-                new BlockPos(x, y, z), te.getClass().getName());
-            return new ContainerMEPatternProviderII(
-                (TileMEDataPatternProviderII) te, player);
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
-            MMCEComplement.LOGGER.error(
-                "Rejected server GUI {}: tile at {} is {}", id,
-                new BlockPos(x, y, z),
-                te == null ? "null" : te.getClass().getName());
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
-                && te instanceof TileMEDataPatternProvider) {
-            return new github.kasuminova.mmce.common.container
-                .ContainerMEPatternProvider(
-                    (TileMEDataPatternProvider) te, player);
+        if (CompatMods.isAeItemCompatLoaded()) {
+            Object gui = net.edwin.mmcecomplement.compat.ae.AeItemGuiCompat.getServerGui(id, player, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getServerGui(id, player, te);
@@ -103,12 +71,6 @@ public class GuiHandlerMMCE implements IGuiHandler {
         if (CompatMods.isAeGasCompatLoaded()) {
             Object gui = AeGasGuiCompat.getServerGui(id, player, te);
             if (gui != null) return gui;
-        }
-        if (CompatMods.isAeItemCompatLoaded()
-                && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
-                && te instanceof TileMEPatternProviderII) {
-            return new ContainerMEPatternProviderII(
-                (TileMEPatternProviderII) te, player);
         }
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new ContainerBatchHatch(player, (TileBatchHatch) te);
@@ -190,33 +152,9 @@ public class GuiHandlerMMCE implements IGuiHandler {
                 && ((StorageController) te).mmceComplement$isStorageController()) {
             return new GuiStorage(player, (StorageController) te);
         }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
-            te = BlockMEDataPatternProviderII.upgradeStaleProviderTile(
-                world, pos, te);
-        }
-        if (id == MMCEComplement.GUI_ME_FULL_EXPOSURE_ASSEMBLY
-                && te instanceof TileMEFullExposureAssemblyFallback) {
-            return new GuiMEFullExposureFallback(
-                (TileMEFullExposureAssemblyFallback) te, player);
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II
-                && te instanceof TileMEDataPatternProviderII) {
-            MMCEComplement.LOGGER.info(
-                "Opening client GUI for data pattern provider II at {}, tile={}",
-                new BlockPos(x, y, z), te.getClass().getName());
-            return new GuiMEDataPatternProviderII(
-                (TileMEDataPatternProviderII) te, player);
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER_II) {
-            MMCEComplement.LOGGER.error(
-                "Rejected client GUI {}: tile at {} is {}", id,
-                new BlockPos(x, y, z),
-                te == null ? "null" : te.getClass().getName());
-        }
-        if (id == MMCEComplement.GUI_ME_DATA_PATTERN_PROVIDER
-                && te instanceof TileMEDataPatternProvider) {
-            return new GuiMEDataPatternProvider(
-                (TileMEDataPatternProvider) te, player);
+        if (CompatMods.isAeItemCompatLoaded()) {
+            Object gui = net.edwin.mmcecomplement.compat.ae.AeItemGuiCompat.getClientGui(id, player, world, pos, te);
+            if (gui != null) return gui;
         }
         if (CompatMods.isFluxCompatLoaded()) {
             Object gui = FluxGuiCompat.getClientGui(id, player, te);
@@ -233,12 +171,6 @@ public class GuiHandlerMMCE implements IGuiHandler {
         if (CompatMods.isAeGasCompatLoaded()) {
             Object gui = AeGasGuiCompat.getClientGui(id, player, te);
             if (gui != null) return gui;
-        }
-        if (CompatMods.isAeItemCompatLoaded()
-                && id == MMCEComplement.GUI_ME_PATTERN_PROVIDER_II
-                && te instanceof TileMEPatternProviderII) {
-            return new GuiMEPatternProviderII(
-                (TileMEPatternProviderII) te, player);
         }
         if (id == MMCEComplement.GUI_BATCH_HATCH && te instanceof TileBatchHatch) {
             return new GuiBatchHatch(player, (TileBatchHatch) te);

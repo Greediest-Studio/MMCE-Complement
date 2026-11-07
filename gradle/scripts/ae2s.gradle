@@ -1,0 +1,62 @@
+// AE2S uses a separate, Java 25 API. Keep it isolated from the Java 8 / AE2UEL
+// sources so neither runtime has to load the other branch's classes.
+sourceSets {
+    ae2s {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+tasks.named('compileAe2sJava', JavaCompile) {
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    sourceCompatibility = '8'
+    targetCompatibility = '8'
+    options.compilerArgs += ['-proc:none']
+}
+
+tasks.named('jar', Jar) { from(sourceSets.ae2s.output) }
+tasks.named('sourcesJar', Jar) { from(sourceSets.ae2s.allSource) }
+
+sourceSets {
+    ae2sTest {
+        compileClasspath += sourceSets.ae2s.output + sourceSets.ae2s.compileClasspath + sourceSets.test.compileClasspath
+        runtimeClasspath += output + sourceSets.ae2s.output + sourceSets.test.runtimeClasspath.filter {
+            !it.name.contains('ae2-extended-life')
+        } + sourceSets.main.compileClasspath.filter { it.name.contains('Supergiant') || it.name.contains('geckolib') }
+    }
+}
+dependencies {
+    // Match current Cleanroom/AE2S, rather than vanilla 1.12's fastutil 7.x.
+    ae2sTestRuntimeOnly 'it.unimi.dsi:fastutil:8.5.18'
+}
+tasks.named('compileAe2sTestJava', JavaCompile) {
+    javaCompiler = javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(25) }
+    sourceCompatibility = targetCompatibility = '8'
+    options.compilerArgs += ['-proc:none']
+}
+tasks.register('ae2sTest', Test) {
+    testClassesDirs = sourceSets.ae2sTest.output.classesDirs
+    classpath = configurations.ae2sTestRuntimeClasspath.filter { it.name.startsWith('fastutil-') } +
+        sourceSets.ae2sTest.runtimeClasspath.filter { !it.name.startsWith('fastutil-7.') }
+    useJUnitPlatform()
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+}
+tasks.named('check') { dependsOn 'ae2sTest' }
+
+// Run the shared script contract under both mutually exclusive AE runtimes.
+tasks.register('ae2sStorageScriptTest', Test) {
+    dependsOn 'testClasses'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = tasks.named('ae2sTest', Test).get().classpath
+    include '**/integration/crafttweaker/StorageScriptAccessTest*.class',
+        '**/integration/crafttweaker/MachineStorageControllerTest*.class'
+    filter {
+        includeTestsMatching '*StorageScriptAccessTest'
+        includeTestsMatching '*MachineStorageControllerTest'
+    }
+    useJUnitPlatform()
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+}
+tasks.named('check') { dependsOn 'ae2sStorageScriptTest' }

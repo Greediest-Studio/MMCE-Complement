@@ -355,3 +355,4 @@ gui.mmce_complement.storage.empty=Empty
 gui.mmce_complement.storage.unformed=Structure is not formed
 
 tile.mmce_complement.ae_storage_access_port.name=ME Storage Access Port
+tile.mmce_complement.storage_interaction_assembly.name=Storage Interaction Assembly

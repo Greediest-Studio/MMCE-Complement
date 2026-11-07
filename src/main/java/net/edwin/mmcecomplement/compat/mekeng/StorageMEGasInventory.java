@@ -34,7 +34,6 @@ public final class StorageMEGasInventory extends StorageMEInventory<IAEGasStack>
         GasStack offered = input.getGasStack().copy();
         offered.amount = (int) Math.min(input.getStackSize(), Integer.MAX_VALUE);
         int accepted = handler.receiveGas(null, offered, mode == Actionable.MODULATE);
-        if (mode == Actionable.MODULATE) networkChange(input, accepted);
         long left = input.getStackSize() - accepted;
         return left == 0 ? null : input.copy().setStackSize(left);
     }
@@ -46,7 +45,6 @@ public final class StorageMEGasInventory extends StorageMEInventory<IAEGasStack>
         wanted.amount = (int) Math.min(request.getStackSize(), Integer.MAX_VALUE);
         GasStack drawn = handler.drawGas(wanted, mode == Actionable.MODULATE);
         if (drawn == null || drawn.amount <= 0) return null;
-        if (mode == Actionable.MODULATE) networkChange(request, -drawn.amount);
         return request.copy().setStackSize(drawn.amount);
     }
     @Override public IItemList<IAEGasStack> getAvailableItems(IItemList<IAEGasStack> out) {

@@ -24,7 +24,6 @@ public final class StorageMEFluidInventory extends StorageMEInventory<IAEFluidSt
         FluidStack offered = input.getFluidStack().copy();
         offered.amount = (int) Math.min(input.getStackSize(), Integer.MAX_VALUE);
         int accepted = handler.fill(offered, mode == Actionable.MODULATE);
-        if (mode == Actionable.MODULATE) networkChange(input, accepted);
         long left = input.getStackSize() - accepted;
         return left == 0 ? null : input.copy().setStackSize(left);
     }
@@ -36,7 +35,6 @@ public final class StorageMEFluidInventory extends StorageMEInventory<IAEFluidSt
         wanted.amount = (int) Math.min(request.getStackSize(), Integer.MAX_VALUE);
         FluidStack drawn = handler.drain(wanted, mode == Actionable.MODULATE);
         if (drawn == null || drawn.amount <= 0) return null;
-        if (mode == Actionable.MODULATE) networkChange(request, -drawn.amount);
         return request.copy().setStackSize(drawn.amount);
     }
     @Override public IItemList<IAEFluidStack> getAvailableItems(IItemList<IAEFluidStack> out) {

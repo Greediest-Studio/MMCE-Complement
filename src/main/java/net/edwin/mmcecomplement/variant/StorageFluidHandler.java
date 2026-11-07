@@ -35,13 +35,15 @@ public class StorageFluidHandler implements IFluidHandler {
         owner.markDirty();
         if (owner instanceof hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized)
             ((hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized) owner).markForUpdateSync();
+        if (owner instanceof StorageController)
+            ((StorageController) owner).mmceComplement$markStorageChanged();
     }
 
-    public int getSlots() { return tanks.length; }
-    public int getCapacity() { return capacity; }
-    public FluidTank getTank(int index) { return index >= 0 && index < tanks.length ? tanks[index] : null; }
+    public synchronized int getSlots() { return tanks.length; }
+    public synchronized int getCapacity() { return capacity; }
+    public synchronized FluidTank getTank(int index) { return index >= 0 && index < tanks.length ? tanks[index] : null; }
     /** Merge identical fluid+NBT stacks and sort across the entire storage. */
-    public void sort() {
+    public synchronized void sort() {
         List<FluidGroup> groups = new ArrayList<>();
         for (FluidTank tank : tanks) {
             FluidStack stack = tank.getFluid();
@@ -93,21 +95,34 @@ public class StorageFluidHandler implements IFluidHandler {
     public IFluidHandler getTankInteractionHandler(final int index) {
         final FluidTank tank = getTank(index);
         if (tank == null) return null;
+        final StorageFluidHandler owner = this;
         return new IFluidHandler() {
             @Override public IFluidTankProperties[] getTankProperties() {
-                return new IFluidTankProperties[] { new FluidTankProperties(tank.getFluid(), capacity, true, true) };
+                synchronized (owner) {
+                FluidStack stack = tank.getFluid();
+                return new IFluidTankProperties[] { new FluidTankProperties(stack == null ? null : stack.copy(), capacity, true, true) };
+                }
             }
-            @Override public int fill(FluidStack resource, boolean doFill) { return tank.fill(resource, doFill); }
-            @Override public FluidStack drain(FluidStack resource, boolean doDrain) { return tank.drain(resource, doDrain); }
-            @Override public FluidStack drain(int maxDrain, boolean doDrain) { return tank.drain(maxDrain, doDrain); }
+            @Override public int fill(FluidStack resource, boolean doFill) {
+                synchronized (owner) { return tank.fill(resource, doFill); }
+            }
+            @Override public FluidStack drain(FluidStack resource, boolean doDrain) {
+                synchronized (owner) { return tank.drain(resource, doDrain); }
+            }
+            @Override public FluidStack drain(int maxDrain, boolean doDrain) {
+                synchronized (owner) { return tank.drain(maxDrain, doDrain); }
+            }
         };
     }
-    @Override public IFluidTankProperties[] getTankProperties() {
+    @Override public synchronized IFluidTankProperties[] getTankProperties() {
         IFluidTankProperties[] result = new IFluidTankProperties[tanks.length];
-        for (int i = 0; i < tanks.length; i++) result[i] = new FluidTankProperties(tanks[i].getFluid(), capacity, true, true);
+        for (int i = 0; i < tanks.length; i++) {
+            FluidStack stack = tanks[i].getFluid();
+            result[i] = new FluidTankProperties(stack == null ? null : stack.copy(), capacity, true, true);
+        }
         return result;
     }
-    @Override public int fill(FluidStack resource, boolean doFill) {
+    @Override public synchronized int fill(FluidStack resource, boolean doFill) {
         if (resource == null || resource.amount <= 0) return 0;
         FluidStack remaining = resource.copy();
         // Fill existing stacks first, then empty tanks, including in simulation.
@@ -122,7 +137,7 @@ public class StorageFluidHandler implements IFluidHandler {
         }
         return resource.amount - remaining.amount;
     }
-    @Override public FluidStack drain(FluidStack resource, boolean doDrain) {
+    @Override public synchronized FluidStack drain(FluidStack resource, boolean doDrain) {
         if (resource == null || resource.amount <= 0) return null;
         FluidStack remaining = resource.copy();
         for (FluidTank tank : tanks) {
@@ -136,18 +151,18 @@ public class StorageFluidHandler implements IFluidHandler {
         result.amount = amount;
         return result;
     }
-    @Override public FluidStack drain(int maxDrain, boolean doDrain) {
+    @Override public synchronized FluidStack drain(int maxDrain, boolean doDrain) {
         for (FluidTank t : tanks) if (t.getFluid() != null && t.getFluid().amount > 0) return t.drain(maxDrain, doDrain);
         return null;
     }
-    public NBTTagCompound serializeNBT() {
+    public synchronized NBTTagCompound serializeNBT() {
         NBTTagCompound root = new NBTTagCompound();
         NBTTagList list = new NBTTagList();
         for (FluidTank tank : tanks) list.appendTag(tank.writeToNBT(new NBTTagCompound()));
         root.setTag("Tanks", list);
         return root;
     }
-    public void deserializeNBT(NBTTagCompound root) {
+    public synchronized void deserializeNBT(NBTTagCompound root) {
         if (root == null || !root.hasKey("Tanks", 9)) return;
         NBTTagList list = root.getTagList("Tanks", 10);
         for (int i = 0; i < tanks.length && i < list.tagCount(); i++) tanks[i].readFromNBT(list.getCompoundTagAt(i));

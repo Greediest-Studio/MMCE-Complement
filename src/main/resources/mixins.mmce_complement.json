@@ -36,9 +36,6 @@
                ],
     "client":  [
                    "MixinGuiUtilRenderComponents",
-                   "MixinGuiMEItemInputBusTitle",
-                   "MixinGuiMEItemBusMarkerCount",
-                   "MixinGuiMEFluidInputBusTitle",
                    "MixinMachineStructurePreviewPanel",
                    "MixinWorldSceneRendererWidget",
                    "MixinMachineControllerRenderer",

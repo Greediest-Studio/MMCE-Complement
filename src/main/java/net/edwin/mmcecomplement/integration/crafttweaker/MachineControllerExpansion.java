@@ -24,6 +24,15 @@ public final class MachineControllerExpansion {
     private MachineControllerExpansion() {
     }
 
+    /** Storage-only API; ordinary machines are deliberately not converted. */
+    @ZenMethod
+    public static IMachineStorageController asStorageController(IMachineController controller) {
+        if (controller == null) return null;
+        TileMultiblockMachineController tile = controller.getController();
+        return tile instanceof IMachineStorageController
+            ? (IMachineStorageController) tile : null;
+    }
+
     @ZenMethod
     public static boolean hasModule(IMachineController controller, String moduleId) {
         if (controller == null || moduleId == null) {

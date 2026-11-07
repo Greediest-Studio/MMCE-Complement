@@ -42,10 +42,12 @@ class StorageMEGasInventoryTest {
             assertEquals(500, inventory.injectItems(request, Actionable.MODULATE, null).getStackSize());
             assertEquals(2500, request.getStackSize());
             assertEquals(2000, inventory.getAvailableItems(GasStorageChannel.INSTANCE.createList()).getFirstItem().getStackSize());
+            assertEquals(2000, inventory.pollChanges().get(0).getStackSize());
             assertNull(inventory.extractItems(GasStorageChannel.INSTANCE.createStack(new GasStack(oxygen, 500)), Actionable.MODULATE, null));
             assertEquals(1500, inventory.extractItems(request.copy().setStackSize(1500), Actionable.SIMULATE, null).getStackSize());
             assertEquals(1000, backing.getAmount(0));
             assertEquals(1500, inventory.extractItems(request.copy().setStackSize(1500), Actionable.MODULATE, null).getStackSize());
+            assertEquals(-1500, inventory.pollChanges().get(0).getStackSize());
             assertTrue(inventory.pollChanges().isEmpty());
             backing.receiveGas(null, new GasStack(oxygen, 100), true);
             assertEquals(100, inventory.pollChanges().get(0).getStackSize());
@@ -63,6 +65,7 @@ class StorageMEGasInventoryTest {
             assertEquals(2147483647L, largeInventory.injectItems(huge, Actionable.MODULATE, null).getStackSize());
             assertNull(largeInventory.injectItems(huge.copy().setStackSize(Integer.MAX_VALUE), Actionable.MODULATE, null));
             assertEquals(4294967294L, largeInventory.getAvailableItems(GasStorageChannel.INSTANCE.createList()).getFirstItem().getStackSize());
+            assertEquals(4294967294L, largeInventory.pollChanges().get(0).getStackSize());
             assertTrue(largeInventory.pollChanges().isEmpty());
             assertEquals(2147483647L, largeInventory.extractItems(huge, Actionable.MODULATE, null).getStackSize());
         }

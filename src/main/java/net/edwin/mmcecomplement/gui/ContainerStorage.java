@@ -7,6 +7,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
@@ -337,6 +338,16 @@ public class ContainerStorage extends Container {
         }
 
         @Override public boolean isItemValid(ItemStack stack) { return owner.mode == MODE_ITEMS && exists(); }
+        @Override public void onSlotChanged() {
+            // Vanilla may grow/shrink the live stack returned by getStack()
+            // instead of calling setStackInSlot (e.g. shift-click merges).
+            if (storage != null) storage.mmceComplement$markStorageChanged();
+            if (storage instanceof TileEntity) {
+                ((TileEntity) storage).markDirty();
+                if (storage instanceof hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized)
+                    ((hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized) storage).markForUpdateSync();
+            }
+        }
         @Override public boolean isEnabled() { return owner.mode == MODE_ITEMS && exists(); }
         @Override public int getSlotStackLimit() { return 64; }
         @Override public boolean canTakeStack(EntityPlayer player) { return owner.mode == MODE_ITEMS && exists(); }

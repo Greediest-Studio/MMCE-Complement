@@ -229,6 +229,8 @@ controller.setRedstone("throughput", 15); // 自动限制到 0–15
 
 ## CraftTweaker 与附属模块 API
 
+多方块存储器提供继承 `IMachineController` 的 `IMachineStorageController`，支持物品/流体/气体容量、唯一槽位编号、内容查询和模拟/实际存取。转换入口、完整方法表与脚本示例见[存储控制器 CraftTweaker API](storage-controller-crafttweaker-zh_cn.md)。
+
 附属模块的 JSON 格式、依赖/冲突、JEI 预览和结构导出请参阅[附属模块指南](attachment-modules-zh_cn.md)。常用脚本扩展如下：
 
 ```zenscript

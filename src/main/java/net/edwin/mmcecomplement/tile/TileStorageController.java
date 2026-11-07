@@ -11,6 +11,11 @@ import net.edwin.mmcecomplement.variant.StorageAccessPort;
 import net.edwin.mmcecomplement.variant.StorageAccessPorts;
 import java.util.HashSet;
 import java.util.Set;
+import net.edwin.mmcecomplement.integration.crafttweaker.IMachineStorageController;
+import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import github.kasuminova.mmce.common.event.Phase;
 
 /**
  * Controller used by storage variants.
@@ -20,7 +25,7 @@ import java.util.Set;
  * recipe search or recipe tick. Keeping it as a separate tile prevents the
  * normal integrated controller logic from running a container as a machine.
  */
-public class TileStorageController extends TileMachineController {
+public class TileStorageController extends TileMachineController implements IMachineStorageController {
     public static final String FULL_MESSAGE = "status.mmce_complement.storage.full";
     private static final CraftingStatus FULL_STATUS = CraftingStatus.failure(FULL_MESSAGE);
     private CraftingStatus status = CraftingStatus.MISSING_STRUCTURE;
@@ -66,10 +71,12 @@ public class TileStorageController extends TileMachineController {
         updateControllerState(getWorld().getBlockState(getPos()));
         boolean formed = doStructureCheck() && isStructureFormed();
         storagePorts = StorageAccessPorts.refresh(this, storagePorts);
+        if (formed) onMachineTick(Phase.START);
         // No stock is exposed to hatches until the whole structure is formed.
         setControllerStatus(!formed ? CraftingStatus.MISSING_STRUCTURE
             : StorageAutomation.tick(this, (StorageController) (Object) this)
                 ? FULL_STATUS : CraftingStatus.SUCCESS);
+        if (formed) onMachineTick(Phase.END);
     }
 
     @Override
@@ -90,6 +97,19 @@ public class TileStorageController extends TileMachineController {
     public void flushContextModifier() {
         // Storage variants do not create recipe contexts or modifiers.
     }
+
+    // A storage structure has no active recipes, recipe threads or recipe modifiers.
+    @Override public ActiveMachineRecipe getActiveRecipe() { return null; }
+    @Override public ActiveMachineRecipe[] getActiveRecipeList() { return new ActiveMachineRecipe[0]; }
+    @Override public RecipeThread[] getRecipeThreadList() { return new RecipeThread[0]; }
+    @Override public int getExtraThreadCount() { return 0; }
+    @Override public void setExtraThreadCount(int count) { }
+    @Override public boolean isWorking() { return false; }
+    @Override public void addModifier(String key, RecipeModifier modifier) { }
+    @Override public void removeModifier(String key) { }
+    @Override public void addPermanentModifier(String key, RecipeModifier modifier) { }
+    @Override public void removePermanentModifier(String key) { }
+    @Override public boolean hasModifier(String key) { return false; }
 
     @Override
     public void overrideStatusInfo(String message) {

@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
+import net.edwin.mmcecomplement.variant.StorageController;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,15 +26,15 @@ public final class StorageGasHandler implements IExtendedGasHandler {
         this.tanks = new GasTank[Math.max(0, slots)];
         for (int i = 0; i < tanks.length; i++) tanks[i] = new GasTank(this.capacity);
     }
-    public int getSlots() { return tanks.length; }
-    public int getCapacity() { return capacity; }
-    public GasStack getStack(int i) { return i >= 0 && i < tanks.length ? tanks[i].getGas() : null; }
-    public int getAmount(int i) { GasStack s = getStack(i); return s == null ? 0 : s.amount; }
-    public net.minecraft.util.ResourceLocation getTexture(int i) { GasStack stack = getStack(i); return stack == null ? null : stack.getGas().getIcon(); }
-    public int getTint(int i) { GasStack stack = getStack(i); return stack == null ? 0xFFFFFF : stack.getGas().getTint(); }
-    public String getDisplayName(int i) { GasStack stack = getStack(i); return stack == null ? null : stack.getGas().getLocalizedName(); }
+    public synchronized int getSlots() { return tanks.length; }
+    public synchronized int getCapacity() { return capacity; }
+    public synchronized GasStack getStack(int i) { return i >= 0 && i < tanks.length ? tanks[i].getGas() : null; }
+    public synchronized int getAmount(int i) { GasStack s = getStack(i); return s == null ? 0 : s.amount; }
+    public synchronized net.minecraft.util.ResourceLocation getTexture(int i) { GasStack stack = getStack(i); return stack == null ? null : stack.getGas().getIcon(); }
+    public synchronized int getTint(int i) { GasStack stack = getStack(i); return stack == null ? 0xFFFFFF : stack.getGas().getTint(); }
+    public synchronized String getDisplayName(int i) { GasStack stack = getStack(i); return stack == null ? null : stack.getGas().getLocalizedName(); }
     /** Merge same-gas tanks, sort by registry name, and leave empty tanks last. */
-    public void sort() {
+    public synchronized void sort() {
         List<GasGroup> groups = new ArrayList<>();
         for (GasTank tank : tanks) {
             GasStack stack = tank.getGas();
@@ -80,8 +81,14 @@ public final class StorageGasHandler implements IExtendedGasHandler {
         private long amount;
         private GasGroup(GasStack prototype) { this.prototype = prototype; }
     }
-    private void changed() { owner.markDirty(); if (owner instanceof hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized) ((hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized)owner).markForUpdateSync(); }
-    @Override public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
+    private void changed() {
+        owner.markDirty();
+        if (owner instanceof hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized)
+            ((hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized)owner).markForUpdateSync();
+        if (owner instanceof StorageController)
+            ((StorageController) owner).mmceComplement$markStorageChanged();
+    }
+    @Override public synchronized int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
         if (stack == null || stack.amount <= 0) return 0;
         GasStack remaining = stack.copy();
         for (int pass = 0; pass < 2; pass++) {
@@ -104,7 +111,7 @@ public final class StorageGasHandler implements IExtendedGasHandler {
         if (doTransfer && received > 0) changed();
         return received;
     }
-    @Override public GasStack drawGas(GasStack request, boolean doTransfer) {
+    @Override public synchronized GasStack drawGas(GasStack request, boolean doTransfer) {
         if (request == null || request.amount <= 0) return null;
         int remaining = request.amount;
         for (GasTank tank : tanks) {
@@ -120,16 +127,34 @@ public final class StorageGasHandler implements IExtendedGasHandler {
         result.amount = drawn;
         return result;
     }
-    @Override public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
+    /** Slot-specific script transfers retain the same lock and change notifications. */
+    public synchronized int receiveGasInSlot(int slot, GasStack request, boolean doTransfer) {
+        if (slot < 0 || slot >= tanks.length || request == null || request.amount <= 0) return 0;
+        GasStack portion = request.copy();
+        portion.amount = Math.min(portion.amount, capacity - tanks[slot].getStored());
+        if (portion.amount <= 0) return 0;
+        int accepted = tanks[slot].receive(portion, doTransfer);
+        if (doTransfer && accepted > 0) changed();
+        return accepted;
+    }
+    public synchronized GasStack drawGasInSlot(int slot, GasStack request, boolean doTransfer) {
+        if (slot < 0 || slot >= tanks.length || request == null || request.amount <= 0) return null;
+        GasStack stored = tanks[slot].getGas();
+        if (stored == null || !stored.isGasEqual(request)) return null;
+        GasStack drawn = tanks[slot].draw(request.amount, doTransfer);
+        if (doTransfer && drawn != null && drawn.amount > 0) changed();
+        return drawn;
+    }
+    @Override public synchronized GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
         if (amount <= 0) return null;
         for (GasTank t : tanks) if (t.getGas() != null && t.getGas().amount > 0) { GasStack s=t.draw(amount, doTransfer); if(doTransfer&&s!=null)changed(); return s; }
         return null;
     }
-    @Override public boolean canReceiveGas(EnumFacing side, mekanism.api.gas.Gas gas) { return gas != null && receiveGas(side, new GasStack(gas, 1), false) > 0; }
-    @Override public boolean canDrawGas(EnumFacing side, mekanism.api.gas.Gas gas) { for(GasTank t:tanks) if(t.getGas()!=null&&t.getGas().amount>0&&(gas==null||t.getGas().getGas()==gas)) return true; return false; }
-    @Override public GasTankInfo[] getTankInfo() { GasTankInfo[] a=new GasTankInfo[tanks.length]; for(int i=0;i<a.length;i++)a[i]=tanks[i].getInfo(); return a; }
-    public NBTTagCompound serializeNBT() { NBTTagCompound root=new NBTTagCompound(); NBTTagList list=new NBTTagList(); for(GasTank t:tanks)list.appendTag(t.write(new NBTTagCompound())); root.setTag("Tanks",list); return root; }
-    public void deserializeNBT(NBTTagCompound root) { if(root==null||!root.hasKey("Tanks",9))return; NBTTagList list=root.getTagList("Tanks",10); for(int i=0;i<tanks.length&&i<list.tagCount();i++)tanks[i].read(list.getCompoundTagAt(i)); }
+    @Override public synchronized boolean canReceiveGas(EnumFacing side, mekanism.api.gas.Gas gas) { return gas != null && receiveGas(side, new GasStack(gas, 1), false) > 0; }
+    @Override public synchronized boolean canDrawGas(EnumFacing side, mekanism.api.gas.Gas gas) { for(GasTank t:tanks) if(t.getGas()!=null&&t.getGas().amount>0&&(gas==null||t.getGas().getGas()==gas)) return true; return false; }
+    @Override public synchronized GasTankInfo[] getTankInfo() { GasTankInfo[] a=new GasTankInfo[tanks.length]; for(int i=0;i<a.length;i++)a[i]=tanks[i].getInfo(); return a; }
+    public synchronized NBTTagCompound serializeNBT() { NBTTagCompound root=new NBTTagCompound(); NBTTagList list=new NBTTagList(); for(GasTank t:tanks)list.appendTag(t.write(new NBTTagCompound())); root.setTag("Tanks",list); return root; }
+    public synchronized void deserializeNBT(NBTTagCompound root) { if(root==null||!root.hasKey("Tanks",9))return; NBTTagList list=root.getTagList("Tanks",10); for(int i=0;i<tanks.length&&i<list.tagCount();i++)tanks[i].read(list.getCompoundTagAt(i)); }
     /** Handles the Mekanism gas container carried by the GUI cursor. */
     public boolean interact(EntityPlayer player, int index) {
         if (index < 0 || index >= tanks.length) return false;

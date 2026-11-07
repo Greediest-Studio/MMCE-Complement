@@ -25,12 +25,9 @@ import net.minecraft.util.ITickable;
 import java.util.*;
 
 /** One AE channel mounts all declared storage channels of a formed storage variant. */
-public class TileAEStorageAccessPort extends MEMachineComponent implements ICellContainer, ITickable, StorageAccessPort {
+public class TileAEStorageAccessPort extends TileConfigurableStoragePort implements StorageAccessPort {
     private final Set<TileMultiblockMachineController> controllers = new HashSet<>();
     private List<StorageMEInventory<?>> inventories;
-    private IGrid lastGrid;
-    private boolean lastActive;
-    private boolean refreshGrid;
 
     @Override public ItemStack getVisualItemStack() {
         return ModBlocks.AE_STORAGE_ACCESS_PORT == null ? ItemStack.EMPTY
@@ -51,7 +48,7 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
     }
     @Override public void unbindStorage(TileMultiblockMachineController controller) { controllers.remove(controller); }
 
-    private TileMultiblockMachineController controller() {
+    TileMultiblockMachineController controller() {
         TileMultiblockMachineController found = null;
         Iterator<TileMultiblockMachineController> iterator = controllers.iterator();
         while (iterator.hasNext()) {
@@ -71,7 +68,7 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
         return found;
     }
 
-    private StorageController storage() {
+    StorageController storage() {
         if (isInvalid() || getWorld() == null || getWorld().isRemote || !proxy.isActive()) return null;
         TileMultiblockMachineController target = controller();
         if (target == null) return null;
@@ -88,7 +85,7 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
         return (StorageController) target;
     }
 
-    private List<StorageMEInventory<?>> inventories() {
+    protected List<StorageMEInventory<?>> inventories() {
         if (inventories != null) return inventories;
         inventories = new ArrayList<>();
         inventories.add(new StorageMEItemInventory(AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class), () -> {
@@ -102,46 +99,9 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
                 ? storage.mmceComplement$getFluidStorage() : null;
         }));
         if (CompatMods.isAeGasCompatLoaded()) inventories.add(StorageMEGasBridge.create(this::storage));
-        for (StorageMEInventory<?> inventory : inventories) inventory.resetSnapshot();
+        initializeNetworkViews(inventories);
         return inventories;
     }
 
-    @Override public List<IMEInventoryHandler> getCellArray(IStorageChannel<?> channel) {
-        // The grid mounts active nodes only. Keep handlers stable when the structure
-        // breaks; the polling delta removes the sealed contents from the terminal.
-        for (StorageMEInventory<?> inventory : inventories()) {
-            if (inventory.getChannel() == channel) return Collections.singletonList(inventory);
-        }
-        return Collections.emptyList();
-    }
-
-    @Override public void update() {
-        if (getWorld() == null || getWorld().isRemote || isInvalid()) return;
-        try {
-            IGrid grid = proxy.getGrid();
-            boolean active = proxy.isActive();
-            if (refreshGrid || lastGrid != grid || lastActive != active) {
-                refreshGrid = false;
-                lastGrid = grid;
-                lastActive = active;
-                grid.postEvent(new MENetworkCellArrayUpdate());
-                for (StorageMEInventory<?> inventory : inventories()) inventory.resetSnapshot();
-            } else if (active) {
-                for (StorageMEInventory<?> inventory : inventories()) {
-                    List<? extends IAEStack<?>> changes = inventory.pollChanges();
-                    if (!changes.isEmpty()) proxy.getStorage().postAlterationOfStoredItems(inventory.getChannel(), changes, source);
-                }
-            }
-        } catch (GridAccessException ignored) {
-            lastGrid = null;
-            lastActive = false;
-        }
-    }
-
-    @Override public void gridChanged() { refreshGrid = true; }
-    @MENetworkEventSubscribe public void channelsChanged(MENetworkChannelsChanged event) { refreshGrid = true; }
-    @MENetworkEventSubscribe public void powerChanged(MENetworkPowerStatusChange event) { refreshGrid = true; }
-    @Override public int getPriority() { return 0; }
-    @Override public void blinkCell(int slot) { }
-    @Override public void saveChanges(ICellInventory<?> cell) { markDirty(); }
+    @Override protected StorageController networkStorage() { return storage(); }
 }

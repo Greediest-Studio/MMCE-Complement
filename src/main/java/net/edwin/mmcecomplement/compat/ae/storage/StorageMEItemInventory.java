@@ -31,7 +31,6 @@ public final class StorageMEItemInventory extends StorageMEInventory<IAEItemStac
                 remaining -= offered.getCount() - rest.getCount();
             }
         }
-        if (mode == Actionable.MODULATE) networkChange(input, input.getStackSize() - remaining);
         return remaining == 0 ? null : input.copy().setStackSize(remaining);
     }
     @Override public IAEItemStack extractItems(IAEItemStack request, Actionable mode, IActionSource source) {
@@ -46,7 +45,6 @@ public final class StorageMEItemInventory extends StorageMEInventory<IAEItemStac
         }
         long extracted = request.getStackSize() - remaining;
         if (extracted == 0) return null;
-        if (mode == Actionable.MODULATE) networkChange(request, -extracted);
         return request.copy().setStackSize(extracted);
     }
     @Override public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {

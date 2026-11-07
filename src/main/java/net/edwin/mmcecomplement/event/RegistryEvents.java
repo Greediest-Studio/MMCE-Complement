@@ -227,7 +227,7 @@ public final class RegistryEvents {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void onRequirementTypeRegister(RegistryEvent.Register event) {
         if (event.getGenericType() == RequirementType.class) {
-            event.getRegistry().register(ModMEChannelTypes.REQUIREMENT);
+            if (CompatMods.isAeItemCompatLoaded()) event.getRegistry().register(ModMEChannelTypes.REQUIREMENT);
             CatalystTypes.register(event.getRegistry());
         }
     }
@@ -498,6 +498,15 @@ public final class RegistryEvents {
             GameRegistry.registerTileEntity(TileAEStorageAccessPort.class,
                 new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
 
+            ModBlocks.STORAGE_INTERACTION_ASSEMBLY =
+                new net.edwin.mmcecomplement.compat.ae.block.BlockStorageInteractionAssembly();
+            ModBlocks.STORAGE_INTERACTION_ASSEMBLY.setRegistryName(
+                new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
+            event.getRegistry().register(ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
+            GameRegistry.registerTileEntity(
+                net.edwin.mmcecomplement.compat.ae.tile.TileStorageInteractionAssembly.class,
+                new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
+
             ModBlocks.ME_ORE_DICT_INPUT_BUS = new BlockMEOreDictInputBus();
             ModBlocks.ME_ORE_DICT_INPUT_BUS.setRegistryName(
                 new ResourceLocation(Tags.MOD_ID, "me_ore_dict_input_bus"));
@@ -530,6 +539,9 @@ public final class RegistryEvents {
                     "me_fluid_inventory_input_bus"));
         }
 
+        if (net.edwin.mmcecomplement.compat.Ae2sStorageCompat.isLoaded()) {
+            net.edwin.mmcecomplement.compat.Ae2sStorageCompat.registerBlocks(event.getRegistry());
+        }
         if (CompatMods.isAeGasCompatLoaded()) {
             AeGasRegistryCompat.registerBlocks(event.getRegistry());
         }
@@ -738,6 +750,10 @@ public final class RegistryEvents {
             event.getRegistry().register(outBusItem);
         }
 
+        if (net.edwin.mmcecomplement.compat.Ae2sStorageCompat.isLoaded()) {
+            registerMachineItem(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
+            registerMachineItem(event, ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
+        }
         if (CompatMods.isAeItemCompatLoaded()
             && ModBlocks.ME_DATA_PATTERN_PROVIDER != null) {
             registerMEDataPatternProviderItem(event,
@@ -756,6 +772,7 @@ public final class RegistryEvents {
             registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerMEItemBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
             registerMEItemBlock(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
+            registerMachineItem(event, ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
             ItemBlockMEMachineComponent mineralItem =
                 new ItemBlockMEMachineComponent(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             mineralItem.setRegistryName(
@@ -948,9 +965,14 @@ public final class RegistryEvents {
             registerBlockItemModel(ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerBlockItemModel(ModBlocks.ME_CONNECTION_SHARE_HATCH);
             registerBlockItemModel(ModBlocks.AE_STORAGE_ACCESS_PORT);
+            registerBlockItemModel(ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
             registerBlockItemModel(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_ITEM_INVENTORY_INPUT_BUS);
             registerBlockItemModel(ModBlocks.ME_FLUID_INVENTORY_INPUT_BUS);
+        }
+        if (net.edwin.mmcecomplement.compat.Ae2sStorageCompat.isLoaded()) {
+            registerBlockItemModel(ModBlocks.AE_STORAGE_ACCESS_PORT);
+            registerBlockItemModel(ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
         }
         if (CompatMods.isAeGasCompatLoaded()) {
             registerBlockItemModel(ModBlocks.ME_GAS_INVENTORY_INPUT_BUS);
