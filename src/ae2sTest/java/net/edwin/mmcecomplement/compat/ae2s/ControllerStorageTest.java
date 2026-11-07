@@ -82,6 +82,8 @@ class ControllerStorageTest {
 
     @Test void entrypointsLoadWithSupergiantAndWithoutUel() throws Exception {
         assertThrows(ClassNotFoundException.class, () -> Class.forName("appeng.api.AEApi"));
+        assertThrows(ClassNotFoundException.class, () -> Class.forName("me.ramidzkh.mekae2.ae2.AEGasKey"));
+        assertNull(NativeGasStorageBridge.create(() -> null), "Native gas integration remains optional");
         for (String name : new String[] {
             "net.edwin.mmcecomplement.MMCEComplement",
             "net.edwin.mmcecomplement.event.RegistryEvents",

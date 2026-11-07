@@ -16,8 +16,12 @@ import java.util.function.Supplier;
 /** No cached contents: both AE and pipes mutate the controller's real handlers. */
 public final class ControllerStorage implements MEStorage {
     private final Supplier<StorageController> storage;
+    private final MEStorage gasStorage;
 
-    public ControllerStorage(Supplier<StorageController> storage) { this.storage = storage; }
+    public ControllerStorage(Supplier<StorageController> storage) {
+        this.storage = storage;
+        gasStorage = NativeGasStorageBridge.create(storage);
+    }
 
     @Override public long insert(AEKey key, long amount, Actionable mode, IActionSource source) {
         if (key == null || amount <= 0) return 0;
@@ -44,7 +48,7 @@ public final class ControllerStorage implements MEStorage {
             return handler == null ? 0 : handler.fill(((AEFluidKey) key).toStack((int) Math.min(amount, Integer.MAX_VALUE)),
                 mode == Actionable.MODULATE);
         }
-        return 0;
+        return gasStorage == null ? 0 : gasStorage.insert(key, amount, mode, source);
     }
 
     @Override public long extract(AEKey key, long amount, Actionable mode, IActionSource source) {
@@ -69,7 +73,7 @@ public final class ControllerStorage implements MEStorage {
                 mode == Actionable.MODULATE);
             return drawn == null ? 0 : drawn.amount;
         }
-        return 0;
+        return gasStorage == null ? 0 : gasStorage.extract(key, amount, mode, source);
     }
 
     @Override public void getAvailableStacks(KeyCounter out) {
@@ -85,6 +89,7 @@ public final class ControllerStorage implements MEStorage {
             FluidStack stack = tank.getContents();
             if (stack != null && stack.amount > 0) out.add(AEFluidKey.of(stack), stack.amount);
         }
+        if (gasStorage != null) gasStorage.getAvailableStacks(out);
     }
 
     @Override public ITextComponent getDescription() {

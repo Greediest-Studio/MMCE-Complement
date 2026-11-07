@@ -60,3 +60,27 @@ tasks.register('ae2sStorageScriptTest', Test) {
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
 }
 tasks.named('check') { dependsOn 'ae2sStorageScriptTest' }
+
+// Exercise the native gas key API without adding MekEng to the base AE2S or UEL tests.
+sourceSets {
+    ae2sGasTest {
+        compileClasspath += sourceSets.ae2s.output + sourceSets.ae2sTest.compileClasspath
+        runtimeClasspath += output + sourceSets.ae2sTest.runtimeClasspath +
+            sourceSets.main.compileClasspath.filter { it.name.startsWith('mekeng-1.2.1') }
+    }
+}
+
+tasks.named('compileAe2sGasTestJava', JavaCompile) {
+    javaCompiler = javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(25) }
+    sourceCompatibility = targetCompatibility = '8'
+    options.compilerArgs += ['-proc:none']
+}
+
+tasks.register('ae2sGasTest', Test) {
+    testClassesDirs = sourceSets.ae2sGasTest.output.classesDirs
+    classpath = tasks.named('ae2sTest', Test).get().classpath + sourceSets.ae2sGasTest.output +
+        sourceSets.main.compileClasspath.filter { it.name.startsWith('mekeng-1.2.1') }
+    useJUnitPlatform()
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+}
+tasks.named('check') { dependsOn 'ae2sGasTest' }

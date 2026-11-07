@@ -5,6 +5,16 @@
 AppliedCompatibility 同时注册新旧 AE ID 时也只注册一次，不会启用 UEL 专用 Mixin。
 下文的 1.6.1 安装验收记录及哈希属于线上 PR 的历史产物，不代表合并后的 JAR 已完成游戏内验收。
 
+本次补齐多方块存储端口的 AE2S 原生气体存储：安装 Mekanism 与原生 MekEng
+（Applied Mekanistics 1.2.1）后，物品、流体、气体均可直接访问控制器的实际库存。
+气体接口支持模拟存取、多槽大总量及共享后端锁；终端通过原生存储总线监视器同步，
+外部管道/脚本改动继续由控制器的变更标记触发刷新。未安装原生 MekEng 时不加载气体适配类，
+不影响物品、流体与 CraftTweaker 接口。存储交互总成仍为管道容器，不接入 ME 导线。
+
+本次 Gradle 验证包括 UEL 回归、无原生 MekEng 的 AE2S 回归、AE2S 共享脚本测试，
+以及 7 项使用真实原生气体键和存储总线监视器的气体测试。
+这些测试不替代合并后安装包的游戏内验收。
+
 本分支基于 YDHusky/MMCE-Complement 的 e293441a08b096f35624b26bdc18d8e60f16b9df，
 已检查作者的 AE2S 初步适配提交 f98d33366476c6c9898b68908f8162e971fd3dec。
 保留 **MMCE Complement** 名称、mmce_complement ID、net.edwin 包名、版本 1.6.1
@@ -47,7 +57,7 @@ MMCE、AE2S、AppliedCompatibility 均使用上表的官方 JAR，不嵌入、�
 - 补足官方 1.0.1 安装 JAR 在 SRG 环境遗漏的节点初始化/失效钩子；
   原生节点状态回调直接持久化、同步仓室，避免关闭世界时查询已销毁的旧代理网络。
   这些钩子都放在 Complement 的可选 AE2S Mixin 中。
-- 存储端口使用 AE2S 原生物品/流体存储，增量的数量与原型分离，避免官方旧栈将负数量截零
+- 存储端口使用 AE2S 原生物品/流体/气体存储，增量的数量与原型分离，避免官方旧栈将负数量截零
   造成外部库存重复记账。多端口去重、拆除封存、重建和断线接管沿用 Complement 的库存规则。
 - 原生 AE2S 编码样板接入 36/144 槽供应器，保留数据标记和工作模式；原生服务支持合并下发。
 - Complement 的三种供应器使用原生 AE2S 容器、界面和同步协议，支持扩展槽位、三个独立流体槽、
@@ -135,6 +145,8 @@ MMCE、AE2S、AppliedCompatibility 均使用上表的官方 JAR，不嵌入、�
     ./gradlew build reobfRuntimeHarnessJar --no-daemon
 
 UEL 回归测试运行在 Java 8；独立的 AE2S 测试运行在 Java 25。
+`ae2sGasTest` 单独引入原生 MekEng，覆盖真实气体键和终端监视器，
+`ae2sTest` 保持无原生 MekEng 环境；两者均随 `check` / `build` 执行。
 需要使用本地开发包时，仍可通过以下参数覆盖：
 
     gradle reobfJar reobfRuntimeHarnessJar sourcesJar test --console=plain \
