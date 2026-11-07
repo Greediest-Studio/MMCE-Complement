@@ -8,8 +8,9 @@ public final class Ae2sStorageCompat {
     private Ae2sStorageCompat() { }
 
     public static boolean isLoaded() {
-        return net.minecraftforge.fml.common.Loader.isModLoaded(CompatMods.MODID_AE2S)
-            && !net.minecraftforge.fml.common.Loader.isModLoaded(CompatMods.MODID_AE2);
+        // AppliedCompatibility registers the legacy ID too. Select by the
+        // native branch, rather than mistaking that compatibility ID for UEL.
+        return CompatMods.isAe2sLoaded();
     }
 
     public static void registerBlocks(IForgeRegistry<Block> registry) {

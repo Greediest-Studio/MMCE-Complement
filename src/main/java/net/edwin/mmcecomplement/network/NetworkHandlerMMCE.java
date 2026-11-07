@@ -84,6 +84,12 @@ public final class NetworkHandlerMMCE {
         CHANNEL.registerMessage(StorageTankHandler.class, StorageTankMessage.class, 6, Side.SERVER);
     }
 
+    private static boolean isPatternContainerFor(Container container, TileEntity tile) {
+        if (CompatMods.isAe2sLoaded()) return container instanceof net.edwin.mmcecomplement.compat.ae2s.AE2SPatternProviderContainer
+            && ((net.edwin.mmcecomplement.compat.ae2s.AE2SPatternProviderContainer) container).getOwner() == tile;
+        return container instanceof ContainerMEPatternProvider && ((ContainerMEPatternProvider) container).getOwner() == tile;
+    }
+
     public static final class StorageTabMessage implements IMessage {
         public int mode; public StorageTabMessage() {} public StorageTabMessage(int mode){this.mode=mode;}
         @Override public void fromBytes(ByteBuf b){mode=b.readByte();} @Override public void toBytes(ByteBuf b){b.writeByte(mode);}
@@ -490,9 +496,7 @@ public final class NetworkHandlerMMCE {
             }
 
             if (te instanceof TileMEOreDictInputBus
-                    && player.openContainer instanceof ContainerMEItemInputBus
-                    && ((ContainerMEItemInputBus) player.openContainer)
-                        .getOwner() == te) {
+                    && getContainerOwner(player.openContainer) == te) {
                 TileMEOreDictInputBus bus = (TileMEOreDictInputBus) te;
                 if (msg.fieldId == FIELD_ME_ORE_DICT_WHITELIST) {
                     bus.setWhitelist(clampFilter(nbt.getString("v")));
@@ -577,9 +581,7 @@ public final class NetworkHandlerMMCE {
 
             if (te instanceof TileMEDataPatternProvider
                     && msg.fieldId == FIELD_ME_DATA_PATTERN) {
-                if (!(player.openContainer instanceof ContainerMEPatternProvider)
-                    || ((ContainerMEPatternProvider) player.openContainer)
-                        .getOwner() != te) {
+                if (!isPatternContainerFor(player.openContainer, te)) {
                     return;
                 }
                 TileMEDataPatternProvider provider =
@@ -598,9 +600,7 @@ public final class NetworkHandlerMMCE {
 
             if (te instanceof TileMEDataPatternProviderII
                     && msg.fieldId == FIELD_ME_DATA_PATTERN_II) {
-                if (!(player.openContainer instanceof ContainerMEPatternProvider)
-                    || ((ContainerMEPatternProvider) player.openContainer)
-                        .getOwner() != te) {
+                if (!isPatternContainerFor(player.openContainer, te)) {
                     return;
                 }
                 TileMEDataPatternProviderII provider =

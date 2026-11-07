@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -90,13 +91,13 @@ public class TileMEFluidInventoryInputBus extends MEFluidInputBus
     @Override
     public TickRateModulation tickingRequest(IGridNode node,
                                               int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         Lock writeLock = tanks.getRWLock().writeLock();
         writeLock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEFluidStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             boolean changed = syncConfiguredFluids(monitor, activePull);
             if (!activePull && !hasBufferedFluids()) {
                 return TickRateModulation.SLEEP;
@@ -146,8 +147,8 @@ public class TileMEFluidInventoryInputBus extends MEFluidInputBus
                 permanentReserve, room);
             if (amount <= 0L) continue;
             request.setStackSize(amount);
-            IAEFluidStack extracted = Platform.poweredExtraction(
-                proxy.getEnergy(), monitor, request, source);
+            IAEFluidStack extracted = AeNetworkCompat.poweredExtraction(this,
+                AeNetworkCompat.energy(this), monitor, request, source);
             if (extracted == null || extracted.getStackSize() <= 0L) continue;
             if (stored == null) {
                 tanks.setFluidInSlot(slot, extracted);
@@ -164,18 +165,18 @@ public class TileMEFluidInventoryInputBus extends MEFluidInputBus
     private IAEFluidStack insertToNetwork(IMEMonitor<IAEFluidStack> monitor,
                                           IAEFluidStack stack)
         throws GridAccessException {
-        return Platform.poweredInsert(proxy.getEnergy(), monitor,
+        return AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this), monitor,
             stack.copy(), source);
     }
 
     private void pushAllToNetwork() {
-        if (!proxy.isActive()) return;
+        if (!isActive()) return;
         Lock writeLock = tanks.getRWLock().writeLock();
         writeLock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEFluidStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             for (int slot = 0; slot < tanks.getSlots(); slot++) {
                 IAEFluidStack stored = tanks.getFluidInSlot(slot);
                 if (stored != null) {
@@ -201,8 +202,8 @@ public class TileMEFluidInventoryInputBus extends MEFluidInputBus
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            IGridNode node = proxy.getNode();
-            if (node != null) proxy.getTick().alertDevice(node);
+            IGridNode node = AeNetworkCompat.getNode(this);
+            if (node != null) AeNetworkCompat.alert(this);
         } catch (GridAccessException ignored) { }
     }
 

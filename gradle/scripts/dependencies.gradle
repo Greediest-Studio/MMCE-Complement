@@ -2,6 +2,19 @@ apply from: 'gradle/scripts/helpers.gradle'
 
 repositories {
     exclusiveContent {
+        forRepository {
+            ivy {
+                name 'FormlessDragon releases'
+                url 'https://github.com/FormlessDragon'
+                patternLayout {
+                    artifact '[module]/releases/download/v[revision]/[artifact]-[revision](-[classifier]).[ext]'
+                }
+                metadataSources { artifact() }
+            }
+        }
+        filter { includeGroup 'github.formlessdragon.releases' }
+    }
+    exclusiveContent {
         forRepository { maven { name 'CraftTweaker'; url 'https://maven.blamejared.com' } }
         filter { includeGroup 'CraftTweaker2' }
     }
@@ -39,9 +52,9 @@ repositories {
 dependencies {
     // Optional MMCE Addons API. Its configurable biome/dimension hatches and
     // binding tool are registered only when modularmachineryaddons exists.
-    compileOnly files('../MMCE-Addons/build/libs/ModularMachinery-Addons-2.0.3-dev.jar')
+    compileOnly rfg.deobf('curse.maven:modular-machinery-community-edition-addons-1236022:8175673')
     // Optional TOPCE API used by the configurable detector probe provider.
-    compileOnly files('../The-One-Probe-Community-Edition/build/libs/TheOneProbe-CE-1.12-1.3.8-fix3-dev.jar')
+    compileOnly rfg.deobf('curse.maven:the-one-probe-245211:2667280')
     // Include StripLatestForgeRequirements by default for the dev env, saves everyone a hassle
     runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
     // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
@@ -60,8 +73,29 @@ dependencies {
     // AE2UEL API used by the existing appeng integration.
     compileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
     testCompileOnly rfg.deobf('curse.maven:ae2-extended-life-570458:5411078')
-    // AE2S (Applied Energistics 2 - Supergiant) is an alternative AE2 branch.
-    compileOnly 'com.github.FormlessDragon:Applied-Energistics-2-Supergiant:v1.0.15:dev'
+    // The native AE2S integration compiles against the same implementation used
+    // for production verification. These dependencies are never embedded.
+    if (providers.gradleProperty('ae2s_dev_jar').isPresent()) {
+        compileOnly files(providers.gradleProperty('ae2s_dev_jar').get())
+    } else {
+        compileOnly('github.formlessdragon.releases:Applied-Energistics-2-Supergiant:1.1.0') {
+            artifact { name = 'AppliedEnergistics2-Supergiant'; classifier = 'dev'; type = 'jar' }
+        }
+    }
+    if (providers.gradleProperty('appcompat_dev_jar').isPresent()) {
+        compileOnly files(providers.gradleProperty('appcompat_dev_jar').get())
+    } else {
+        compileOnly('github.formlessdragon.releases:AppliedCompatibility:1.0.1') {
+            artifact { name = 'appcompat'; classifier = 'dev'; type = 'jar' }
+        }
+    }
+    if (providers.gradleProperty('mekeng_dev_jar').isPresent()) {
+        compileOnly files(providers.gradleProperty('mekeng_dev_jar').get())
+    } else {
+        compileOnly('github.formlessdragon.releases:Applied-Mekanistics:1.2.1') {
+            artifact { name = 'mekeng'; classifier = 'dev'; type = 'jar' }
+        }
+    }
     // Optional at runtime. The quadruple fluid hatch exposes Mekanism's gas
     // API only when Mekanism is installed, matching MMCE's native fluid hatches.
     compileOnly rfg.deobf('curse.maven:mekanism-ce-unofficial-840735:8411935')

@@ -1,0 +1,9 @@
+{
+    "package": "net.edwin.mmcecomplement.compat.ae2s.mixin",
+    "required": true,
+    "refmap": "mixins.mmce_complement.refmap.json",
+    "minVersion": "0.8.5",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": ["MixinMEMachineComponent", "MixinMEPatternProvider", "MixinPatternItemFilter", "MixinNativeInventorySettings"],
+    "client": ["MixinNativeBusTitles", "MixinNativeItemInputGui", "MixinNativeBusMarkerCount"]
+}

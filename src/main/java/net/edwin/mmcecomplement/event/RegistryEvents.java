@@ -492,20 +492,24 @@ public final class RegistryEvents {
                 new ResourceLocation(Tags.MOD_ID,
                     "me_connection_share_hatch"));
 
-            ModBlocks.AE_STORAGE_ACCESS_PORT = new BlockAEStorageAccessPort();
-            ModBlocks.AE_STORAGE_ACCESS_PORT.setRegistryName(new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
-            event.getRegistry().register(ModBlocks.AE_STORAGE_ACCESS_PORT);
-            GameRegistry.registerTileEntity(TileAEStorageAccessPort.class,
-                new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
+            // AppliedCompatibility also exposes the legacy AE mod ID. Native
+            // AE2S storage blocks are registered separately below, exactly once.
+            if (!CompatMods.isAe2sLoaded()) {
+                ModBlocks.AE_STORAGE_ACCESS_PORT = new BlockAEStorageAccessPort();
+                ModBlocks.AE_STORAGE_ACCESS_PORT.setRegistryName(new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
+                event.getRegistry().register(ModBlocks.AE_STORAGE_ACCESS_PORT);
+                GameRegistry.registerTileEntity(TileAEStorageAccessPort.class,
+                    new ResourceLocation(Tags.MOD_ID, "ae_storage_access_port"));
 
-            ModBlocks.STORAGE_INTERACTION_ASSEMBLY =
-                new net.edwin.mmcecomplement.compat.ae.block.BlockStorageInteractionAssembly();
-            ModBlocks.STORAGE_INTERACTION_ASSEMBLY.setRegistryName(
-                new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
-            event.getRegistry().register(ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
-            GameRegistry.registerTileEntity(
-                net.edwin.mmcecomplement.compat.ae.tile.TileStorageInteractionAssembly.class,
-                new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
+                ModBlocks.STORAGE_INTERACTION_ASSEMBLY =
+                    new net.edwin.mmcecomplement.compat.ae.block.BlockStorageInteractionAssembly();
+                ModBlocks.STORAGE_INTERACTION_ASSEMBLY.setRegistryName(
+                    new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
+                event.getRegistry().register(ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
+                GameRegistry.registerTileEntity(
+                    net.edwin.mmcecomplement.compat.ae.tile.TileStorageInteractionAssembly.class,
+                    new ResourceLocation(Tags.MOD_ID, "storage_interaction_assembly"));
+            }
 
             ModBlocks.ME_ORE_DICT_INPUT_BUS = new BlockMEOreDictInputBus();
             ModBlocks.ME_ORE_DICT_INPUT_BUS.setRegistryName(
@@ -771,8 +775,10 @@ public final class RegistryEvents {
             registerMEItemBlock(event, ModBlocks.ME_PATTERN_PROVIDER_II);
             registerMEItemBlock(event, ModBlocks.ME_CHANNEL_INPUT_HATCH);
             registerMEItemBlock(event, ModBlocks.ME_CONNECTION_SHARE_HATCH);
-            registerMEItemBlock(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
-            registerMachineItem(event, ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
+            if (!CompatMods.isAe2sLoaded()) {
+                registerMEItemBlock(event, ModBlocks.AE_STORAGE_ACCESS_PORT);
+                registerMachineItem(event, ModBlocks.STORAGE_INTERACTION_ASSEMBLY);
+            }
             ItemBlockMEMachineComponent mineralItem =
                 new ItemBlockMEMachineComponent(ModBlocks.ME_ORE_DICT_INPUT_BUS);
             mineralItem.setRegistryName(

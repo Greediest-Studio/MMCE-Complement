@@ -49,7 +49,7 @@ public class TileStoragePort extends TileColorableMachineComponent
     }
     @Override public synchronized void unbindStorage(TileMultiblockMachineController controller) { controllers.remove(controller); }
 
-    private synchronized StorageController storage() {
+    protected synchronized StorageController storage() {
         if (world == null || isInvalid()) return null;
         TileMultiblockMachineController found = null;
         Iterator<TileMultiblockMachineController> it = controllers.iterator();

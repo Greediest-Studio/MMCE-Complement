@@ -13,7 +13,12 @@ public final class MMCEComplementLateMixinLoader implements ILateMixinLoader {
     public List<String> getMixinConfigs() {
         List<String> configs = new ArrayList<>();
         configs.add("mixins.mmce_complement.json");
-        if (Loader.isModLoaded("appliedenergistics2")) {
+        if (Loader.isModLoaded("ae2")) {
+            configs.add("mixins.mmce_complement.ae2s.json");
+            if (Loader.isModLoaded("mekeng")) {
+                configs.add("mixins.mmce_complement.ae2s.mekeng.json");
+            }
+        } else if (Loader.isModLoaded("appliedenergistics2")) {
             configs.add("mixins.mmce_complement.ae2uel.json");
         }
         if (Loader.isModLoaded("mekanism")) {

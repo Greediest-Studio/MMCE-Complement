@@ -1,0 +1,48 @@
+{
+  "cleanroom": "0.7.14-alpha",
+  "side": "client",
+  "exit": 0,
+  "loader_version_seen": true,
+  "server_ready": false,
+  "timed_out": false,
+  "shutdown_error": false,
+  "gameplay_report": {
+    "result": "PASS",
+    "cleanroom": "0.7.14-alpha",
+    "ticks": 589,
+    "checks": [
+      "registered-tile-construction-nbt-and-official-mmce-native-node:49",
+      "native-item-fluid-storage-simulation-insert-extract-exact-deltas",
+      "external-storage-edits-publish-to-native-cache",
+      "real-native-grid-scheduler-item-fluid-input-and-permanent-reserve",
+      "item-fluid-buffers-return-to-the-same-network",
+      "ae2s-native-pattern-index-extended-slot-40-and-mixed-item-fluid-push",
+      "real-ae2s-channel-path-and-two-channel-reservation",
+      "channel-release-destroys-private-endpoints",
+      "physical-storage-controller-formed-two-ports-counted-once-items-and-fluids",
+      "physical-storage-structure-break-seals-inventory",
+      "physical-storage-structure-reformation-restores-inventory",
+      "physical-storage-port-disconnect-failover-and-rejoin-without-duplication",
+      "physical-connection-sharing-complement-and-original-mmce-hatches-with-duplicate-channel-charge",
+      "connection-sharing-network-conflict-detaches-owned-links",
+      "connection-sharing-recovers-after-network-conflict",
+      "physical-sharing-structure-break-releases-links-and-duplicate-channels",
+      "native-provider-final-slots-35-and-143-data-markers-and-nbt",
+      "native-provider-merged-inputs-blocking-enhanced-blocking-lock-and-isolation",
+      "native-node-invalidation"
+    ],
+    "clientWorldRenderedTicks": 564,
+    "patternProviderGuiTicks": 411,
+    "clientFluidSlotInteraction": true,
+    "clientGuiChecks": [
+      "native-work-mode-button-and-return-cache-action-server-sync",
+      "native-item-inventory-active-reserve-panel-and-server-packets",
+      "native-fluid-inventory-active-reserve-panel-and-server-packets",
+      "native-ore-dict-whitelist-blacklist-active-reserve-and-server-packets",
+      "native-data-provider-i-final-slot-35-middle-click-edit-server-and-client-sync",
+      "native-data-provider-ii-final-slot-143-middle-click-edit-server-and-client-sync"
+    ],
+    "clientScreenshot": "provider-ii.png"
+  },
+  "result": "FUNCTIONAL_PASS"
+}

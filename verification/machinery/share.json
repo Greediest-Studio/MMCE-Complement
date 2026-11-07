@@ -1,0 +1,48 @@
+{
+  "registryname": "mmce_complement_verification_share",
+  "localizedname": "MMCE Complement AE2S share",
+  "requires-blueprint": false,
+  "color": "557799",
+  "parts": [
+    {
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "mmce_complement:me_connection_share_hatch"
+      ]
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "mmce_complement:me_connection_share_hatch"
+      ]
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "mmce_complement:me_item_inventory_input_bus"
+      ]
+    },
+    {
+      "x": 8,
+      "y": 0,
+      "z": 0,
+      "elements": [
+        "modularmachinery:blockmeiteminputbus"
+      ]
+    },
+    {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "elements": [
+        "minecraft:stone"
+      ]
+    }
+  ]
+}

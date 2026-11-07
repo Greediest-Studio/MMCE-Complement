@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.AEApi;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -52,8 +53,8 @@ public class TileMEOutputAssembly extends MEItemOutputBus
         .storage().getStorageChannel(IFluidStorageChannel.class);
     private final IGasStorageChannel gasChannel = AEApi.instance()
         .storage().getStorageChannel(IGasStorageChannel.class);
-    private final AEFluidInventory fluidTanks =
-        new AEFluidInventory(this, SLOT_COUNT, CAPACITY);
+    private final AssemblyFluidInventory fluidTanks =
+        new AssemblyFluidInventory(this, SLOT_COUNT, CAPACITY);
     private final GasInventory gasTanks =
         new GasInventory(SLOT_COUNT, CAPACITY, this);
     private final github.kasuminova.mmce.common.util.GasInventoryHandler
@@ -146,17 +147,17 @@ public class TileMEOutputAssembly extends MEItemOutputBus
     @Override
     public TickRateModulation tickingRequest(IGridNode node,
                                               int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         Lock lock = getInternalInventory().getRWLock().writeLock();
         lock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEItemStack> items =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             IMEMonitor<IAEFluidStack> fluids =
-                proxy.getStorage().getInventory(fluidChannel);
+                AeNetworkCompat.inventory(this, fluidChannel);
             IMEMonitor<IAEGasStack> gases =
-                proxy.getStorage().getInventory(gasChannel);
+                AeNetworkCompat.inventory(this, gasChannel);
             boolean changed = transfer(items, fluids, gases);
             refreshDisplay();
             return changed ? TickRateModulation.FASTER
@@ -183,8 +184,8 @@ public class TileMEOutputAssembly extends MEItemOutputBus
             }
             IAEFluidStack fluid = fluidTanks.getFluidInSlot(slot);
             if (fluid != null) {
-                IAEFluidStack remainder = Platform.poweredInsert(
-                    proxy.getEnergy(), fluids, fluid.copy(), source);
+                IAEFluidStack remainder = AeNetworkCompat.poweredInsert(this,
+                    AeNetworkCompat.energy(this), fluids, fluid.copy(), source);
                 changed |= remainder == null
                     || remainder.getStackSize() != fluid.getStackSize();
                 fluidTanks.setFluidInSlot(slot, remainder);
@@ -193,7 +194,7 @@ public class TileMEOutputAssembly extends MEItemOutputBus
             if (gas != null) {
                 IAEGasStack request = AEGasStack.of(gas.copy());
                 IAEGasStack remainder = request == null ? null
-                    : Platform.poweredInsert(proxy.getEnergy(), gases,
+                    : AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this), gases,
                         request, source);
                 changed |= remainder == null
                     || remainder.getStackSize() != gas.amount;
@@ -210,7 +211,7 @@ public class TileMEOutputAssembly extends MEItemOutputBus
         IAEItemStack request = channel.createStack(stack);
         if (request == null) return stack;
         request.setStackSize(stack.getCount());
-        IAEItemStack remainder = Platform.poweredInsert(proxy.getEnergy(),
+        IAEItemStack remainder = AeNetworkCompat.poweredInsert(this, AeNetworkCompat.energy(this),
             monitor, request, source);
         return remainder == null ? ItemStack.EMPTY
             : remainder.createItemStack();
@@ -291,8 +292,8 @@ public class TileMEOutputAssembly extends MEItemOutputBus
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            IGridNode node = proxy.getNode();
-            if (node != null) proxy.getTick().alertDevice(node);
+            IGridNode node = AeNetworkCompat.getNode(this);
+            if (node != null) AeNetworkCompat.alert(this);
         } catch (GridAccessException ignored) { }
     }
 

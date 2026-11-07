@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.storage.IStorageGrid;
@@ -119,8 +120,8 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            if (proxy.getNode() != null) {
-                proxy.getTick().alertDevice(proxy.getNode());
+            if (AeNetworkCompat.getNode(this) != null) {
+                AeNetworkCompat.alert(this);
             }
         } catch (GridAccessException ignored) { }
     }
@@ -134,9 +135,9 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
 
     @Override
     public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         try {
-            IStorageGrid storage = proxy.getStorage();
+            IStorageGrid storage = AeNetworkCompat.storage(this);
             IMEMonitor<IAEItemStack> monitor = storage.getInventory(channel);
             if (activePull) {
                 updateActiveConfiguration(monitor);
@@ -339,7 +340,7 @@ public class TileMEOreDictInputBus extends MEItemInputBus {
 
     private void pushAllToNetwork() {
         try {
-            IMEMonitor<IAEItemStack> monitor = proxy.getStorage().getInventory(channel);
+            IMEMonitor<IAEItemStack> monitor = AeNetworkCompat.inventory(this, channel);
             for (int i = 0; i < inventory.getSlots(); i++) {
                 ItemStack stored = inventory.getStackInSlot(i);
                 if (!stored.isEmpty()) {

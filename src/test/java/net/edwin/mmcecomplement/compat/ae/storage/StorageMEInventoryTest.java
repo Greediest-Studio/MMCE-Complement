@@ -93,6 +93,35 @@ class StorageMEInventoryTest {
         }
     }
 
+    @Test void signedNativeDeltasUseFilteredViewAndWithdrawEachStackOnce() {
+        ItemStackHandler backing = new ItemStackHandler(2);
+        backing.setStackInSlot(0, new ItemStack(Items.DIAMOND, 4));
+        backing.setStackInSlot(1, new ItemStack(Items.EMERALD, 7));
+        StorageMEItemInventory inventory = new StorageMEItemInventory(items, () -> backing);
+        MEInventoryHandler<IAEItemStack> view = new MEInventoryHandler<>(inventory, items);
+        view.setStorageFilter(StorageFilter.EXTRACTABLE_ONLY);
+        inventory.setNetworkView(view);
+        inventory.resetSnapshot();
+        IItemList<IAEItemStack> filter = items.createList();
+        filter.add(diamonds(1));
+        view.setPartitionList(new PrecisePriorityList<>(filter));
+        java.util.List<Long> deltas = new java.util.ArrayList<>();
+        inventory.pollNetworkChanges((stack, delta) -> {
+            assertTrue(stack.isSameType(new ItemStack(Items.EMERALD)));
+            deltas.add(delta);
+        });
+        assertEquals(java.util.Collections.singletonList(-7L), deltas);
+        deltas.clear();
+        backing.extractItem(0, 4, false);
+        inventory.pollNetworkChanges((stack, delta) -> {
+            assertTrue(stack.isSameType(new ItemStack(Items.DIAMOND)));
+            deltas.add(delta);
+        });
+        assertEquals(java.util.Collections.singletonList(-4L), deltas);
+        inventory.pollNetworkChanges((stack, delta) -> fail("Removal must not be published twice"));
+        assertEquals(7, backing.getStackInSlot(1).getCount(), "Hidden stock must remain in its real container");
+    }
+
     @Test void filteredNetworkViewReportsAccessAndFilterChangesAndNeverHidesRawStock() {
         ItemStackHandler backing = new ItemStackHandler(2);
         backing.setStackInSlot(0, new ItemStack(Items.DIAMOND, 4));

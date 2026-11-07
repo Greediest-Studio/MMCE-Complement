@@ -9,6 +9,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 /** Direct backing inventory with bus-style change detection for external edits. */
 public abstract class StorageMEInventory<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
@@ -33,14 +34,25 @@ public abstract class StorageMEInventory<T extends IAEStack<T>> implements IMEIn
     // transfers. Keep the last announced snapshot until the delta is posted,
     // including changes made by injectItems/extractItems through this handler.
     public final List<T> pollChanges() {
-        IItemList<T> current = networkView.getAvailableItems(channel.createList());
-        IItemList<T> difference = channel.createList();
-        for (T stack : current) difference.add(stack.copy());
-        for (T stack : announced) difference.add(stack.copy().setStackSize(-stack.getStackSize()));
         List<T> changes = new ArrayList<>();
-        for (T stack : difference) if (stack.getStackSize() != 0) changes.add(stack.copy());
-        announced = current;
+        pollNetworkChanges((stack, delta) -> changes.add(stack.copy().setStackSize(delta)));
         return changes;
+    }
+
+    /** Keep the signed delta separate: official legacy stack wrappers clamp sizes to zero. */
+    public final void pollNetworkChanges(BiConsumer<T, Long> listener) {
+        IItemList<T> current = networkView.getAvailableItems(channel.createList());
+        for (T stack : current) {
+            T previous = announced.findPrecise(stack);
+            long delta = stack.getStackSize() - (previous == null ? 0 : previous.getStackSize());
+            if (delta != 0) listener.accept(stack, delta);
+        }
+        for (T stack : announced) {
+            if (current.findPrecise(stack) == null && stack.getStackSize() != 0) {
+                listener.accept(stack, -stack.getStackSize());
+            }
+        }
+        announced = current;
     }
 
     @Override public final IStorageChannel<T> getChannel() { return channel; }

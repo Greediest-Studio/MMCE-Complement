@@ -91,7 +91,7 @@ public class MMCEComplement {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         if (!CompatMods.isAe2Loaded()) {
-            throw new IllegalStateException("MMCE Complement requires AE2 Extended Life or AE2S.");
+            throw new IllegalStateException("MMCE Complement requires AE2 Extended Life, or AE2S with AppliedCompatibility (MMCE support enabled).");
         }
         LOGGER.info("Hello From {}!", Tags.MOD_NAME);
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandlerMMCE());

@@ -52,15 +52,34 @@ tasks.decompressDecompiledSources.enabled !propertyBool('change_minecraft_source
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(propertyBool('use_modern_java_syntax') ? 16 : 8))
-        // Azul covers the most platforms for Java 8 toolchains, crucially including MacOS arm64
-        vendor.set(JvmVendorSpec.AZUL)
+        // AE2S and AppliedCompatibility expose Java 25 class files. Keep the
+        // addon's existing Java 8 bytecode and the original RFG build pipeline.
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     if (propertyBool('generate_sources_jar')) {
         withSourcesJar()
     }
     if (propertyBool('generate_javadocs_jar')) {
         withJavadocJar()
+    }
+}
+
+// RFG recompiles the original Forge/Minecraft sources, which still use Java 8
+// APIs such as Pack200. Only the addon needs the Java 25 compiler for AE2S.
+tasks.named('compilePatchedMcJava', JavaCompile).configure {
+    javaCompiler.set(javaToolchains.compilerFor { languageVersion = JavaLanguageVersion.of(8) })
+}
+
+// File dependencies otherwise precede modules in Gradle's classpath. The
+// established appeng API must win over the bridge's deliberately partial API.
+afterEvaluate {
+    tasks.withType(JavaCompile).configureEach {
+        def originalClasspath = classpath
+        classpath = files(providers.provider {
+            originalClasspath.files.toList().sort { it.name.startsWith('appcompat-') ? 1 : 0 }
+        }).builtBy(originalClasspath)
     }
 }
 
@@ -71,6 +90,7 @@ configurations {
 
 minecraft {
     mcVersion.set('1.12.2')
+    jvmLanguageVersion.set(JavaLanguageVersion.of(25))
 
     mcpMappingChannel.set(propertyString('mapping_channel'))
     mcpMappingVersion.set(propertyString('mapping_version'))
@@ -148,6 +168,7 @@ dependencies {
 
 apply from: 'gradle/scripts/dependencies.gradle'
 apply from: 'gradle/scripts/ae2s.gradle'
+apply from: 'gradle/scripts/ae2s-verification.gradle'
 
 // Adds Access Transformer files to tasks
 if (propertyBool('use_access_transformer')) {
