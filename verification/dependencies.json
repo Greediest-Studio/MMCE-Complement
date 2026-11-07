@@ -1,0 +1,44 @@
+[
+  {
+    "file": "AppliedEnergistics2-Supergiant-1.1.0+a47dfe029.jar",
+    "name": "AE2S / Supergiant",
+    "version": "1.1.0+a47dfe029",
+    "source": "https://github.com/FormlessDragon/Applied-Energistics-2-Supergiant/releases",
+    "sha256": "7d82003578a820bf3dce121d98fd08911c8e5dcbe558e6158f6cc18558e98233"
+  },
+  {
+    "file": "appcompat-1.0.1.jar",
+    "name": "AppliedCompatibility (official, unmodified)",
+    "version": "1.0.1",
+    "source": "https://github.com/FormlessDragon/AppliedCompatibility/releases/tag/v1.0.1",
+    "sha256": "99b9fbcae04da56880a3e183d45bd65948996997fd3f043899dc5cb3688e83e7"
+  },
+  {
+    "file": "modularmachinery-community-edition-817377-7372951.jar",
+    "name": "Modular Machinery Community Edition",
+    "version": "2.3.2 (file 7372951)",
+    "source": "https://www.curseforge.com/minecraft/mc-mods/modularmachinery-community-edition/files/7372951",
+    "sha256": "83676773e8c4f63963a48b4921f05898dcdbfdf777230e53e9830cd8f18177fb"
+  },
+  {
+    "file": "crafttweaker-4.1.20.698.jar",
+    "name": "CraftTweaker2",
+    "version": "4.1.20.698",
+    "source": "https://maven.blamejared.com/CraftTweaker2/CraftTweaker2-MC1120-Main/1.12-4.1.20.698/",
+    "sha256": "b2e5e443f18d0d5bcfd1364f9ec89565e6a1e2ad4568b899c590aa5507978b27"
+  },
+  {
+    "file": "jei-4.35.1.jar",
+    "name": "Had Enough Items",
+    "version": "4.35.1",
+    "source": "https://maven.cleanroommc.com/mezz/jei/4.35.1/",
+    "sha256": "8777b115592519ea0b077032988301853b39794edbb67f54b54cbef6715b283b"
+  },
+  {
+    "file": "geckolib-388172-4020277.jar",
+    "name": "GeckoLib3",
+    "version": "3.0.30 (file 4020277)",
+    "source": "https://www.curseforge.com/minecraft/mc-mods/geckolib/files/4020277",
+    "sha256": "b00bc9de4e3e94cea0455f8d58b295c1464272135e842bdf3170c2c955c871a5"
+  }
+]

@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import net.edwin.mmcecomplement.compat.ae.storage.*;
 import net.edwin.mmcecomplement.init.ModBlocks;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
@@ -28,9 +29,13 @@ import java.util.*;
 public class TileAEStorageAccessPort extends MEMachineComponent implements ICellContainer, ITickable, StorageAccessPort {
     private final Set<TileMultiblockMachineController> controllers = new HashSet<>();
     private List<StorageMEInventory<?>> inventories;
-    private IGrid lastGrid;
+    private Object lastGrid;
     private boolean lastActive;
     private boolean refreshGrid;
+
+    public TileAEStorageAccessPort() {
+        if (CompatMods.isAe2sLoaded()) net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork.attachStorage(this);
+    }
 
     @Override public ItemStack getVisualItemStack() {
         return ModBlocks.AE_STORAGE_ACCESS_PORT == null ? ItemStack.EMPTY
@@ -72,16 +77,24 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
     }
 
     private StorageController storage() {
-        if (isInvalid() || getWorld() == null || getWorld().isRemote || !proxy.isActive()) return null;
+        if (isInvalid() || getWorld() == null || getWorld().isRemote || !isActive()) return null;
         TileMultiblockMachineController target = controller();
         if (target == null) return null;
+        if (CompatMods.isAe2sLoaded()) {
+            for (Object machine : net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork.machines(this, TileAEStorageAccessPort.class)) {
+                TileAEStorageAccessPort other = (TileAEStorageAccessPort) machine;
+                if (other == this || other.isInvalid() || !other.isActive() || other.controller() != target) continue;
+                if (other.getPos().compareTo(getPos()) < 0) return null;
+            }
+            return (StorageController) target;
+        }
         try {
             // Mount each backing container only once per grid, even with several ports.
             for (IGridNode node : proxy.getGrid().getMachines(TileAEStorageAccessPort.class)) {
                 Object machine = node.getMachine();
                 if (!(machine instanceof TileAEStorageAccessPort) || machine == this) continue;
                 TileAEStorageAccessPort other = (TileAEStorageAccessPort) machine;
-                if (other.isInvalid() || !other.proxy.isActive() || other.controller() != target) continue;
+                if (other.isInvalid() || !other.isActive() || other.controller() != target) continue;
                 if (other.getPos().compareTo(getPos()) < 0) return null;
             }
         } catch (GridAccessException e) { return null; }
@@ -117,24 +130,48 @@ public class TileAEStorageAccessPort extends MEMachineComponent implements ICell
 
     @Override public void update() {
         if (getWorld() == null || getWorld().isRemote || isInvalid()) return;
+        if (CompatMods.isAe2sLoaded()) {
+            updateNativeStorage();
+            return;
+        }
         try {
             IGrid grid = proxy.getGrid();
             boolean active = proxy.isActive();
-            if (refreshGrid || lastGrid != grid || lastActive != active) {
+            Object gridIdentity = AeNetworkCompat.gridIdentity(grid);
+            if (refreshGrid || lastGrid != gridIdentity || lastActive != active) {
                 refreshGrid = false;
-                lastGrid = grid;
+                lastGrid = gridIdentity;
                 lastActive = active;
                 grid.postEvent(new MENetworkCellArrayUpdate());
                 for (StorageMEInventory<?> inventory : inventories()) inventory.resetSnapshot();
             } else if (active) {
                 for (StorageMEInventory<?> inventory : inventories()) {
                     List<? extends IAEStack<?>> changes = inventory.pollChanges();
-                    if (!changes.isEmpty()) proxy.getStorage().postAlterationOfStoredItems(inventory.getChannel(), changes, source);
+                    if (!changes.isEmpty()) {
+                        if (CompatMods.isAe2sLoaded()) AeNetworkCompat.postStorageChanges(this, inventory, changes);
+                        else proxy.getStorage().postAlterationOfStoredItems(inventory.getChannel(), changes, source);
+                    }
                 }
             }
         } catch (GridAccessException ignored) {
             lastGrid = null;
             lastActive = false;
+        }
+    }
+
+    private void updateNativeStorage() {
+        ae2.api.networking.IManagedGridNode node = net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork.mainNode(this);
+        Object grid = node.getGrid();
+        boolean active = node.isActive();
+        if (refreshGrid || grid != lastGrid || active != lastActive) {
+            refreshGrid = false;
+            lastGrid = grid;
+            lastActive = active;
+            if (grid != null) ae2.api.storage.IStorageProvider.requestUpdate(node);
+        }
+        if (active) for (StorageMEInventory<?> inventory : inventories()) {
+            inventory.pollNetworkChanges((stack, delta) ->
+                net.edwin.mmcecomplement.compat.ae2s.AE2SStorageProvider.changed(this, inventory, stack, delta));
         }
     }
 

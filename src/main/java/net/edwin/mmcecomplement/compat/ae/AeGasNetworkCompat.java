@@ -20,9 +20,12 @@ public final class AeGasNetworkCompat {
                 || fieldId != NetworkHandlerMMCE.FIELD_ME_INPUT_ASSEMBLY_MARKER) {
             return false;
         }
-        if (!(player.openContainer instanceof ContainerMEInputAssembly)
-                || ((ContainerMEInputAssembly) player.openContainer)
-                    .getOwner() != tile) {
+        boolean ownsContainer = player.openContainer instanceof ContainerMEInputAssembly
+            && ((ContainerMEInputAssembly) player.openContainer).getOwner() == tile;
+        if (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded()
+            && player.openContainer instanceof net.edwin.mmcecomplement.compat.ae2s.mekeng.AE2SAssemblyContainer)
+            ownsContainer = ((net.edwin.mmcecomplement.compat.ae2s.mekeng.AE2SAssemblyContainer) player.openContainer).getOwner() == tile;
+        if (!ownsContainer) {
             return true;
         }
         int slot = nbt.getInteger("slot");

@@ -30,7 +30,7 @@ public class GuiMEOutputAssembly extends GuiMEItemBus {
                                EntityPlayer player) {
         super(new ContainerMEOutputAssembly(tile, player));
         this.tile = tile;
-        this.ySize = 186;
+        this.ySize = 204;
     }
 
     @Override

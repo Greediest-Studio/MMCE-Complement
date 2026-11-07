@@ -1,0 +1,26 @@
+{
+  "runtime_verification_version": "2.3.2 (CurseForge file 7372951)",
+  "requested_version": "2.3.3",
+  "requested_binary_status": "No public 2.3.3 release or Actions JAR found; not runtime verified",
+  "source_checked": {
+    "repository": "https://github.com/Circulate233/ModularMachinery-Community-Edition",
+    "commit": "e1d80aeaeaff55ef6482f9a9734fa1d5d8d16082",
+    "archive_url": "https://codeload.github.com/Circulate233/ModularMachinery-Community-Edition/zip/e1d80aeaeaff55ef6482f9a9734fa1d5d8d16082",
+    "sha256": "c8a658dfa063aa057ce26dce9b61fef202e34bb97da4e4ff1bc710074cdef5a3",
+    "listener_api": "IOInventory.IntConsumer extends Consumer<Integer>: accept(int), default accept(Integer)"
+  },
+  "other_sources_checked": [
+    "https://github.com/NovaEngineering-Source/ModularMachinery-Community-Edition/releases",
+    "https://github.com/Greediest-Studio/ModularMachinery-Community-Edition/actions",
+    "https://github.com/Greediest-Studio/ModularMachinery-Community-Edition/tree/dev",
+    "https://www.curseforge.com/minecraft/mc-mods/modularmachinery-community-edition/files",
+    "https://modrinth.com/mod/modularmachinery-community-edition/versions"
+  ],
+  "downloaded_greediest_ci": {
+    "run": 40447532350,
+    "artifact": 12708499325,
+    "commit": "c407fd66b7fe5f764f43926197118bd1ef56d272",
+    "archive_sha256": "3fc1d1b377d37dfdd595f5a2ccd8ea73d4513f8a58ced0cd39de5e7ca927689c",
+    "actual_version": "2.3.2; excluded from runtime lock"
+  }
+}

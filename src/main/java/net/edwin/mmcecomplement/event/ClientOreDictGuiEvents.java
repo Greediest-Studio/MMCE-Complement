@@ -31,6 +31,8 @@ import java.util.WeakHashMap;
 public final class ClientOreDictGuiEvents {
     private static final String MMCE_INPUT_GUI =
             "github.kasuminova.mmce.client.gui.GuiMEItemInputBus";
+    private static final String NATIVE_INPUT_GUI =
+            "github.formlessdragon.appcompat.client.gui.mmce.GuiMEItemInputBus";
     private static final int ACTIVE_BUTTON_ID = 0x4D44;
     private static final int PANEL_WIDTH = 156;
     private static final int PANEL_GAP = 8;
@@ -308,7 +310,8 @@ public final class ClientOreDictGuiEvents {
     }
 
     private static TileMEOreDictInputBus getTile(GuiScreen gui) {
-        if (gui == null || !MMCE_INPUT_GUI.equals(gui.getClass().getName())
+        if (gui == null || (!MMCE_INPUT_GUI.equals(gui.getClass().getName())
+                && !NATIVE_INPUT_GUI.equals(gui.getClass().getName()))
                 || !(gui instanceof GuiContainer)) {
             return null;
         }
@@ -334,7 +337,8 @@ public final class ClientOreDictGuiEvents {
             field.setAccessible(true);
             Container container = (Container) field.get(gui);
             for (Slot slot : container.inventorySlots) {
-                if (slot instanceof SlotFake) {
+                if (slot instanceof SlotFake || (net.edwin.mmcecomplement.compat.CompatMods.isAe2sLoaded()
+                    && net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork.isConfigSlot(slot))) {
                     slot.putStack(net.minecraft.item.ItemStack.EMPTY);
                 }
             }

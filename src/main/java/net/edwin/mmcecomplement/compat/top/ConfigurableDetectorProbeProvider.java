@@ -29,10 +29,10 @@ public class ConfigurableDetectorProbeProvider implements IProbeInfoProvider {
             String bound = biome.getBoundBiomeRegistryName();
             if (bound == null) {
                 probeInfo.text(new TextComponentTranslation(
-                        "top.mmce_complement.detector.unbound"));
+                        "top.mmce_complement.detector.unbound").getFormattedText());
             } else {
                 probeInfo.text(new TextComponentTranslation(
-                        "top.mmce_complement.detector.biome", bound));
+                        "top.mmce_complement.detector.biome", bound).getFormattedText());
             }
         } else if (tile instanceof TileConfigurableDimensionProvider) {
             TileConfigurableDimensionProvider dimension =
@@ -40,10 +40,10 @@ public class ConfigurableDetectorProbeProvider implements IProbeInfoProvider {
             Integer bound = dimension.getBoundDimensionId();
             if (bound == null) {
                 probeInfo.text(new TextComponentTranslation(
-                        "top.mmce_complement.detector.unbound"));
+                        "top.mmce_complement.detector.unbound").getFormattedText());
             } else {
                 probeInfo.text(new TextComponentTranslation(
-                        "top.mmce_complement.detector.dimension", bound));
+                        "top.mmce_complement.detector.dimension", bound).getFormattedText());
             }
         }
     }

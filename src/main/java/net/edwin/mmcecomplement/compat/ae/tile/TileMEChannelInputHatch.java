@@ -8,24 +8,20 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridBlock;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.events.MENetworkChannelChanged;
-import appeng.api.networking.pathing.ControllerState;
-import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.AEPartLocation;
 import appeng.api.util.DimensionalCoord;
-import appeng.core.AEConfig;
-import appeng.me.GridConnection;
-import appeng.me.GridNode;
-import appeng.me.cache.PathGridCache;
-import appeng.me.pathfinding.IPathItem;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import net.edwin.mmcecomplement.init.ModBlocks;
+import net.edwin.mmcecomplement.compat.CompatMods;
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
+import net.edwin.mmcecomplement.compat.ae.LegacyChannelPath;
+import net.edwin.mmcecomplement.compat.ae2s.AE2SNetwork;
 import net.edwin.mmcecomplement.mechannel.MEChannelPathSnapshot;
 import net.edwin.mmcecomplement.mechannel.MEChannelProvider;
 import net.edwin.mmcecomplement.mechannel.ModMEChannelTypes;
@@ -36,7 +32,6 @@ import net.minecraft.util.EnumFacing;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -59,7 +54,8 @@ public class TileMEChannelInputHatch extends MEMachineComponent
 
     public TileMEChannelInputHatch() {
         // The visible/world node carries channels but does not consume one.
-        proxy.setFlags(GridFlags.DENSE_CAPACITY);
+        if (CompatMods.isAe2sLoaded()) AE2SNetwork.configureChannelHatch(this);
+        else proxy.setFlags(GridFlags.DENSE_CAPACITY);
         proxy.setIdlePowerUsage(1.0D);
     }
 
@@ -100,82 +96,16 @@ public class TileMEChannelInputHatch extends MEMachineComponent
 
     @Override
     public Object getMEChannelNetworkIdentity() {
-        IGridNode node = proxy.getNode();
-        if (node == null || node.getGrid() == null || !proxy.isPowered()) {
+        IGridNode node = AeNetworkCompat.getNode(this);
+        if (node == null || node.getGrid() == null || !isPowered()) {
             return null;
         }
-        return node.getGrid();
+        return AeNetworkCompat.gridIdentity(node.getGrid());
     }
 
     @Override
     public MEChannelPathSnapshot snapshotMEChannelPath() {
-        IGridNode apiNode = proxy.getNode();
-        if (!(apiNode instanceof GridNode) || apiNode.getGrid() == null
-            || !proxy.isPowered()) {
-            return MEChannelPathSnapshot.unavailable(
-                MEChannelPathSnapshot.State.DISCONNECTED,
-                apiNode == null ? null : apiNode.getGrid());
-        }
-
-        IGrid grid = apiNode.getGrid();
-        IPathingGrid apiPath = grid.getCache(IPathingGrid.class);
-        if (apiPath == null || apiPath.isNetworkBooting()) {
-            return MEChannelPathSnapshot.unavailable(
-                MEChannelPathSnapshot.State.BOOTING, grid);
-        }
-        ControllerState controllerState = apiPath.getControllerState();
-        if (controllerState == ControllerState.CONTROLLER_CONFLICT) {
-            return MEChannelPathSnapshot.unavailable(
-                MEChannelPathSnapshot.State.CONTROLLER_CONFLICT, grid);
-        }
-
-        List<MEChannelPathSnapshot.Capacity> capacities = new ArrayList<>();
-        if (controllerState == ControllerState.NO_CONTROLLER) {
-            int used = apiPath instanceof PathGridCache
-                ? ((PathGridCache) apiPath).getChannelsInUse()
-                : ((GridNode) apiNode).usedChannels();
-            capacities.add(new MEChannelPathSnapshot.Capacity(grid,
-                normalCapacity() - used));
-            capacities.add(new MEChannelPathSnapshot.Capacity(this,
-                denseCapacity() - ((GridNode) apiNode).usedChannels()));
-            return MEChannelPathSnapshot.ready(grid, capacities);
-        }
-
-        IPathItem cursor = (IPathItem) apiNode;
-        if (cursor.getControllerRoute() == null) {
-            return MEChannelPathSnapshot.unavailable(
-                MEChannelPathSnapshot.State.BOOTING, grid);
-        }
-        IdentityHashMap<IPathItem, Boolean> visited = new IdentityHashMap<>();
-        while (cursor != null && visited.put(cursor, Boolean.TRUE) == null) {
-            addCapacity(cursor, capacities);
-            cursor = cursor.getControllerRoute();
-        }
-        if (capacities.isEmpty()) {
-            return MEChannelPathSnapshot.unavailable(
-                MEChannelPathSnapshot.State.DISCONNECTED, grid);
-        }
-        return MEChannelPathSnapshot.ready(grid, capacities);
-    }
-
-    private static void addCapacity(
-        IPathItem pathItem,
-        List<MEChannelPathSnapshot.Capacity> capacities) {
-        if (pathItem instanceof GridNode) {
-            GridNode node = (GridNode) pathItem;
-            EnumSet<GridFlags> flags = node.getFlags();
-            if (flags.contains(GridFlags.CANNOT_CARRY)) {
-                return;
-            }
-            int maximum = flags.contains(GridFlags.DENSE_CAPACITY)
-                ? denseCapacity() : normalCapacity();
-            capacities.add(new MEChannelPathSnapshot.Capacity(node,
-                maximum - node.usedChannels()));
-        } else if (pathItem instanceof GridConnection) {
-            GridConnection connection = (GridConnection) pathItem;
-            capacities.add(new MEChannelPathSnapshot.Capacity(connection,
-                denseCapacity() - connection.getUsedChannels()));
-        }
+        return CompatMods.isAe2sLoaded() ? AE2SNetwork.snapshot(this) : LegacyChannelPath.snapshot(this);
     }
 
     @Override
@@ -212,14 +142,14 @@ public class TileMEChannelInputHatch extends MEMachineComponent
             queueApply();
             return false;
         }
-        IGridNode main = proxy.getNode();
+        IGridNode main = AeNetworkCompat.getNode(this);
         IGrid grid = main == null ? null : main.getGrid();
-        if (grid == null || !proxy.isPowered()) {
+        if (grid == null || !isPowered()) {
             return false;
         }
         for (int i = 0; i < amount; i++) {
             IGridNode node = channelNodes.get(i).node;
-            if (node == null || node.getGrid() != grid || !node.isActive()
+            if (node == null || !AeNetworkCompat.sameGrid(node.getGrid(), grid) || !node.isActive()
                 || !node.meetsChannelRequirements()) {
                 return false;
             }
@@ -255,7 +185,7 @@ public class TileMEChannelInputHatch extends MEMachineComponent
             }
         }
 
-        IGridNode main = proxy.getNode();
+        IGridNode main = AeNetworkCompat.getNode(this);
         if (main == null || main.getGrid() == null) {
             // Do not enqueue ourselves from inside MMCE's synchronous-task
             // drain loop: that queue is consumed until empty, so doing so
@@ -280,33 +210,34 @@ public class TileMEChannelInputHatch extends MEMachineComponent
                 }
             }
 
-            for (int i = 0; i < channelNodes.size(); i++) {
+            // Native flags are immutable after node creation. Remove released
+            // endpoints rather than keeping disabled legacy nodes in the graph.
+            if (CompatMods.isAe2sLoaded()) {
+                while (channelNodes.size() > target) channelNodes.remove(channelNodes.size() - 1).node.destroy();
+            }
+            for (int i = 0; i < channelNodes.size() && !CompatMods.isAe2sLoaded(); i++) {
                 ChannelNode channelNode = channelNodes.get(i);
                 boolean changed = channelNode.block.setEnabled(i < target);
                 if (changed && channelNode.node.getGrid() != null) {
-                    channelNode.node.getGrid().postEvent(
-                        new MENetworkChannelChanged(channelNode.node));
+                    LegacyChannelPath.channelChanged(channelNode.node);
                 }
             }
         }
 
         IGrid currentGrid = main.getGrid();
-        if (currentGrid != null) {
-            IPathingGrid path = currentGrid.getCache(IPathingGrid.class);
-            if (path != null) {
-                path.repath();
-            }
+        if (currentGrid != null && !CompatMods.isAe2sLoaded()) {
+            LegacyChannelPath.repath(currentGrid);
         }
     }
 
     private boolean createChannelNode(IGridNode main, int index) {
         VirtualChannelGridBlock block = new VirtualChannelGridBlock(index,
             index < requestedChannels);
-        IGridNode node = AEApi.instance().grid().createGridNode(block);
+        IGridNode node = AeNetworkCompat.createNode(block);
         try {
             node.setPlayerID(main.getPlayerID());
             node.updateState();
-            AEApi.instance().grid().createGridConnection(main, node);
+            AeNetworkCompat.connect(main, node);
             channelNodes.add(new ChannelNode(block, node));
             return true;
         } catch (FailedConnectionException | RuntimeException ex) {
@@ -340,11 +271,11 @@ public class TileMEChannelInputHatch extends MEMachineComponent
     }
 
     private static int normalCapacity() {
-        return Math.max(0, AEConfig.instance().getNormalChannelCapacity());
+        return Math.max(0, AeNetworkCompat.normalCapacity());
     }
 
     private static int denseCapacity() {
-        return Math.max(0, AEConfig.instance().getDenseChannelCapacity());
+        return Math.max(0, AeNetworkCompat.denseCapacity());
     }
 
     private final class VirtualChannelGridBlock implements IGridBlock {

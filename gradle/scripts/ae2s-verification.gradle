@@ -1,0 +1,27 @@
+sourceSets {
+    runtimeHarness {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+tasks.register('runtimeHarnessJar', Jar) {
+    dependsOn tasks.named('runtimeHarnessClasses')
+    archiveFileName.set('mmce-complement-verification-mcp.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('verification'))
+    from sourceSets.runtimeHarness.output
+}
+
+def mainReobf = tasks.named('reobfJar').get()
+tasks.register('reobfRuntimeHarnessJar', mainReobf.class.superclass) {
+    setInputJarFromTask(tasks.named('runtimeHarnessJar', Jar))
+    mcVersion.set(mainReobf.mcVersion)
+    srg.set(mainReobf.srg)
+    fieldCsv.set(mainReobf.fieldCsv)
+    methodCsv.set(mainReobf.methodCsv)
+    exceptorCfg.set(mainReobf.exceptorCfg)
+    recompMcJar.set(mainReobf.recompMcJar)
+    referenceClasspath.from(sourceSets.runtimeHarness.compileClasspath)
+    archiveFileName.set('mmce-complement-verification-srg.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('verification'))
+}

@@ -20,5 +20,9 @@ public interface IMEDataPatternProvider {
 
     String getSelectedInterfaceType();
 
+    float getPatternValue(int slot);
+
+    List<hellfirepvp.modularmachinery.common.util.SmartInterfaceData> getBoundData();
+
     boolean resetUnsupportedSelectionForController(BlockPos controllerPos);
 }

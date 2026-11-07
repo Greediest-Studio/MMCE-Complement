@@ -20,7 +20,7 @@ public final class AeFullExposureTileFactory {
                 true, AeFullExposureTileFactory.class.getClassLoader())
                 .getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException | LinkageError failure) {
-            return new TileMEFullExposureAssemblyFallback();
+            throw new IllegalStateException("Could not create the registered gas-capable assembly", failure);
         }
     }
 

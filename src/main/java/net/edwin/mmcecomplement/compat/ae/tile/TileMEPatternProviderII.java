@@ -87,7 +87,8 @@ public class TileMEPatternProviderII extends MEPatternProvider {
     private String machineNameII;
 
     public TileMEPatternProviderII() {
-        bindExpandedPatternInventory();
+        if (!CompatMods.isAe2sLoaded()) bindExpandedPatternInventory();
+        net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.attachCrafting(this);
         configureHandler(handlerII);
         for (int i = 0; i < PATTERN_SLOTS; i++) {
             combinationComponentsII.add(new MachineComponent<InfItemFluidHandler>(
@@ -184,7 +185,7 @@ public class TileMEPatternProviderII extends MEPatternProvider {
 
     @Override
     public void provideCrafting(ICraftingProviderHelper craftingTracker) {
-        if (!proxy.isActive() || !proxy.isPowered()) {
+        if (!isActive() || !isPowered()) {
             return;
         }
         Arrays.stream(detailsII)
@@ -219,6 +220,7 @@ public class TileMEPatternProviderII extends MEPatternProvider {
             if (stack.isEmpty()) {
                 continue;
             }
+            if (net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.appendPatternInput(stack, target)) continue;
             if (CompatMods.isAe2FcrCompatLoaded()
                     && Ae2FcrPatternCompat.appendFakeFluid(stack, target)) {
                 continue;
@@ -236,8 +238,8 @@ public class TileMEPatternProviderII extends MEPatternProvider {
     }
 
     private boolean acceptsPatternII(ICraftingPatternDetails patternDetails) {
-        if (patternDetails.isCraftable() || !proxy.isActive()
-            || !proxy.isPowered()) {
+        if (patternDetails.isCraftable() || !isActive()
+            || !isPowered()) {
             return false;
         }
         return workMode != WorkModeSetting.ENHANCED_BLOCKING_MODE
@@ -271,6 +273,10 @@ public class TileMEPatternProviderII extends MEPatternProvider {
         if (currentPatternIdx >= 0 && currentPatternIdx < detailsII.length) {
             setCurrentPatternII(detailsII[currentPatternIdx]);
         }
+        if (CompatMods.isAe2sLoaded()) {
+            net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.requestPatternUpdate(this);
+            return;
+        }
         try {
             proxy.getGrid().postEvent(new MENetworkCraftingPatternChange(
                 this, proxy.getNode()));
@@ -285,16 +291,8 @@ public class TileMEPatternProviderII extends MEPatternProvider {
         }
         detailsII[slot] = null;
         ItemStack pattern = patternsII.getStackInSlot(slot);
-        Item patternItem = pattern.getItem();
-        if (!pattern.isEmpty()
-            && patternItem instanceof ICraftingPatternItem) {
-            ICraftingPatternDetails detail =
-                ((ICraftingPatternItem) patternItem)
-                    .getPatternForItem(pattern, getWorld());
-            if (detail != null && !detail.isCraftable()) {
-                detailsII[slot] = detail;
-            }
-        }
+        ICraftingPatternDetails decoded = net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.decodePattern(pattern, getWorld());
+        if (decoded != null && !decoded.isCraftable()) detailsII[slot] = decoded;
 
         if (workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE
             && slot == currentPatternIdx) {
@@ -316,7 +314,7 @@ public class TileMEPatternProviderII extends MEPatternProvider {
     }
 
     private void returnItemsII() {
-        if (!shouldReturnItems || !proxy.isActive() || !proxy.isPowered()) {
+        if (!shouldReturnItems || !isActive() || !isPowered()) {
             return;
         }
         shouldReturnItems = false;
@@ -336,6 +334,10 @@ public class TileMEPatternProviderII extends MEPatternProvider {
     }
 
     private void returnHandlerToNetwork(InfItemFluidHandler target) {
+        if (CompatMods.isAe2sLoaded()) {
+            net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.returnItems(this, target);
+            return;
+        }
         try {
             IItemStorageChannel itemChannel = AEApi.instance().storage()
                 .getStorageChannel(IItemStorageChannel.class);
@@ -585,6 +587,10 @@ public class TileMEPatternProviderII extends MEPatternProvider {
                                   ItemStack removedStack,
                                   ItemStack newStack) {
         refreshPattern(slot);
+        if (CompatMods.isAe2sLoaded()) {
+            net.edwin.mmcecomplement.compat.ae.AeNetworkCompat.requestPatternUpdate(this);
+            return;
+        }
         try {
             proxy.getGrid().postEvent(new MENetworkCraftingPatternChange(
                 this, proxy.getNode()));

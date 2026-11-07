@@ -1,0 +1,66 @@
+{
+  "$schema": "schema.json",
+  "includes": [
+    "common/common.json"
+  ],
+  "background": {
+    "texture": "modularmachinery:textures/gui/meiteminputbus.png",
+    "srcRect": [
+      0,
+      0,
+      176,
+      204
+    ]
+  },
+  "slots": {
+    "PLAYER_INVENTORY": {
+      "left": 8,
+      "top": 123,
+      "grid": "BREAK_AFTER_9COLS"
+    },
+    "PLAYER_HOTBAR": {
+      "left": 8,
+      "top": 181,
+      "grid": "HORIZONTAL"
+    }
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "gui.mmce_complement.me_input_assembly.title"
+      },
+      "position": {
+        "left": 8,
+        "top": 8
+      },
+      "maxWidth": 160
+    },
+    "inventory": {
+      "text": {
+        "translate": "container.inventory"
+      },
+      "position": {
+        "left": 8,
+        "top": 111
+      }
+    },
+    "stored": {
+      "text": {
+        "translate": "gui.ae2.StoredItems"
+      },
+      "position": {
+        "left": 97,
+        "top": 24
+      }
+    },
+    "config": {
+      "text": {
+        "translate": "gui.ae2.Config"
+      },
+      "position": {
+        "left": 8,
+        "top": 24
+      }
+    }
+  }
+}

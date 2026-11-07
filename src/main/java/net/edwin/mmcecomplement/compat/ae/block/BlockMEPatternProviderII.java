@@ -120,7 +120,10 @@ public class BlockMEPatternProviderII extends BlockMEPatternProvider {
     @Override
     public TileEntity createTileEntity(@Nonnull World world,
                                        @Nonnull IBlockState state) {
-        return new TileMEPatternProviderII();
+        // Keep the Forge factory in one place. Subclasses select their tile
+        // through the vanilla factory, whose name is mapped consistently in
+        // installed jars as well as in the development environment.
+        return createNewTileEntity(world, getMetaFromState(state));
     }
 
     @Override

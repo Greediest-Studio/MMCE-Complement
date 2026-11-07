@@ -11,7 +11,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
-import appeng.core.AEConfig;
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
@@ -66,6 +66,10 @@ public final class MEConnectionShareManager {
     }
 
     public static synchronized void refresh(TileMultiblockMachineController controller) {
+        if (controller.isInvalid() || !controller.isStructureFormed() || controller.getFoundPattern() == null) {
+            clear(controller);
+            return;
+        }
         List<MEMachineComponent> components = collectComponents(controller);
         List<TileMEConnectionShareHatch> shares = new ArrayList<>();
         List<MEMachineComponent> targets = new ArrayList<>();
@@ -80,11 +84,11 @@ public final class MEConnectionShareManager {
         IGrid network = null;
         boolean conflict = false;
         for (TileMEConnectionShareHatch share : shares) {
-            IGridNode node = share.getProxy().getNode();
+            IGridNode node = AeNetworkCompat.getNode(share);
             IGrid grid = node == null ? null : node.getGrid();
-            if (grid == null || !share.getProxy().isPowered()) continue;
+            if (grid == null || !share.isPowered()) continue;
             if (network == null) network = grid;
-            else if (network != grid) conflict = true;
+            else if (!AeNetworkCompat.sameGrid(network, grid)) conflict = true;
         }
 
         State old = STATES.get(controller);
@@ -128,8 +132,8 @@ public final class MEConnectionShareManager {
     private static IGridNode findSharedNode(
         List<TileMEConnectionShareHatch> shares, IGrid network) {
         for (TileMEConnectionShareHatch share : shares) {
-            IGridNode node = share.getProxy().getNode();
-            if (node != null && node.getGrid() == network) return node;
+            IGridNode node = AeNetworkCompat.getNode(share);
+            if (node != null && AeNetworkCompat.sameGrid(node.getGrid(), network)) return node;
         }
         return null;
     }
@@ -146,11 +150,11 @@ public final class MEConnectionShareManager {
                                        IGridNode sharedNode,
                                        IGrid network) {
         Set<IGridNode> machineNodes =
-            Collections.newSetFromMap(new IdentityHashMap<>());
+            new java.util.HashSet<>();
         Set<IGridHost> machineHosts =
             Collections.newSetFromMap(new IdentityHashMap<>());
         for (MEMachineComponent component : components) {
-            IGridNode node = component.getProxy().getNode();
+            IGridNode node = AeNetworkCompat.getNode(component);
             if (node != null) machineNodes.add(node);
             machineHosts.add(component);
         }
@@ -159,20 +163,20 @@ public final class MEConnectionShareManager {
         // member can merge its whole local sub-grid into the shared network.
         List<MEMachineComponent> candidates = new ArrayList<>();
         for (MEMachineComponent target : targets) {
-            IGridNode node = target.getProxy().getNode();
-            if (node == null || node.getGrid() == network) continue;
+            IGridNode node = AeNetworkCompat.getNode(target);
+            if (node == null || AeNetworkCompat.sameGrid(node.getGrid(), network)) continue;
             if (isMachineLocalGrid(node.getGrid(), machineNodes, machineHosts)) {
                 candidates.add(target);
             }
         }
 
         for (MEMachineComponent target : candidates) {
-            IGridNode node = target.getProxy().getNode();
+            IGridNode node = AeNetworkCompat.getNode(target);
             IGrid currentSharedGrid = sharedNode.getGrid();
-            if (node == null || node.getGrid() == currentSharedGrid) continue;
+            if (node == null || AeNetworkCompat.sameGrid(node.getGrid(), currentSharedGrid)) continue;
             try {
                 IGridConnection connection =
-                    AEApi.instance().grid().createGridConnection(sharedNode, node);
+                    AeNetworkCompat.connect(sharedNode, node);
                 state.links.add(new Link(connection, node, false));
             } catch (FailedConnectionException | RuntimeException ignored) {
                 // A node can disappear while AE is rebuilding its pathing
@@ -190,8 +194,8 @@ public final class MEConnectionShareManager {
         // One bridge can bring several mutually connected hatches online.
         // Count every candidate that actually reached the shared network.
         for (MEMachineComponent target : candidates) {
-            IGridNode node = target.getProxy().getNode();
-            if (node != null && node.getGrid() == state.network
+            IGridNode node = AeNetworkCompat.getNode(target);
+            if (node != null && AeNetworkCompat.sameGrid(node.getGrid(), state.network)
                 && !containsIdentity(state.replacedComponents, target)) {
                 state.replacedComponents.add(target);
             }
@@ -201,7 +205,7 @@ public final class MEConnectionShareManager {
     private static boolean isMachineLocalGrid(
         IGrid grid, Set<IGridNode> machineNodes, Set<IGridHost> machineHosts) {
         if (grid == null) return true;
-        for (IGridNode node : grid.getNodes()) {
+        for (IGridNode node : AeNetworkCompat.nodes(grid)) {
             if (machineNodes.contains(node)) continue;
             IGridHost host = node.getMachine();
             // Virtual channel nodes are hosted by their owning machine hatch
@@ -271,7 +275,7 @@ public final class MEConnectionShareManager {
         }
         long desiredLong = (long) contribution * duplicateCount;
         int desired = (int) Math.min(Math.max(0L, desiredLong),
-            Math.max(0, AEConfig.instance().getDenseChannelCapacity()));
+            Math.max(0, AeNetworkCompat.denseCapacity()));
         while (state.duplicateLinks.size() > desired) {
             Link link = state.duplicateLinks.remove(state.duplicateLinks.size() - 1);
             state.links.remove(link);
@@ -282,14 +286,14 @@ public final class MEConnectionShareManager {
             if (duplicateCount == 0) break;
             TileMEConnectionShareHatch owner =
                 state.shares.get(1 + (index % duplicateCount));
-            IGridNode ownerNode = owner.getProxy().getNode();
-            if (ownerNode == null || ownerNode.getGrid() != state.network) break;
+            IGridNode ownerNode = AeNetworkCompat.getNode(owner);
+            if (ownerNode == null || !AeNetworkCompat.sameGrid(ownerNode.getGrid(), state.network)) break;
             VirtualBlock block = new VirtualBlock(owner, index);
-            IGridNode virtualNode = AEApi.instance().grid().createGridNode(block);
+            IGridNode virtualNode = AeNetworkCompat.createNode(block);
             try {
                 virtualNode.updateState();
                 IGridConnection connection =
-                    AEApi.instance().grid().createGridConnection(ownerNode,
+                    AeNetworkCompat.connect(ownerNode,
                         virtualNode);
                 Link link = new Link(connection, virtualNode, true);
                 state.duplicateLinks.add(link);
@@ -313,11 +317,11 @@ public final class MEConnectionShareManager {
         IGrid current = null;
         for (MEMachineComponent component : collectComponents(controller)) {
             if (!(component instanceof TileMEConnectionShareHatch)) continue;
-            IGridNode node = component.getProxy().getNode();
+            IGridNode node = AeNetworkCompat.getNode(component);
             IGrid grid = node == null ? null : node.getGrid();
-            if (grid == null || !component.getProxy().isPowered()) continue;
+            if (grid == null || !component.isPowered()) continue;
             if (current == null) current = grid;
-            else if (current != grid) {
+            else if (!AeNetworkCompat.sameGrid(current, grid)) {
                 return "craftcheck.failure.mmce_complement.me_connection_share.network_mismatch";
             }
         }
@@ -328,7 +332,7 @@ public final class MEConnectionShareManager {
         if (component instanceof TileMEChannelInputHatch) {
             return ((TileMEChannelInputHatch) component).getRequestedChannels();
         }
-        IGridNode node = component.getProxy().getNode();
+        IGridNode node = AeNetworkCompat.getNode(component);
         return node != null && node.hasFlag(GridFlags.REQUIRE_CHANNEL) ? 1 : 0;
     }
 
@@ -374,7 +378,7 @@ public final class MEConnectionShareManager {
         private boolean sameContext(List<MEMachineComponent> current,
                                     IGrid currentNetwork,
                                     boolean currentConflict) {
-            if (network != currentNetwork || conflict != currentConflict
+            if (!AeNetworkCompat.sameGrid(network, currentNetwork) || conflict != currentConflict
                 || components.size() != current.size()) return false;
             Set<MEMachineComponent> identities =
                 Collections.newSetFromMap(new IdentityHashMap<>());
@@ -387,7 +391,7 @@ public final class MEConnectionShareManager {
 
         private boolean linksValid() {
             for (Link link : links) {
-                if (link.node == null || link.node.getGrid() != network) return false;
+                if (link.node == null || !AeNetworkCompat.sameGrid(link.node.getGrid(), network)) return false;
             }
             return true;
         }

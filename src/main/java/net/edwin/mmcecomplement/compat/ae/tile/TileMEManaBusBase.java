@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.definitions.IItemDefinition;
@@ -123,12 +124,12 @@ public abstract class TileMEManaBusBase extends MEMachineComponent implements IT
     @Nonnull
     @Override
     public TickRateModulation tickingRequest(@Nonnull final IGridNode node, final int ticksSinceLastCall) {
-        if (!proxy.isActive()) {
+        if (!isActive()) {
             return TickRateModulation.IDLE;
         }
 
         try {
-            IMEMonitor<IAEItemStack> inventory = proxy.getStorage().getInventory(getChannel());
+            IMEMonitor<IAEItemStack> inventory = AeNetworkCompat.storage(this).getInventory(getChannel());
             long moved = transferMana(inventory);
             return moved > 0L ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
@@ -271,7 +272,7 @@ public abstract class TileMEManaBusBase extends MEMachineComponent implements IT
                 return;
             }
             try {
-                proxy.getTick().alertDevice(proxy.getNode());
+                AeNetworkCompat.alert(this);
             } catch (GridAccessException ignored) {
             }
         };

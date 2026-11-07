@@ -1,0 +1,22 @@
+{
+  "cleanroom": "0.6.8-alpha",
+  "side": "server",
+  "userdev": false,
+  "installer_sha256": "7a68129c889fdba0c0feb3262760e465a35abe5b95b29d6876ecb608a6bbcc29",
+  "jars": {
+    "AppliedEnergistics2-Supergiant-1.1.0+a47dfe029.jar": "7d82003578a820bf3dce121d98fd08911c8e5dcbe558e6158f6cc18558e98233",
+    "appcompat-1.0.1.jar": "99b9fbcae04da56880a3e183d45bd65948996997fd3f043899dc5cb3688e83e7",
+    "modularmachinery-community-edition-817377-7372951.jar": "83676773e8c4f63963a48b4921f05898dcdbfdf777230e53e9830cd8f18177fb",
+    "crafttweaker-4.1.20.698.jar": "b2e5e443f18d0d5bcfd1364f9ec89565e6a1e2ad4568b899c590aa5507978b27",
+    "jei-4.35.1.jar": "8777b115592519ea0b077032988301853b39794edbb67f54b54cbef6715b283b",
+    "geckolib-388172-4020277.jar": "b00bc9de4e3e94cea0455f8d58b295c1464272135e842bdf3170c2c955c871a5",
+    "Mekanism-CE-Unofficial-All-10.0.5.222.jar": "932d06d5a8b557d1a7fa787dca05a6bb952beb043398bb3ee5117d7e721d91ca",
+    "mekeng-1.2.1.jar": "914fbfca78a2be2a0fed6738b646901ae482b91b9e6c0236d65efcd675aebe2d",
+    "MekanismCeu-AE-Upgrade-SupergiantAE2-1.3.0.jar": "f965510c9fc533f99f64b0a445638d3ef268cadf484e9734e1bf4394615cdb75",
+    "mmce_complement-1.6.1.jar": "311aa550925fbbc6872971b04bf502c2e3a63919d906493afffb07c4181cc4ec",
+    "mmce-complement-verification-srg.jar": "e848382ce0b8851b5b47759210b1d55256e08e1d85b53b9aca4e0a8b0f56e872"
+  },
+  "foundation_loadsall": false,
+  "original_runtime_sha256": "18ddaf6a04d3aadab154577c4050951d9211ab83ac3bd5a40540122ed37b27ba",
+  "note": "Compact copy of the original runtime manifest. Full commands, library hashes and logs remain in local verification/evidence/."
+}

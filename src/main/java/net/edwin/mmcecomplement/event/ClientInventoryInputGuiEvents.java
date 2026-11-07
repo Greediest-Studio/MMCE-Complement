@@ -36,6 +36,14 @@ public final class ClientInventoryInputGuiEvents {
         "github.kasuminova.mmce.client.gui.GuiMEGasInputBus";
     private static final String MIXED_GUI =
         "net.edwin.mmcecomplement.compat.ae.gui.GuiMEInputAssembly";
+    private static final String NATIVE_ITEM_GUI =
+        "github.formlessdragon.appcompat.client.gui.mmce.GuiMEItemInputBus";
+    private static final String NATIVE_FLUID_GUI =
+        "github.formlessdragon.appcompat.client.gui.mmce.GuiMEFluidInputBus";
+    private static final String NATIVE_GAS_GUI =
+        "github.formlessdragon.appcompat.client.gui.mmce.GuiMEGasInputBus";
+    private static final String NATIVE_MIXED_GUI =
+        "net.edwin.mmcecomplement.compat.ae2s.client.AE2SAssemblyGui";
     private static final int ACTIVE_BUTTON_ID = 0x4D49;
     private static final int PANEL_WIDTH = 156;
     private static final int PANEL_GAP = 8;
@@ -49,7 +57,9 @@ public final class ClientInventoryInputGuiEvents {
         PanelState state = findState(event.getGui());
         if (state == null) return;
         String guiName = event.getGui().getClass().getName();
-        int guiHeight = ITEM_GUI.equals(guiName) || MIXED_GUI.equals(guiName)
+        boolean itemGui = ITEM_GUI.equals(guiName) || NATIVE_ITEM_GUI.equals(guiName)
+            || MIXED_GUI.equals(guiName) || NATIVE_MIXED_GUI.equals(guiName);
+        int guiHeight = itemGui
             ? 204 : 231;
         int guiLeft = getGuiCoordinate(event.getGui(), "guiLeft",
             "field_147003_i", (event.getGui().width - 176) / 2);
@@ -71,8 +81,7 @@ public final class ClientInventoryInputGuiEvents {
             ClientInventoryInputGuiEvents::isValidReserveText);
         state.reserve.setText(Long.toString(
             state.bus.getPermanentReserve()));
-        state.milliBuckets = !ITEM_GUI.equals(guiName)
-            && !MIXED_GUI.equals(guiName);
+        state.milliBuckets = !itemGui;
         event.getButtonList().add(state.button);
         PANELS.put(event.getGui(), state);
         Keyboard.enableRepeatEvents(true);
@@ -133,6 +142,7 @@ public final class ClientInventoryInputGuiEvents {
             return;
         }
         if (state.reserve.textboxKeyTyped(Keyboard.getEventCharacter(), key)) {
+            state.reserveEdited = true;
             sendReserve(state, parseReserve(state.reserve.getText()));
             event.setCanceled(true);
         }
@@ -166,7 +176,7 @@ public final class ClientInventoryInputGuiEvents {
         GuiScreen current = Minecraft.getMinecraft().currentScreen;
         PanelState state = PANELS.remove(current);
         if (state == null) return;
-        normalizeAndSendReserve(state);
+        if (state.reserveEdited) normalizeAndSendReserve(state);
         Keyboard.enableRepeatEvents(false);
     }
 
@@ -235,7 +245,9 @@ public final class ClientInventoryInputGuiEvents {
         if (gui == null || !(gui instanceof GuiContainer)) return null;
         String name = gui.getClass().getName();
         if (!ITEM_GUI.equals(name) && !FLUID_GUI.equals(name)
-            && !GAS_GUI.equals(name) && !MIXED_GUI.equals(name)) return null;
+            && !GAS_GUI.equals(name) && !MIXED_GUI.equals(name)
+            && !NATIVE_ITEM_GUI.equals(name) && !NATIVE_FLUID_GUI.equals(name)
+            && !NATIVE_GAS_GUI.equals(name) && !NATIVE_MIXED_GUI.equals(name)) return null;
         try {
             java.lang.reflect.Field field = ReflectionHelper.findField(
                 GuiContainer.class, "inventorySlots", "field_147002_h");
@@ -258,6 +270,7 @@ public final class ClientInventoryInputGuiEvents {
         private GuiButton button;
         private GuiTextField reserve;
         private boolean milliBuckets;
+        private boolean reserveEdited;
 
         private PanelState(MEInventoryInputBus bus, TileEntity tile) {
             this.bus = bus;

@@ -1,5 +1,6 @@
 package net.edwin.mmcecomplement.compat.ae.tile;
 
+import net.edwin.mmcecomplement.compat.ae.AeNetworkCompat;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -90,13 +91,13 @@ public class TileMEItemInventoryInputBus extends MEItemInputBus
     @Override
     public TickRateModulation tickingRequest(IGridNode node,
                                               int ticksSinceLastCall) {
-        if (!proxy.isActive()) return TickRateModulation.IDLE;
+        if (!isActive()) return TickRateModulation.IDLE;
         Lock writeLock = inventory.getRWLock().writeLock();
         writeLock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEItemStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             boolean changed = syncConfiguredItems(monitor, activePull);
             if (!activePull && !hasBufferedItems()) {
                 return TickRateModulation.SLEEP;
@@ -146,8 +147,8 @@ public class TileMEItemInventoryInputBus extends MEItemInputBus
                 permanentReserve, room);
             if (amount <= 0L) continue;
             request.setStackSize(amount);
-            IAEItemStack extracted = Platform.poweredExtraction(
-                proxy.getEnergy(), monitor, request, source);
+            IAEItemStack extracted = AeNetworkCompat.poweredExtraction(this,
+                AeNetworkCompat.energy(this), monitor, request, source);
             if (extracted == null || extracted.getStackSize() <= 0L) continue;
             ItemStack pulled = extracted.createItemStack();
             if (pulled.isEmpty()) continue;
@@ -169,20 +170,20 @@ public class TileMEItemInventoryInputBus extends MEItemInputBus
         IAEItemStack request = channel.createStack(stack);
         if (request == null) return stack;
         request.setStackSize(stack.getCount());
-        IAEItemStack remainder = Platform.poweredInsert(
-            proxy.getEnergy(), monitor, request, source);
+        IAEItemStack remainder = AeNetworkCompat.poweredInsert(this,
+            AeNetworkCompat.energy(this), monitor, request, source);
         return remainder == null ? ItemStack.EMPTY
             : remainder.createItemStack();
     }
 
     private void pushAllToNetwork() {
-        if (!proxy.isActive()) return;
+        if (!isActive()) return;
         Lock writeLock = inventory.getRWLock().writeLock();
         writeLock.lock();
         inTick = true;
         try {
             IMEMonitor<IAEItemStack> monitor =
-                proxy.getStorage().getInventory(channel);
+                AeNetworkCompat.inventory(this, channel);
             for (int slot = 0; slot < inventory.getSlots(); slot++) {
                 ItemStack stored = inventory.getStackInSlot(slot);
                 if (!stored.isEmpty()) {
@@ -207,8 +208,8 @@ public class TileMEItemInventoryInputBus extends MEItemInputBus
     private void wakeGridTicking() {
         if (getWorld() == null || getWorld().isRemote) return;
         try {
-            IGridNode node = proxy.getNode();
-            if (node != null) proxy.getTick().alertDevice(node);
+            IGridNode node = AeNetworkCompat.getNode(this);
+            if (node != null) AeNetworkCompat.alert(this);
         } catch (GridAccessException ignored) { }
     }
 
