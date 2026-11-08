@@ -51,7 +51,7 @@
 | ME 存储访问端口 | 直接向有电的 ME 网络暴露库存，提供原生存储总线设置 GUI |
 | CraftTweaker | 在服务端机器事件查询、存取和修改容量 |
 
-两种直接接口的方块 ID 和区别见 [存储访问接口](ae-storage-access-port-zh_cn.md)。
+两种直接接口的方块 ID 和区别见 [存储访问接口](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Interfaces)。
 输入/输出仓要属于已识别的主结构或生效附属模块；仅贴在结构旁边不会加入机器。
 
 同一机器的控制器、直接接口和脚本访问同一份后端。增加接口不会增加容量，
@@ -64,7 +64,7 @@
 不应把破坏控制器当作搬运流体/气体的手段，应先转移内容。
 
 控制器内的动态容量设置会随 NBT 保存，使用方法见
-[存储控制器 CraftTweaker API](storage-controller-crafttweaker-zh_cn.md)。
+[存储控制器 CraftTweaker API](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Controller-CraftTweaker)。
 未成型时仍可查询已配置容量，但不能存取或修改容量。
 
 ## AE2UEL 与 AE2S
@@ -72,4 +72,4 @@
 AE2UEL 与 AE2S 共用机器定义、存储交互总成和脚本 API。
 ME 存储访问端口分别使用各自的存储总线实现。AE2S 需要 Cleanroom、Java 25 和
 AppliedCompatibility；ME 气体访问还需该分支对应的 MekEng，不能混装两种 AE 主模组。
-依赖与实际验证范围见 [AE2S 兼容说明](AE2S-COMPATIBILITY.md)。
+各 AE 分支的依赖与使用方式见 [AE2S 兼容说明](https://github.com/Greediest-Studio/MMCE-Complement/wiki/AE2S-Compatibility)。

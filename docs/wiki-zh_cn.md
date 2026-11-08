@@ -2,10 +2,10 @@
 
 当前文档对应 MMCE Complement **1.6.2**，运行环境为 Minecraft 1.12.2。
 
-[English Wiki](wiki-en_us.md) · [附属模块指南](attachment-modules-zh_cn.md)
+[English Wiki](https://github.com/Greediest-Studio/MMCE-Complement/wiki/English-Home) · [附属模块指南](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Attachment-Modules)
 
-新增内容：[多方块存储器](multiblock-storage-zh_cn.md) · [存储访问接口](ae-storage-access-port-zh_cn.md) ·
-[存储控制器 CraftTweaker API（含动态容量）](storage-controller-crafttweaker-zh_cn.md) · [AE2S 兼容说明](AE2S-COMPATIBILITY.md)。
+存储指南：[多方块存储器](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Multiblock-Storage) · [存储访问接口](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Interfaces) ·
+[存储控制器 CraftTweaker API（含动态容量）](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Controller-CraftTweaker) · [AE2S 兼容说明](https://github.com/Greediest-Studio/MMCE-Complement/wiki/AE2S-Compatibility)。
 
 ## 项目简介
 
@@ -17,7 +17,7 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 
 AE2UEL 与 AE2S 二选一。AE2S 环境使用 Cleanroom 0.6.8+、Java 25 和官方 AppliedCompatibility 1.0.1；
 ME 气体使用原生 MekEng / Applied Mekanistics 1.2.1，UEL 则使用对应的 Mekanism Energistics。
-CrazyAE 能量/魔力等可选组合的原生 AE2S 支持不在已验收范围内，不能仅凭注册成功判断可用。
+CrazyAE 能源、魔力组件需要其专用通道与兼容 API；AE2S 本身不提供这些通道。
 
 | 功能 | 额外可选依赖 |
 | --- | --- |
@@ -56,7 +56,7 @@ CrazyAE 能量/魔力等可选组合的原生 AE2S 支持不在已验收范围�
 - **九重流体输入/输出仓**（`nine_fluid_input_hatch_normal`、`nine_fluid_output_hatch_normal`）：中型至真空共 6 档，拥有 9 个隔离储槽；输入仓不允许重复，输出仓允许重复。
 - 安装 Mekanism 后，以上流体仓以及普通输入/输出总成可以同时处理 Mekanism 气体。流体容量以 mB 显示。
 
-1.4.0 修复了四重流体仓读档后每槽容量错误变成 25 mB 的问题。仓室会保存自身等级并在加载时恢复正确的每槽容量。
+多重流体仓会保存自身等级，并在加载存档时恢复对应的每槽容量。
 
 ### 物品、流体和数据总成
 
@@ -234,11 +234,11 @@ controller.setRedstone("throughput", 15); // 自动限制到 0–15
 - 内部缓存容量：**10,000 FE**；
 - 默认传输速率：**800,000 FE/t**。
 
-## CraftTweaker 与附属模块 API
+## CraftTweaker 支持
 
-多方块存储器提供继承 `IMachineController` 的 `IMachineStorageController`，支持物品/流体/气体容量、唯一槽位编号、内容查询和模拟/实际存取。转换入口、完整方法表与脚本示例见[存储控制器 CraftTweaker API](storage-controller-crafttweaker-zh_cn.md)。
+多方块存储器提供继承 `IMachineController` 的 `IMachineStorageController`，支持物品/流体/气体容量、唯一槽位编号、内容查询和模拟/实际存取。使用 `setMaxItemSlots`、`setMaxFluidSlots`、`setMaxGasSlots` 调整槽数，使用单槽或批量容量方法调整流体、气体上限。完整方法与脚本示例见 [CraftTweaker 支持](https://github.com/Greediest-Studio/MMCE-Complement/wiki/CraftTweaker-API)，集中参考见 [存储控制器脚本](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Controller-CraftTweaker)。
 
-附属模块的 JSON 格式、依赖/冲突、JEI 预览和结构导出请参阅[附属模块指南](attachment-modules-zh_cn.md)。常用脚本扩展如下：
+附属模块的 JSON 格式、依赖/冲突、JEI 预览和结构导出请参阅[附属模块指南](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Attachment-Modules)。常用脚本扩展如下：
 
 ```zenscript
 // 配方要求/禁止附属模块
@@ -274,7 +274,7 @@ mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
 - `.addFluidModifier(function(controller, liquid) as ILiquidStack)` 修改流体输出的种类、数量和 NBT；返回 `null` 或非正数量会取消该输出。
 - `.addGasModifier(function(controller, gas))` 修改气体输出的种类和数量；气体参数/返回值在 ZenScript 中表现为 `IIngredient`，运行时必须是 Mekanism `IGasStack`。
 - 修改器必须紧跟对应的流体或气体输出；多个修改器按声明顺序执行，并参与输出空间预检、并行数量计算和最终写入。
-- 详细说明：[流体输出修改器](fluid-output-modifier-zh_cn.md)、[气体输出修改器](gas-output-modifier-zh_cn.md)。
+- 详细说明：[流体输出修改器](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Fluid-Output-Modifiers)、[气体输出修改器](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Gas-Output-Modifiers)。
 
 ### 流体预览 NBT 与气体 Tooltip
 
@@ -292,22 +292,13 @@ recipe
 
 流体 NBT 会显示在 JEI 流体槽中，不改变实际输入匹配或输出内容。气体不支持 `.setPreViewNBT(IData)`；Mekanism `GasStack` 不支持任意 NBT，气体仅提供 Tooltip API。`.addGasTooltip(String...)` 追加提示行，`.setGasTooltip(String...)` 覆盖此前由本扩展添加的提示行；两者均支持气体输入和输出组件。
 
-详细说明：[流体/气体预览 NBT](preview-nbt-zh_cn.md)。
+详细说明：[流体/气体预览 NBT](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Preview-NBT)。
 
 附属模块结构检查与 MMCE 主结构使用相同的同步检查流程、调度和线程，不再存在独立的逐 tick 附属区域扫描或变化监听轮询。
 
-## 1.4.x 更新摘要
+## 版本记录
 
-- 新增 ME 物品/流体/气体/矿辞库存输入总线的统一标记、主动拉取和永久保留库存功能。
-- 新增 ME 输入、库存输入、输出、全暴露四种混合总成。
-- 新增 ME 频道输入仓及 JEI 支持，提供动态频道占用和 CraftTweaker `.addMEChannelInput(int)`。
-- 新增红石控制仓、红石信号输入仓和红石信号输出仓，以及命名红石接口 API。
-- 新增 144 槽的 ME 机械样板供应器 II，并兼容 MMCE 样板镜像和 Whimcraft 库存共享总线。
-- 新增 ME 连接共享仓，一条外部 AE 网络连接即可供同一机器内未接线的 ME 仓室共同使用，并保留正常频道计费和异网冲突保护。
-- 输入总成可在同一配方组中同时作为物品输入仓和流体/气体输入仓使用；数据输入总成还可同时承担智能数据接口需求。
-- 无线通量仓默认缓存/速率更新为 10,000 FE / 800,000 FE/t。
-- 修复四重流体仓读档容量、样板供应器 II GUI/材质/交互、ME 总成贴图和红石控制仓连接等问题。
-- 修复 Nova Engineering 的可选星辉魔法（Astral Sorcery）兼容层在配方注册表尚未编译时被提前查询而导致的启动异常。
+各版本内容见 [版本记录](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Release-Notes)。
 
 ## 常见问题
 
@@ -317,4 +308,4 @@ recipe
 
 **库存输入总线没有拉取？** 确认“主动拉取”为开启；关闭时是待机状态。永久保留库存值过高也会使可抽取数量变为 0。
 
-**流体仓容量不正确？** 破坏并重新放置旧版本方块，或让区块重新保存；1.4.0 会保存并恢复方块等级，不再把每槽容量重置为 25 mB。
+**流体仓容量不正确？** 核对仓室等级、每槽容量和客户端/服务端配置。处理已有仓室前先转移内容物，详见 [故障排查](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Troubleshooting)。

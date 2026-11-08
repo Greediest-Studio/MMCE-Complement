@@ -3,27 +3,67 @@ package net.edwin.mmcecomplement.variant;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 
 /** Item handler that marks the controller dirty when a storage slot changes. */
 public class StorageItemHandler extends ItemStackHandler {
     private final TileMultiblockMachineController owner;
+    private boolean resizing;
 
     public StorageItemHandler(TileMultiblockMachineController owner, int size) {
         super(size);
         this.owner = owner;
     }
 
-    /** Retain handler identity for pipes; never remove an occupied slot. */
+    /** Capacity settings are committed by the caller after the resize finishes. */
+    public synchronized boolean isResizing() { return resizing; }
+
+    /** Move removed slots into retained empty slots, then eject any remainder. */
     public synchronized boolean resize(int size) {
-        if (size < 1 || size > StorageCapacitySettings.MAX_SLOTS) return false;
+        if (resizing || size < 1 || size > StorageCapacitySettings.MAX_SLOTS) return false;
         if (size == stacks.size()) return true;
-        for (int i = size; i < stacks.size(); i++) if (!stacks.get(i).isEmpty()) return false;
-        net.minecraft.util.NonNullList<ItemStack> next = net.minecraft.util.NonNullList.withSize(size, ItemStack.EMPTY);
-        for (int i = 0; i < Math.min(size, stacks.size()); i++) next.set(i, stacks.get(i));
+        NonNullList<ItemStack> previous = stacks;
+        NonNullList<ItemStack> next = NonNullList.withSize(size, ItemStack.EMPTY);
+        for (int i = 0; i < Math.min(size, previous.size()); i++) next.set(i, previous.get(i));
+        int target = 0;
+        for (int i = size; i < stacks.size(); i++) {
+            ItemStack remaining = stacks.get(i).copy();
+            if (remaining.isEmpty()) continue;
+            for (; target < size && !remaining.isEmpty(); target++) {
+                if (!next.get(target).isEmpty()) continue;
+                int count = Math.min(remaining.getCount(), Math.min(getSlotLimit(target), remaining.getMaxStackSize()));
+                if (count <= 0) continue;
+                ItemStack moved = remaining.splitStack(count);
+                next.set(target, moved);
+            }
+            previous.set(i, remaining);
+        }
+        // Publish the retained inventory before entity callbacks can access it.
+        // Removed stacks are detached, so callbacks cannot extract them twice.
         stacks = next;
-        onContentsChanged(0);
-        return true;
+        resizing = true;
+        boolean completed = false;
+        try {
+            for (int i = size; i < previous.size(); i++) {
+                ItemStack remaining = previous.get(i);
+                if (!remaining.isEmpty()) {
+                    if (!StorageItemDrops.drop(owner.getWorld(), owner.getPos(), remaining)) return false;
+                    previous.set(i, ItemStack.EMPTY);
+                }
+            }
+            completed = true;
+            return true;
+        } finally {
+            if (!completed) {
+                // Keep any undropped remainder in its original tail slot.
+                // Preserve changes made to retained slots by entity callbacks.
+                for (int i = 0; i < size; i++) previous.set(i, stacks.get(i));
+                stacks = previous;
+            }
+            resizing = false;
+            onContentsChanged(0);
+        }
     }
 
     @Override public synchronized int getSlots() { return super.getSlots(); }

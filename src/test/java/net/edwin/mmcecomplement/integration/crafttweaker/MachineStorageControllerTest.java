@@ -101,7 +101,7 @@ public class MachineStorageControllerTest {
         assertFalse(current.setGasCapacityInSlot(0, 8000));
     }
 
-    @Test void liveCapacityChangesPreserveHandlersRejectDestructiveShrinksAndKeepStableIds() throws Exception {
+    @Test void liveCapacityChangesPreserveHandlersRelocateItemsAndKeepStableIds() throws Exception {
         current = live();
         Object items = current.items, fluids = current.fluids, gases = current.gases;
         long id = current.getSlotId("fluid", 1);
@@ -120,10 +120,10 @@ public class MachineStorageControllerTest {
         current.fluids.getTank(4).setFluid(new FluidStack(FluidRegistry.LAVA, 50));
         mekanism.api.gas.Gas gas = new mekanism.api.gas.Gas("dynamic_script_gas", 0xFFFFFF);
         current.gases.receiveGasInSlot(3, new mekanism.api.gas.GasStack(gas, 200), true);
-        assertFalse(current.setMaxItemSlots(4));
+        assertTrue(current.setMaxItemSlots(4));
         assertFalse(current.setMaxFluidSlots(3));
         assertFalse(current.setMaxGasSlots(2));
-        assertEquals(2, current.items.getStackInSlot(7).getCount());
+        assertEquals(2, current.items.getStackInSlot(0).getCount());
         assertEquals(50, current.fluids.getTank(4).getFluidAmount());
         assertEquals(200, current.gases.getAmount(3));
         assertFalse(current.setFluidCapacityInSlot(0, 999));
@@ -137,7 +137,7 @@ public class MachineStorageControllerTest {
         assertEquals(2000, current.fluids.getTankProperties()[0].getCapacity());
         assertEquals(3000, current.gases.getTankInfo()[3].getMaxGas());
         int saves = current.saves;
-        assertTrue(current.setMaxItemSlots(8));
+        assertTrue(current.setMaxItemSlots(4));
         assertTrue(current.setFluidCapacityInSlot(0, 2000));
         assertEquals(saves, current.saves, "Repeated event calls must not continually dirty the chunk");
         assertFalse(current.setMaxItemSlots(0));
@@ -154,7 +154,7 @@ public class MachineStorageControllerTest {
         assertEquals(4000, current.fluids.getTank(5).getCapacity());
         current.fluids.getTank(4).setFluid(null);
         current.gases.drawGasInSlot(3, new mekanism.api.gas.GasStack(gas, 200), true);
-        current.items.extractItem(7, 2, false);
+        current.items.extractItem(0, 2, false);
         assertTrue(current.setMaxItemSlots(4));
         assertTrue(current.setMaxFluidSlots(3));
         assertTrue(current.setMaxGasSlots(2));

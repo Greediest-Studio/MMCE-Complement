@@ -15,8 +15,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
+import net.edwin.mmcecomplement.variant.StorageItemDrops;
 
 /** MMCE controller block used by storage variants. */
 public class BlockStorageController extends BlockController {
@@ -114,14 +114,9 @@ public class BlockStorageController extends BlockController {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stack = inventory.getStackInSlot(i);
             if (stack == null || stack.isEmpty()) continue;
-            EntityItem entity = new EntityItem(world,
-                pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D,
-                stack.copy());
-            entity.motionX = (world.rand.nextDouble() - 0.5D) * 0.15D;
-            entity.motionY = world.rand.nextDouble() * 0.2D + 0.1D;
-            entity.motionZ = (world.rand.nextDouble() - 0.5D) * 0.15D;
-            world.spawnEntity(entity);
-            inventory.setStackInSlot(i, ItemStack.EMPTY);
+            if (StorageItemDrops.drop(world, pos, stack)) {
+                inventory.setStackInSlot(i, ItemStack.EMPTY);
+            }
         }
     }
 }

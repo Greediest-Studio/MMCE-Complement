@@ -50,7 +50,7 @@ function inspectStorage(controller as IMachineController) {
 
 ## 动态修改槽数和容量
 
-以下方法均返回 `bool`，仅在 `storageAvailable` 为 true 时执行。修改只影响当前这台机器，
+以下方法的 `count`、`index`、`capacity` 参数均为 `int`，返回值为 `bool`。仅在 `storageAvailable` 为 true 时执行。修改只影响当前这台机器，
 不会修改共享机器 JSON 或其他控制器，随控制器 NBT 保存并同步，卸载区块、重启和临时拆坏结构后仍保留。
 
 | 方法 | 作用 |
@@ -64,7 +64,9 @@ function inspectStorage(controller as IMachineController) {
 | `setGasSlotCapacity(capacity)` | 设置所有现有气体槽及未来新增槽的默认容量，清除单槽覆盖 |
 
 - 槽数范围为 **1–4096**，容量范围为 **1–2,147,483,647**。不能用这些方法开启 JSON 中未配置的流体/气体类型。
-- 缩减槽数时，所有被删除的末尾槽位必须为空；不会自动搬移、丢弃或掉落其内容。
+- 缩减物品槽数时，按索引顺序将末尾槽位的物品搬入保留区的空槽，遵守物品堆叠上限，保留 metadata 和 NBT。现有非空槽保持原样；放不下的物品从控制器位置掉落，行为与破坏控制器时一致。
+- 缩减流体或气体槽数时，被删除的末尾槽位必须为空。缩减单槽容量时，新容量不能低于已有数量。
+- 若物品实体生成被其他模组取消，未掉落的余量保留在原末尾槽，槽数设置返回 `false`；已经搬移或掉落的物品不会再次生成。
 - 缩减单槽容量时，新值不得小于该槽现有数量。批量设置会先检查全部槽位，任意一个不满足即整次拒绝。
 - 无效参数、越界、类型未开启、结构未成型、客户端或异步调用均返回 `false`，原配置和内容不变。
 - 成功或重复设置相同值返回 `true`；重复调用相同设置不会持续产生脏数据通知。
@@ -93,21 +95,23 @@ function upgradeStorage(controller as IMachineController) {
 }
 ```
 
-多个设置调用各自独立，并非一组事务。降级脚本应检查每个返回值，先取走末尾槽位和超出目标容量的内容，再尝试缩容。
+多个设置调用各自独立，并非一组事务。降级脚本应检查每个返回值；物品缩槽会搬移并掉落溢出物，流体和气体缩槽前应先清空末尾槽，降低容量前应先取走超量内容。
 
 ## 查询和存取
 
-下表中的 X 替换为 `Item`、`Fluid` 或 `Gas`。对应的参数类型分别为 `IItemStack`、`ILiquidStack`、`IIngredient`；气体必须使用 Mekanism 的真实气体栈，例如 `<gas:hydrogen>`，不支持矿辞、通配符或组合材料。
+三类内容的参数类型分别为 `IItemStack`、`ILiquidStack`、`IIngredient`；气体必须使用 Mekanism 的真实气体栈，例如 `<gas:hydrogen>`，不支持矿辞、通配符或组合材料。
 
-| 方法 | 返回值 | 说明 |
-| --- | --- | --- |
-| `hasX(stack)` | bool | 是否存在至少一个/一单位匹配内容，忽略请求数量 |
-| `countX(stack)` | long | 所有槽位中匹配内容的总量 |
-| `insertX(stack, simulate = false)` | int | 实际或模拟可添加的数量 |
-| `extractX(stack, simulate = false)` | int | 实际或模拟可提取的数量 |
-| `insertXInSlot(index, stack, simulate = false)` | int | 仅向指定分类槽位添加 |
-| `extractXInSlot(index, stack, simulate = false)` | int | 仅从指定分类槽位提取 |
-| `getXInSlot(index)` | 对应的栈或 null | 指定分类槽位的内容快照 |
+| 物品方法 | 流体方法 | 气体方法 | 返回值与作用 |
+| --- | --- | --- | --- |
+| `hasItem(stack)` | `hasFluid(stack)` | `hasGas(stack)` | bool：存在至少一单位匹配内容，忽略请求数量 |
+| `countItem(stack)` | `countFluid(stack)` | `countGas(stack)` | long：匹配内容的总量 |
+| `insertItem(stack, simulate)` | `insertFluid(stack, simulate)` | `insertGas(stack, simulate)` | int：可添加或实际添加的数量 |
+| `extractItem(stack, simulate)` | `extractFluid(stack, simulate)` | `extractGas(stack, simulate)` | int：可提取或实际提取的数量 |
+| `insertItemInSlot(index, stack, simulate)` | `insertFluidInSlot(index, stack, simulate)` | `insertGasInSlot(index, stack, simulate)` | int：仅向指定槽添加的数量 |
+| `extractItemInSlot(index, stack, simulate)` | `extractFluidInSlot(index, stack, simulate)` | `extractGasInSlot(index, stack, simulate)` | int：仅从指定槽提取的数量 |
+| `getItemInSlot(index)` | `getFluidInSlot(index)` | `getGasInSlot(index)` | 对应类型的栈或 null：槽位内容快照 |
+
+`index` 为 int；`simulate` 为可选 bool，默认 `false`。模拟返回当前可操作的数量，不改变库存。物品、流体、气体的参数与返回栈类型分别为 `IItemStack`、`ILiquidStack` 和 `IIngredient`。
 
 物品匹配包含物品、metadata、完整 NBT；流体包含流体种类和 NBT；气体按 Mekanism 气体种类匹配。查询返回独立副本，修改副本不会改变机器。
 
@@ -168,4 +172,3 @@ function storageExample(storage as IMachineStorageController) {
 - `isWorking` 返回 false；判断存储可用性使用 `storageAvailable`。
 - `extraThreadCount` 返回 0，写入忽略。
 - `addModifier`、`removeModifier`、`addPermanentModifier`、`removePermanentModifier` 无操作；`hasModifier` 返回 false。
-

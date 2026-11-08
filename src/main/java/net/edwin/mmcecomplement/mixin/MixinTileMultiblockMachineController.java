@@ -832,6 +832,11 @@ public abstract class MixinTileMultiblockMachineController
 
     @Override
     public ItemStackHandler mmceComplement$getStorageInventory() {
+        // Entity-join callbacks during overflow drops must see this same live
+        // handler while the caller is still committing the new slot count.
+        if (mmceComplement$storageInventory != null && mmceComplement$storageInventory.isResizing()) {
+            return mmceComplement$storageInventory;
+        }
         // Do not use the formed-only public capacity here: this method is
         // also used when the controller is broken or being harvested.
         int slots = mmceComplement$getConfiguredStorageSlots();

@@ -2,12 +2,12 @@
 
 This page documents MMCE Complement **1.6.2** for Minecraft 1.12.2.
 
-[中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
+[中文 Wiki](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Chinese-Overview) · [Attachment Modules Guide](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Attachment-Modules-English)
 
-New storage references: [multiblock storage](multiblock-storage-zh_cn.md),
-[ME and pipe interfaces](ae-storage-access-port-zh_cn.md),
-[storage scripting and live capacity changes](storage-controller-crafttweaker-zh_cn.md),
-and [AE2S compatibility](AE2S-COMPATIBILITY.md) (detailed references in Chinese).
+Storage guides: [multiblock storage](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Multiblock-Storage),
+[ME and pipe interfaces](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Storage-Interfaces),
+[CraftTweaker support and storage scripting](https://github.com/Greediest-Studio/MMCE-Complement/wiki/CraftTweaker-API),
+and [AE2S compatibility](https://github.com/Greediest-Studio/MMCE-Complement/wiki/AE2S-Compatibility) (detailed references in Chinese).
 
 ## About
 
@@ -35,7 +35,7 @@ All registry names use the `mmce_complement:` namespace. When an optional depend
 
 Install one AE branch. AE2S requires Cleanroom 0.6.8+, Java 25 and official AppliedCompatibility 1.0.1.
 Native gas storage uses MekEng / Applied Mekanistics 1.2.1; UEL uses its matching Mekanism Energistics.
-Optional CrazyAE energy/mana integrations have not completed native AE2S acceptance testing.
+CrazyAE energy/mana components require their dedicated channels and compatibility APIs; AE2S itself does not supply those channels.
 
 ## Multiblock storage
 
@@ -65,7 +65,7 @@ if (storage != null && storage.storageAvailable) {
 
 `setMaxGasSlots`, `setGasCapacityInSlot`, `setFluidSlotCapacity` and `setGasSlotCapacity` are also available.
 Counts must be 1–4096; capacities must be positive int values. Changes require a formed server-side machine on the main thread.
-Deleting occupied tail slots or shrinking below current contents returns false and leaves the operation unchanged.
+When item slots shrink, tail stacks move into retained empty slots first; overflow drops at the controller as it does when the controller is broken. Fluid/gas tail tanks must be empty before removal, and tank capacities cannot shrink below their current contents.
 Overrides persist with the individual controller and do not edit the shared machine definition.
 Bulk capacity setters reset individual overrides and set the default for new tanks.
 Read an individual tank's actual capacity with `getFluidCapacityInSlot` or `getGasCapacityInSlot`.
@@ -271,7 +271,7 @@ Both support Flux Networks' network ID, name, priority, surge/disable-limit, and
 
 ## CraftTweaker and attachment-module APIs
 
-See the [Attachment Modules Guide](attachment-modules-en_us.md) for the JSON format, dependencies/conflicts, JEI previews, and structure export. Common script extensions are:
+See the [Attachment Modules Guide](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Attachment-Modules-English) for the JSON format, dependencies/conflicts, JEI previews, and structure export. Common script extensions are:
 
 ```zenscript
 // Require or forbid attachment modules
@@ -307,7 +307,7 @@ mods.modularmachinery.RecipeBuilder.newBuilder("dynamic", "my_machine", 200)
 - `.addFluidModifier(function(controller, liquid) as ILiquidStack)` changes the fluid type, amount, and NBT; returning `null` or a non-positive amount cancels that output.
 - `.addGasModifier(function(controller, gas))` changes the gas type and amount. In ZenScript the argument and return value are exposed as `IIngredient` for optional-dependency compatibility, but the runtime value must be Mekanism's `IGasStack`.
 - A modifier must directly follow a fluid or gas output. Multiple modifiers run in declaration order and are applied to output-space checks, parallel amount calculations, and final insertion.
-- See the detailed [fluid output modifier](fluid-output-modifier-zh_cn.md) and [gas output modifier](gas-output-modifier-zh_cn.md) references.
+- See the detailed [fluid output modifier](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Fluid-Output-Modifiers) and [gas output modifier](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Gas-Output-Modifiers) references.
 
 ### Fluid preview NBT and gas tooltips
 
@@ -325,7 +325,7 @@ recipe
 
 Fluid NBT is rendered in the JEI fluid slot and does not change matching or output. Gas components do not support `.setPreViewNBT(IData)`; Mekanism `GasStack` has no arbitrary-NBT support, so use the gas tooltip methods instead. `.addGasTooltip(String...)` appends lines, while `.setGasTooltip(String...)` replaces tooltip lines previously added by this extension; both work on gas inputs and outputs.
 
-See the detailed [fluid/gas preview NBT](preview-nbt-zh_cn.md) reference.
+See the detailed [fluid/gas preview NBT](https://github.com/Greediest-Studio/MMCE-Complement/wiki/Preview-NBT) reference.
 
 Attachment structure checks run synchronously with MMCE's main structure check, using the same schedule and thread. There is no independent per-tick attachment scan or change-listener polling path.
 

@@ -10,7 +10,8 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 
 ## Documentation / 文档
 
-- [AE2S / Supergiant：CR 0.6.8+ 安装、构建与验收](docs/AE2S-COMPATIBILITY.md)
+- [AE2UEL / AE2S 安装与兼容](docs/AE2S-COMPATIBILITY.md)
+- [CraftTweaker 支持与完整方法表](docs/crafttweaker-api-zh_cn.md)
 - [存储控制器 CraftTweaker API](docs/storage-controller-crafttweaker-zh_cn.md)
 - [多方块存储器：JSON、自动化与动态容量](docs/multiblock-storage-zh_cn.md)
 - [ME 存储访问端口与存储交互总成](docs/ae-storage-access-port-zh_cn.md)
@@ -53,10 +54,8 @@ Exact registry names, capacities, configuration keys, and examples are maintaine
 
 本分支的 AE2S 目标为 **Cleanroom 0.6.8+ / Java 25**（官方基线标签为 `0.6.8-alpha`）。
 使用官方 AppliedCompatibility 1.0.1，兼容修改集中在 MMCE Complement。
-准确依赖、实测版本和支持范围见 [AE2S 兼容说明](docs/AE2S-COMPATIBILITY.md)。
-保留原项目名称、模组 ID 和作者信息。
-已融入 Butterfly-Kiyo 的 PR #1，并补充 MekEng 气体与混合总成的 AE2S 适配；
-MMCE 2.3.3 JAR 的验收限制见兼容说明。
+依赖组合与组件使用方式见 [AE2UEL / AE2S 兼容说明](docs/AE2S-COMPATIBILITY.md)。
+ME 气体使用对应分支的网络扩展；普通气体管道能力使用 Mekanism。
 
 MMCE Addons, The One Probe CE, GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekanism Energistics, AE2 Fluid Crafting Rework, Botania, Baubles and display/script integrations are optional to this addon. Their related modules register only when the corresponding mod and API are present. MMCE's bundled Modular Magic API is detected by class availability rather than as a separate Forge mod. See the [installation and compatibility guide](docs/wiki-en_us.md) before distributing a modpack.
 
@@ -64,8 +63,8 @@ MMCE Addons, The One Probe CE, GeckoLib, Flux Networks, CrazyAE, Mekanism, Mekan
 
 This project uses Gradle with RetroFuturaGradle. From the repository root:
 
-For this branch's AE2S dependencies and Java toolchains, follow the
-[AE2S build instructions](docs/AE2S-COMPATIBILITY.md#源码构建).
+The addon compiler uses Java 25 for the AE2S API and emits Java 8 bytecode.
+RFG also requires a Java 8 toolchain to compile the Minecraft sources.
 
 ```powershell
 ./gradlew build

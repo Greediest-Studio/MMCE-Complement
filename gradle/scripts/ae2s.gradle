@@ -51,10 +51,12 @@ tasks.register('ae2sStorageScriptTest', Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = tasks.named('ae2sTest', Test).get().classpath
     include '**/integration/crafttweaker/StorageScriptAccessTest*.class',
-        '**/integration/crafttweaker/MachineStorageControllerTest*.class'
+        '**/integration/crafttweaker/MachineStorageControllerTest*.class',
+        '**/integration/crafttweaker/StorageItemResizeTest*.class'
     filter {
         includeTestsMatching '*StorageScriptAccessTest'
         includeTestsMatching '*MachineStorageControllerTest'
+        includeTestsMatching '*StorageItemResizeTest'
     }
     useJUnitPlatform()
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
