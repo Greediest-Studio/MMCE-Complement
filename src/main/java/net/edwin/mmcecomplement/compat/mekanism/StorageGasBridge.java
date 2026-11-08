@@ -7,6 +7,16 @@ import net.minecraft.nbt.NBTTagCompound;
 public final class StorageGasBridge {
     private static final String TYPE = "net.edwin.mmcecomplement.compat.mekanism.StorageGasHandler";
     private StorageGasBridge() {}
+    public static boolean resize(Object handler, int slots) { return mutate(handler, "resize", new Class<?>[]{int.class}, slots); }
+    public static boolean setCapacity(Object handler, int amount) { return mutate(handler, "setCapacity", new Class<?>[]{int.class}, amount); }
+    public static boolean setCapacityInSlot(Object handler, int slot, int amount) {
+        return mutate(handler, "setCapacityInSlot", new Class<?>[]{int.class, int.class}, slot, amount);
+    }
+    private static boolean mutate(Object handler, String method, Class<?>[] types, Object... args) {
+        if (handler == null) return false;
+        try { return (Boolean) handler.getClass().getMethod(method, types).invoke(handler, args); }
+        catch (ReflectiveOperationException e) { throw new IllegalStateException("Storage gas capacity change failed", e); }
+    }
     public static void sort(Object handler) {
         if (handler == null) return;
         try {

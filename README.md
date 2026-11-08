@@ -12,6 +12,8 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 
 - [AE2S / Supergiant：CR 0.6.8+ 安装、构建与验收](docs/AE2S-COMPATIBILITY.md)
 - [存储控制器 CraftTweaker API](docs/storage-controller-crafttweaker-zh_cn.md)
+- [多方块存储器：JSON、自动化与动态容量](docs/multiblock-storage-zh_cn.md)
+- [ME 存储访问端口与存储交互总成](docs/ae-storage-access-port-zh_cn.md)
 - [GitHub Wiki（完整中文文档）](https://github.com/Greediest-Studio/MMCE-Complement/wiki)
 - [Wiki — 中文总览](docs/wiki-zh_cn.md)
 - [Wiki — English overview](docs/wiki-en_us.md)
@@ -24,6 +26,7 @@ MMCE Complement 是 Minecraft 1.12.2 的 MMCE 附属模组，面向整合包作�
 
 - Attachment modules with dependencies, conflicts, JEI/HEI pages, parent-chain previews, and a structure export tool.
 - CraftTweaker module conditions and controller queries.
+- Multiblock item/fluid/gas storage, direct pipe and ME interfaces, and per-controller CraftTweaker capacity changes.
 - Thread, overclock, accelerator, and batch hatches.
 - Quadruple and ninefold fluid input/output hatches with optional Mekanism gas support.
 - Data input, input, output, and self-cycle assemblies.

@@ -116,7 +116,7 @@ public class GuiStorage extends GuiContainer {
             drawHoveringText(Arrays.asList(display.name == null
                 ? I18n.format("gui.mmce_complement.storage.empty") : display.name,
                 StorageVolumeFormatter.formatWithUnit(display.amount) + " / "
-                    + StorageVolumeFormatter.formatWithUnit(container.getTankCapacity())), mouseX, mouseY);
+                    + StorageVolumeFormatter.formatWithUnit(container.getTankCapacity(tank))), mouseX, mouseY);
         } else {
             renderHoveredToolTip(mouseX, mouseY);
         }

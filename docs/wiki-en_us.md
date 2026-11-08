@@ -1,8 +1,13 @@
 # MMCE Complement Wiki (English)
 
-This page documents MMCE Complement **1.6.0** for Minecraft 1.12.2.
+This page documents MMCE Complement **1.6.2** for Minecraft 1.12.2.
 
 [中文 Wiki](wiki-zh_cn.md) · [Attachment Modules Guide](attachment-modules-en_us.md)
+
+New storage references: [multiblock storage](multiblock-storage-zh_cn.md),
+[ME and pipe interfaces](ae-storage-access-port-zh_cn.md),
+[storage scripting and live capacity changes](storage-controller-crafttweaker-zh_cn.md),
+and [AE2S compatibility](AE2S-COMPATIBILITY.md) (detailed references in Chinese).
 
 ## About
 
@@ -27,6 +32,43 @@ Required gameplay dependencies are Minecraft Forge, MMCE, and AE2 Extended Life 
 | TOPCE binding display for configurable detector hatches | The One Probe CE |
 
 All registry names use the `mmce_complement:` namespace. When an optional dependency is absent, its related IDs are not registered.
+
+Install one AE branch. AE2S requires Cleanroom 0.6.8+, Java 25 and official AppliedCompatibility 1.0.1.
+Native gas storage uses MekEng / Applied Mekanistics 1.2.1; UEL uses its matching Mekanism Energistics.
+Optional CrazyAE energy/mana integrations have not completed native AE2S acceptance testing.
+
+## Multiblock storage
+
+Set `"variant": "storage"` in the machine JSON and declare
+`"storage": {"slots": 108, "fluid": {"slots": 9, "capacity": 16000}, "gas": {"slots": 9, "capacity": 64000}}`.
+Fluids use mB; gases use Mekanism units and require Mekanism. Omit a tank type to leave it disabled.
+The generated controller path ends in `_storage_controller`; this controller stores contents and never runs recipes.
+
+- `mmce_complement:ae_storage_access_port` exposes the formed storage to ME and opens the installed branch's storage-bus settings GUI.
+- `mmce_complement:storage_interaction_assembly` exposes the same backing storage to pipes, has no GUI and cannot connect to ME cables.
+- `mmce_complement:me_full_exposure_assembly` is a separate network-pulling assembly, not either storage interface above.
+
+Convert an `IMachineController` using `asStorageController()` to obtain
+`mods.modularmachinery.IMachineStorageController`. Check for null and `storageAvailable` first.
+The API supports counts, contents, simulation, insertion/extraction, stable slot IDs and per-machine capacity changes:
+
+```zenscript
+val storage = controller.asStorageController();
+if (storage != null && storage.storageAvailable) {
+    val resized = storage.setMaxItemSlots(108);
+    if (storage.maxFluidSlots > 0) {
+        val tanks = storage.setMaxFluidSlots(18);
+        val capacity = storage.setFluidCapacityInSlot(0, 64000);
+    }
+}
+```
+
+`setMaxGasSlots`, `setGasCapacityInSlot`, `setFluidSlotCapacity` and `setGasSlotCapacity` are also available.
+Counts must be 1–4096; capacities must be positive int values. Changes require a formed server-side machine on the main thread.
+Deleting occupied tail slots or shrinking below current contents returns false and leaves the operation unchanged.
+Overrides persist with the individual controller and do not edit the shared machine definition.
+Bulk capacity setters reset individual overrides and set the default for new tanks.
+Read an individual tank's actual capacity with `getFluidCapacityInSlot` or `getGasCapacityInSlot`.
 
 ## Core hatches and assemblies
 

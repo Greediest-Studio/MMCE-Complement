@@ -14,6 +14,20 @@ public class StorageItemHandler extends ItemStackHandler {
         this.owner = owner;
     }
 
+    /** Retain handler identity for pipes; never remove an occupied slot. */
+    public synchronized boolean resize(int size) {
+        if (size < 1 || size > StorageCapacitySettings.MAX_SLOTS) return false;
+        if (size == stacks.size()) return true;
+        for (int i = size; i < stacks.size(); i++) if (!stacks.get(i).isEmpty()) return false;
+        net.minecraft.util.NonNullList<ItemStack> next = net.minecraft.util.NonNullList.withSize(size, ItemStack.EMPTY);
+        for (int i = 0; i < Math.min(size, stacks.size()); i++) next.set(i, stacks.get(i));
+        stacks = next;
+        onContentsChanged(0);
+        return true;
+    }
+
+    @Override public synchronized int getSlots() { return super.getSlots(); }
+
     /** Serialize all pipe/GUI operations on the shared controller inventory. */
     @Override
     public synchronized ItemStack insertItem(int slot, ItemStack stack,

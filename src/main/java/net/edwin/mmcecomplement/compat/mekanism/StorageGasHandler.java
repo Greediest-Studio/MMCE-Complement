@@ -19,8 +19,8 @@ import java.util.List;
 /** Optional Mekanism gas backend. This class is only loaded when Mekanism is present. */
 public final class StorageGasHandler implements IExtendedGasHandler {
     private final net.minecraft.tileentity.TileEntity owner;
-    private final GasTank[] tanks;
-    private final int capacity;
+    private GasTank[] tanks;
+    private int capacity;
     public StorageGasHandler(net.minecraft.tileentity.TileEntity owner, int slots, int capacity) {
         this.owner = owner; this.capacity = Math.max(1, capacity);
         this.tanks = new GasTank[Math.max(0, slots)];
@@ -28,6 +28,31 @@ public final class StorageGasHandler implements IExtendedGasHandler {
     }
     public synchronized int getSlots() { return tanks.length; }
     public synchronized int getCapacity() { return capacity; }
+    public synchronized int getCapacityInSlot(int slot) { return slot >= 0 && slot < tanks.length ? tanks[slot].getMaxGas() : 0; }
+    public synchronized boolean resize(int slots) {
+        if (slots < 1 || slots > net.edwin.mmcecomplement.variant.StorageCapacitySettings.MAX_SLOTS) return false;
+        if (slots == tanks.length) return true;
+        for (int i = slots; i < tanks.length; i++) if (tanks[i].getStored() > 0) return false;
+        int old = tanks.length;
+        tanks = java.util.Arrays.copyOf(tanks, slots);
+        for (int i = old; i < slots; i++) tanks[i] = new GasTank(capacity);
+        changed();
+        return true;
+    }
+    public synchronized boolean setCapacityInSlot(int slot, int amount) {
+        if (slot < 0 || slot >= tanks.length || amount <= 0 || amount < tanks[slot].getStored()) return false;
+        if (tanks[slot].getMaxGas() != amount) { tanks[slot].setMaxGas(amount); changed(); }
+        return true;
+    }
+    public synchronized boolean setCapacity(int amount) {
+        if (amount <= 0) return false;
+        for (GasTank tank : tanks) if (tank.getStored() > amount) return false;
+        boolean modified = capacity != amount;
+        capacity = amount;
+        for (GasTank tank : tanks) { modified |= tank.getMaxGas() != amount; tank.setMaxGas(amount); }
+        if (modified) changed();
+        return true;
+    }
     public synchronized GasStack getStack(int i) { return i >= 0 && i < tanks.length ? tanks[i].getGas() : null; }
     public synchronized int getAmount(int i) { GasStack s = getStack(i); return s == null ? 0 : s.amount; }
     public synchronized net.minecraft.util.ResourceLocation getTexture(int i) { GasStack stack = getStack(i); return stack == null ? null : stack.getGas().getIcon(); }
@@ -50,16 +75,14 @@ public final class StorageGasHandler implements IExtendedGasHandler {
             matching.amount += stack.amount;
         }
         groups.sort(Comparator.comparing(group -> group.prototype.getGas().getName()));
-        long required = 0;
-        for (GasGroup group : groups) required += (group.amount + capacity - 1L) / capacity;
-        if (required > tanks.length) return;
         GasStack[] sorted = new GasStack[tanks.length];
         int index = 0;
         for (GasGroup group : groups) {
             long remaining = group.amount;
             while (remaining > 0) {
+                if (index >= tanks.length) return;
                 GasStack stack = group.prototype.copy();
-                stack.amount = (int) Math.min(capacity, remaining);
+                stack.amount = (int) Math.min(tanks[index].getMaxGas(), remaining);
                 remaining -= stack.amount;
                 sorted[index++] = stack;
             }
@@ -96,7 +119,7 @@ public final class StorageGasHandler implements IExtendedGasHandler {
                 GasStack stored = tank.getGas();
                 boolean empty = stored == null || stored.amount <= 0;
                 if (pass == 0 ? empty || !stored.isGasEqual(stack) : !empty) continue;
-                int room = capacity - tank.getStored();
+                int room = tank.getMaxGas() - tank.getStored();
                 if (room <= 0) continue;
                 // Mekanism's GasTank adds the full request before clamping.
                 // Bound it first so large requests cannot overflow that sum.
@@ -131,7 +154,7 @@ public final class StorageGasHandler implements IExtendedGasHandler {
     public synchronized int receiveGasInSlot(int slot, GasStack request, boolean doTransfer) {
         if (slot < 0 || slot >= tanks.length || request == null || request.amount <= 0) return 0;
         GasStack portion = request.copy();
-        portion.amount = Math.min(portion.amount, capacity - tanks[slot].getStored());
+        portion.amount = Math.min(portion.amount, tanks[slot].getMaxGas() - tanks[slot].getStored());
         if (portion.amount <= 0) return 0;
         int accepted = tanks[slot].receive(portion, doTransfer);
         if (doTransfer && accepted > 0) changed();
@@ -153,10 +176,38 @@ public final class StorageGasHandler implements IExtendedGasHandler {
     @Override public synchronized boolean canReceiveGas(EnumFacing side, mekanism.api.gas.Gas gas) { return gas != null && receiveGas(side, new GasStack(gas, 1), false) > 0; }
     @Override public synchronized boolean canDrawGas(EnumFacing side, mekanism.api.gas.Gas gas) { for(GasTank t:tanks) if(t.getGas()!=null&&t.getGas().amount>0&&(gas==null||t.getGas().getGas()==gas)) return true; return false; }
     @Override public synchronized GasTankInfo[] getTankInfo() { GasTankInfo[] a=new GasTankInfo[tanks.length]; for(int i=0;i<a.length;i++)a[i]=tanks[i].getInfo(); return a; }
-    public synchronized NBTTagCompound serializeNBT() { NBTTagCompound root=new NBTTagCompound(); NBTTagList list=new NBTTagList(); for(GasTank t:tanks)list.appendTag(t.write(new NBTTagCompound())); root.setTag("Tanks",list); return root; }
-    public synchronized void deserializeNBT(NBTTagCompound root) { if(root==null||!root.hasKey("Tanks",9))return; NBTTagList list=root.getTagList("Tanks",10); for(int i=0;i<tanks.length&&i<list.tagCount();i++)tanks[i].read(list.getCompoundTagAt(i)); }
+    public synchronized NBTTagCompound serializeNBT() {
+        NBTTagCompound root = new NBTTagCompound();
+        NBTTagList list = new NBTTagList();
+        for (GasTank tank : tanks) {
+            NBTTagCompound tag = tank.write(new NBTTagCompound());
+            tag.setInteger("SlotCapacity", tank.getMaxGas());
+            list.appendTag(tag);
+        }
+        root.setTag("Tanks", list);
+        root.setInteger("Slots", tanks.length);
+        root.setInteger("Capacity", capacity);
+        return root;
+    }
+    public synchronized void deserializeNBT(NBTTagCompound root) {
+        if (root == null || !root.hasKey("Tanks", 9)) return;
+        NBTTagList list = root.getTagList("Tanks", 10);
+        int slots = root.hasKey("Slots", 3) ? root.getInteger("Slots") : tanks.length;
+        if (root.getInteger("Capacity") > 0) capacity = root.getInteger("Capacity");
+        if (slots > 0 && slots <= net.edwin.mmcecomplement.variant.StorageCapacitySettings.MAX_SLOTS && slots != tanks.length) {
+            tanks = new GasTank[slots];
+            for (int i = 0; i < slots; i++) tanks[i] = new GasTank(capacity);
+        }
+        for (int i = 0; i < tanks.length; i++) {
+            NBTTagCompound tag = i < list.tagCount() ? list.getCompoundTagAt(i) : new NBTTagCompound();
+            tanks[i].setGas(null);
+            tanks[i].read(tag);
+            int saved = tag.getInteger("SlotCapacity");
+            tanks[i].setMaxGas(Math.max(tanks[i].getStored(), saved > 0 ? saved : capacity));
+        }
+    }
     /** Handles the Mekanism gas container carried by the GUI cursor. */
-    public boolean interact(EntityPlayer player, int index) {
+    public synchronized boolean interact(EntityPlayer player, int index) {
         if (index < 0 || index >= tanks.length) return false;
         ItemStack held = player.inventory.getItemStack();
         if (held.isEmpty() || !GasUtils.isGasItem(held)) return false;

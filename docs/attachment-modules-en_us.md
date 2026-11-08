@@ -107,6 +107,7 @@ The following example demonstrates the default dependency, a dependency chain, a
 | `depends-on` | string array | No | `["main"]` | Every parent module that must be active before this module can become active. Use `[]` for no parent in the module graph. |
 | `conflicts-with` | string array | No | `[]` | Module IDs incompatible with this module. Conflicts are treated as bidirectional at runtime. |
 | `as-upgrade` | boolean | No | `true` | Whether an active module supplies an MMCE upgrade with the same name as its `id`. |
+| `model` | string | No | Derived name | Registered MMCE model name used in separate rendering mode. |
 
 Important rules:
 
@@ -115,6 +116,15 @@ Important rules:
 - Duplicate IDs, unknown references, empty IDs, self-dependencies, self-conflicts, and dependency cycles cause a machine JSON loading error.
 - Duplicate relationships in one array are de-duplicated, but configurations should not rely on that behavior.
 - Only the fields in the table should currently be used on a module object. A module does not inherit all top-level settings accepted by a complete machine JSON.
+
+## Custom models
+
+Set the top-level `"attachment-module-model"` to `"none"` (normal MMCE component rendering),
+`"hide"` (hide formed components and use the main model), or `"separate"`
+(hide formed components and render models for the machine and active modules separately).
+In separate mode a module's `model` names a model already registered with MMCE;
+without it, lookup uses `<machine_path>__module__<module_id>`.
+Models share the controller origin and facing. These settings only affect rendering, not component collection or matching.
 
 ## Coordinates, rotation, and overlapping structures
 

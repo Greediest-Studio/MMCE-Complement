@@ -26,6 +26,22 @@ public interface StorageController {
     int mmceComplement$getGasStorageCapacity();
     Object mmceComplement$getGasStorage();
 
+    default StorageCapacitySettings mmceComplement$getCapacitySettings() { return null; }
+
+    default int mmceComplement$getFluidCapacityInSlot(int slot) {
+        if (slot < 0 || slot >= mmceComplement$getFluidStorageSlots() || !mmceComplement$hasFluidStorage()) return 0;
+        StorageCapacitySettings settings = mmceComplement$getCapacitySettings();
+        return settings == null ? mmceComplement$getFluidStorageCapacity()
+            : settings.capacity("Fluid", slot, mmceComplement$getFluidStorageCapacity());
+    }
+
+    default int mmceComplement$getGasCapacityInSlot(int slot) {
+        if (slot < 0 || slot >= mmceComplement$getGasStorageSlots() || !mmceComplement$hasGasStorage()) return 0;
+        StorageCapacitySettings settings = mmceComplement$getCapacitySettings();
+        return settings == null ? mmceComplement$getGasStorageCapacity()
+            : settings.capacity("Gas", slot, mmceComplement$getGasStorageCapacity());
+    }
+
     /** Monotonic marker incremented whenever any backing storage changes. */
     default long mmceComplement$getStorageChangeVersion() { return 0L; }
 

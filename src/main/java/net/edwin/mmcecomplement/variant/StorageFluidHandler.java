@@ -16,19 +16,50 @@ import java.util.List;
 /** Independent fluid tanks used by a storage controller. */
 public class StorageFluidHandler implements IFluidHandler {
     private final TileEntity owner;
-    private final FluidTank[] tanks;
-    private final int capacity;
+    private FluidTank[] tanks;
+    private int capacity;
 
     public StorageFluidHandler(TileEntity owner, int slots, int capacity) {
         this.owner = owner;
         this.capacity = Math.max(1, capacity);
         this.tanks = new FluidTank[Math.max(0, slots)];
-        for (int i = 0; i < tanks.length; i++) {
-            final StorageFluidHandler self = this;
-            tanks[i] = new FluidTank(this.capacity) {
-                @Override protected void onContentsChanged() { self.changed(); }
-            };
+        for (int i = 0; i < tanks.length; i++) tanks[i] = createTank(this.capacity);
+    }
+
+    private FluidTank createTank(int amount) {
+        return new FluidTank(amount) {
+            @Override protected void onContentsChanged() { changed(); }
+        };
+    }
+
+    public synchronized boolean resize(int slots) {
+        if (slots < 1 || slots > StorageCapacitySettings.MAX_SLOTS) return false;
+        if (slots == tanks.length) return true;
+        for (int i = slots; i < tanks.length; i++) if (tanks[i].getFluidAmount() > 0) return false;
+        int old = tanks.length;
+        tanks = java.util.Arrays.copyOf(tanks, slots);
+        for (int i = old; i < slots; i++) tanks[i] = createTank(capacity);
+        changed();
+        return true;
+    }
+
+    public synchronized boolean setCapacityInSlot(int slot, int amount) {
+        if (slot < 0 || slot >= tanks.length || amount <= 0 || amount < tanks[slot].getFluidAmount()) return false;
+        if (tanks[slot].getCapacity() != amount) { tanks[slot].setCapacity(amount); changed(); }
+        return true;
+    }
+
+    public synchronized boolean setCapacity(int amount) {
+        if (amount <= 0) return false;
+        for (FluidTank tank : tanks) if (tank.getFluidAmount() > amount) return false;
+        boolean modified = capacity != amount;
+        capacity = amount;
+        for (FluidTank tank : tanks) {
+            modified |= tank.getCapacity() != amount;
+            tank.setCapacity(amount);
         }
+        if (modified) changed();
+        return true;
     }
 
     private void changed() {
@@ -60,17 +91,16 @@ public class StorageFluidHandler implements IFluidHandler {
         }
         groups.sort(Comparator.comparing((FluidGroup group) -> group.prototype.getFluid().getName())
             .thenComparing(group -> group.prototype.tag == null ? "" : group.prototype.tag.toString()));
-        long required = 0;
-        for (FluidGroup group : groups) required += (group.amount + capacity - 1L) / capacity;
-        // Do not discard malformed/over-capacity stock from old NBT.
-        if (required > tanks.length) return;
         FluidStack[] sorted = new FluidStack[tanks.length];
         int index = 0;
         for (FluidGroup group : groups) {
             long remaining = group.amount;
             while (remaining > 0) {
+                // Variable-capacity tanks may not fit the requested sort order.
+                // Build the entire plan before touching any live contents.
+                if (index >= tanks.length) return;
                 FluidStack stack = group.prototype.copy();
-                stack.amount = (int) Math.min(capacity, remaining);
+                stack.amount = (int) Math.min(tanks[index].getCapacity(), remaining);
                 remaining -= stack.amount;
                 sorted[index++] = stack;
             }
@@ -92,25 +122,26 @@ public class StorageFluidHandler implements IFluidHandler {
         private long amount;
         private FluidGroup(FluidStack prototype) { this.prototype = prototype; }
     }
-    public IFluidHandler getTankInteractionHandler(final int index) {
-        final FluidTank tank = getTank(index);
-        if (tank == null) return null;
+    public synchronized IFluidHandler getTankInteractionHandler(final int index) {
+        if (getTank(index) == null) return null;
         final StorageFluidHandler owner = this;
         return new IFluidHandler() {
             @Override public IFluidTankProperties[] getTankProperties() {
                 synchronized (owner) {
+                FluidTank tank = getTank(index);
+                if (tank == null) return new IFluidTankProperties[0];
                 FluidStack stack = tank.getFluid();
-                return new IFluidTankProperties[] { new FluidTankProperties(stack == null ? null : stack.copy(), capacity, true, true) };
+                return new IFluidTankProperties[] { new FluidTankProperties(stack == null ? null : stack.copy(), tank.getCapacity(), true, true) };
                 }
             }
             @Override public int fill(FluidStack resource, boolean doFill) {
-                synchronized (owner) { return tank.fill(resource, doFill); }
+                synchronized (owner) { FluidTank tank = getTank(index); return tank == null ? 0 : tank.fill(resource, doFill); }
             }
             @Override public FluidStack drain(FluidStack resource, boolean doDrain) {
-                synchronized (owner) { return tank.drain(resource, doDrain); }
+                synchronized (owner) { FluidTank tank = getTank(index); return tank == null ? null : tank.drain(resource, doDrain); }
             }
             @Override public FluidStack drain(int maxDrain, boolean doDrain) {
-                synchronized (owner) { return tank.drain(maxDrain, doDrain); }
+                synchronized (owner) { FluidTank tank = getTank(index); return tank == null ? null : tank.drain(maxDrain, doDrain); }
             }
         };
     }
@@ -118,7 +149,7 @@ public class StorageFluidHandler implements IFluidHandler {
         IFluidTankProperties[] result = new IFluidTankProperties[tanks.length];
         for (int i = 0; i < tanks.length; i++) {
             FluidStack stack = tanks[i].getFluid();
-            result[i] = new FluidTankProperties(stack == null ? null : stack.copy(), capacity, true, true);
+            result[i] = new FluidTankProperties(stack == null ? null : stack.copy(), tanks[i].getCapacity(), true, true);
         }
         return result;
     }
@@ -158,13 +189,30 @@ public class StorageFluidHandler implements IFluidHandler {
     public synchronized NBTTagCompound serializeNBT() {
         NBTTagCompound root = new NBTTagCompound();
         NBTTagList list = new NBTTagList();
-        for (FluidTank tank : tanks) list.appendTag(tank.writeToNBT(new NBTTagCompound()));
+        for (FluidTank tank : tanks) {
+            NBTTagCompound tag = tank.writeToNBT(new NBTTagCompound());
+            tag.setInteger("SlotCapacity", tank.getCapacity());
+            list.appendTag(tag);
+        }
+        root.setInteger("Slots", tanks.length);
+        root.setInteger("Capacity", capacity);
         root.setTag("Tanks", list);
         return root;
     }
     public synchronized void deserializeNBT(NBTTagCompound root) {
         if (root == null || !root.hasKey("Tanks", 9)) return;
         NBTTagList list = root.getTagList("Tanks", 10);
-        for (int i = 0; i < tanks.length && i < list.tagCount(); i++) tanks[i].readFromNBT(list.getCompoundTagAt(i));
+        int slots = root.hasKey("Slots", 3) ? root.getInteger("Slots") : tanks.length;
+        if (slots > 0 && slots <= StorageCapacitySettings.MAX_SLOTS && slots != tanks.length) {
+            tanks = new FluidTank[slots];
+            for (int i = 0; i < slots; i++) tanks[i] = createTank(capacity);
+        }
+        if (root.getInteger("Capacity") > 0) capacity = root.getInteger("Capacity");
+        for (int i = 0; i < tanks.length; i++) {
+            NBTTagCompound tag = i < list.tagCount() ? list.getCompoundTagAt(i) : new NBTTagCompound();
+            tanks[i].readFromNBT(tag);
+            int saved = tag.getInteger("SlotCapacity");
+            tanks[i].setCapacity(Math.max(tanks[i].getFluidAmount(), saved > 0 ? saved : capacity));
+        }
     }
 }

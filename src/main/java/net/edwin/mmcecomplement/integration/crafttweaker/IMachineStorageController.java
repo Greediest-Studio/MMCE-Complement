@@ -7,6 +7,7 @@ import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import net.edwin.mmcecomplement.variant.StorageController;
+import net.edwin.mmcecomplement.variant.StorageResizing;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
@@ -53,12 +54,49 @@ public interface IMachineStorageController extends IMachineController {
 
     @ZenMethod
     default int getFluidCapacityInSlot(int slot) {
-        return slot >= 0 && slot < getMaxFluidSlots() ? getFluidSlotCapacity() : 0;
+        StorageController storage = StorageScriptAccess.storage(this);
+        return storage == null ? 0 : storage.mmceComplement$getFluidCapacityInSlot(slot);
     }
 
     @ZenMethod
     default int getGasCapacityInSlot(int slot) {
-        return slot >= 0 && slot < getMaxGasSlots() ? getGasSlotCapacity() : 0;
+        StorageController storage = StorageScriptAccess.storage(this);
+        return storage == null ? 0 : storage.mmceComplement$getGasCapacityInSlot(slot);
+    }
+
+    @ZenMethod
+    default boolean setMaxItemSlots(int slots) {
+        return StorageResizing.slots(StorageScriptAccess.available(this), "Item", slots);
+    }
+
+    @ZenMethod
+    default boolean setMaxFluidSlots(int slots) {
+        return StorageResizing.slots(StorageScriptAccess.available(this), "Fluid", slots);
+    }
+
+    @ZenMethod
+    default boolean setMaxGasSlots(int slots) {
+        return StorageResizing.slots(StorageScriptAccess.available(this), "Gas", slots);
+    }
+
+    @ZenMethod
+    default boolean setFluidCapacityInSlot(int slot, int capacity) {
+        return slot >= 0 && StorageResizing.capacity(StorageScriptAccess.available(this), "Fluid", slot, capacity);
+    }
+
+    @ZenMethod
+    default boolean setGasCapacityInSlot(int slot, int capacity) {
+        return slot >= 0 && StorageResizing.capacity(StorageScriptAccess.available(this), "Gas", slot, capacity);
+    }
+
+    @ZenMethod
+    default boolean setFluidSlotCapacity(int capacity) {
+        return StorageResizing.capacity(StorageScriptAccess.available(this), "Fluid", -1, capacity);
+    }
+
+    @ZenMethod
+    default boolean setGasSlotCapacity(int capacity) {
+        return StorageResizing.capacity(StorageScriptAccess.available(this), "Gas", -1, capacity);
     }
 
     @ZenMethod

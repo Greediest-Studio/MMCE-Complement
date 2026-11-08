@@ -68,6 +68,22 @@ class StorageMEGasInventoryTest {
             assertEquals(4294967294L, largeInventory.pollChanges().get(0).getStackSize());
             assertTrue(largeInventory.pollChanges().isEmpty());
             assertEquals(2147483647L, largeInventory.extractItems(huge, Actionable.MODULATE, null).getStackSize());
+
+            StorageGasHandler resized = new StorageGasHandler(new TileEntity() { }, 1, 1000);
+            StorageMEGasInventory existingPort = new StorageMEGasInventory(GasStorageChannel.INSTANCE, () -> resized);
+            assertTrue(resized.resize(2));
+            assertTrue(resized.setCapacityInSlot(1, 4000));
+            IAEGasStack fiveThousand = request.copy().setStackSize(5000);
+            assertNull(existingPort.injectItems(fiveThousand, Actionable.SIMULATE, null));
+            assertEquals(0, resized.getAmount(0));
+            assertNull(existingPort.injectItems(fiveThousand, Actionable.MODULATE, null));
+            assertEquals(5000, existingPort.pollChanges().get(0).getStackSize());
+            assertFalse(resized.resize(1));
+            assertFalse(resized.setCapacityInSlot(1, 3999));
+            assertEquals(5000, existingPort.extractItems(fiveThousand, Actionable.MODULATE, null).getStackSize());
+            assertEquals(-5000, existingPort.pollChanges().get(0).getStackSize());
+            assertTrue(resized.resize(1));
+            assertTrue(existingPort.pollChanges().isEmpty());
         }
     }
 }

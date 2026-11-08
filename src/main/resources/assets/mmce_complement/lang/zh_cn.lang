@@ -346,8 +346,8 @@ gui.mmce_complement.storage.gases=气体
 
 status.mmce_complement.storage.full=内部空间已满
 
-gui.mmce_complement.storage.fluid_capacity=流体：%s 格，每格 %s
-gui.mmce_complement.storage.gas_capacity=气体：%s 格，每格 %s
+gui.mmce_complement.storage.fluid_capacity=流体：%s 格，默认每格 %s
+gui.mmce_complement.storage.gas_capacity=气体：%s 格，默认每格 %s
 
 gui.mmce_complement.storage.empty=空
 gui.mmce_complement.storage.unformed=结构未成型

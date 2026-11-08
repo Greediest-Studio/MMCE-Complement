@@ -11,11 +11,22 @@ AppliedCompatibility 同时注册新旧 AE ID 时也只注册一次，不会启�
 外部管道/脚本改动继续由控制器的变更标记触发刷新。未安装原生 MekEng 时不加载气体适配类，
 不影响物品、流体与 CraftTweaker 接口。存储交互总成仍为管道容器，不接入 ME 导线。
 
+动态容量方法支持按单台已成型存储器设置三类槽数、流体/气体单槽及批量默认容量，
+与 UEL 共用后端、持久化和脚本契约。缩容会拒绝删除非空槽或截断内容；说明见
+[存储控制器 CraftTweaker API](storage-controller-crafttweaker-zh_cn.md)。
+
 本次 Gradle 验证包括 UEL 回归、无原生 MekEng 的 AE2S 回归、AE2S 共享脚本测试，
-以及 7 项使用真实原生气体键和存储总线监视器的气体测试。
+以及 8 项使用真实原生气体键和存储总线监视器的气体测试。
+本次 `build reobfRuntimeHarnessJar` 共 203 项测试：202 通过、1 项按原条件跳过。
+另以 `test -Ptest_ae_storage_gas --tests '*StorageMEGasInventoryTest'` 单独通过了该可选 UEL 气体测试，
+包括既有 UEL 端口读取动态槽数、单槽容量、模拟存入与准确数量通知。
 这些测试不替代合并后安装包的游戏内验收。
 
-本分支基于 YDHusky/MMCE-Complement 的 e293441a08b096f35624b26bdc18d8e60f16b9df，
+## 历史 1.6.1 安装与验收记录
+
+以下记录来自合并的上游 PR，版本、哈希和游戏验收均按原产物保留。当前安装包为 1.6.2。
+
+该适配分支基于 YDHusky/MMCE-Complement 的 e293441a08b096f35624b26bdc18d8e60f16b9df，
 已检查作者的 AE2S 初步适配提交 f98d33366476c6c9898b68908f8162e971fd3dec。
 保留 **MMCE Complement** 名称、mmce_complement ID、net.edwin 包名、版本 1.6.1
 及原有作者信息，继续使用原 RetroFuturaGradle 构建。

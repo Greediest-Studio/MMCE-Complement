@@ -104,6 +104,12 @@ public abstract class MixinTileMultiblockMachineController
     @Unique private volatile long mmceComplement$storageChangeVersion;
     @Unique private transient NBTTagCompound mmceComplement$pendingFluidNBT;
     @Unique private transient NBTTagCompound mmceComplement$pendingGasNBT;
+    @Unique private final net.edwin.mmcecomplement.variant.StorageCapacitySettings mmceComplement$capacitySettings =
+        new net.edwin.mmcecomplement.variant.StorageCapacitySettings();
+
+    @Override public net.edwin.mmcecomplement.variant.StorageCapacitySettings mmceComplement$getCapacitySettings() {
+        return mmceComplement$capacitySettings;
+    }
 
     @Unique
     private static final String mmceComplement$OVERCLOCK_ENERGY_MODIFIER =
@@ -715,6 +721,7 @@ public abstract class MixinTileMultiblockMachineController
 
     @Inject(method = "writeCustomNBT", at = @At("RETURN"))
     private void mmceComplement$writeAttachmentModules(NBTTagCompound compound, CallbackInfo ci) {
+        compound.setTag("mmceComplementStorageCapacity", mmceComplement$capacitySettings.serializeNBT());
         NBTTagList list = new NBTTagList();
         for (String id : mmceComplement$activeModules) {
             list.appendTag(new NBTTagString(id));
@@ -738,6 +745,7 @@ public abstract class MixinTileMultiblockMachineController
 
     @Inject(method = "readCustomNBT", at = @At("RETURN"))
     private void mmceComplement$readAttachmentModules(NBTTagCompound compound, CallbackInfo ci) {
+        mmceComplement$capacitySettings.deserializeNBT(compound.getCompoundTag("mmceComplementStorageCapacity"));
         LinkedHashSet<String> saved = new LinkedHashSet<>();
         NBTTagList list = compound.getTagList(mmceComplement$NBT_MODULES, 8);
         for (int i = 0; i < list.tagCount(); i++) {
@@ -813,8 +821,8 @@ public abstract class MixinTileMultiblockMachineController
                 .mmceComplement$isStorageVariant()) {
             return 0;
         }
-        return Math.max(0, ((StorageMachine) (Object) machine)
-            .mmceComplement$getStorageSlots());
+        return Math.max(0, mmceComplement$capacitySettings.slots("Item", ((StorageMachine) (Object) machine)
+            .mmceComplement$getStorageSlots()));
     }
 
     @Unique
@@ -861,8 +869,8 @@ public abstract class MixinTileMultiblockMachineController
     }
 
     @Override public boolean mmceComplement$hasFluidStorage() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine && ((StorageMachine)(Object)m).mmceComplement$hasFluidStorage(); }
-    @Override public int mmceComplement$getFluidStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getFluidStorageSlots() : 0; }
-    @Override public int mmceComplement$getFluidStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getFluidStorageCapacity() : 0; }
+    @Override public int mmceComplement$getFluidStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? mmceComplement$capacitySettings.slots("Fluid", ((StorageMachine)(Object)m).mmceComplement$getFluidStorageSlots()) : 0; }
+    @Override public int mmceComplement$getFluidStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? mmceComplement$capacitySettings.capacity("Fluid", ((StorageMachine)(Object)m).mmceComplement$getFluidStorageCapacity()) : 0; }
     @Override public IFluidHandler mmceComplement$getFluidStorage() {
         if (!mmceComplement$hasFluidStorage()) return null;
         int slots=mmceComplement$getFluidStorageSlots(), cap=mmceComplement$getFluidStorageCapacity();
@@ -874,8 +882,8 @@ public abstract class MixinTileMultiblockMachineController
     }
     @Override public IFluidHandler mmceComplement$getFluidTank(int index) { mmceComplement$getFluidStorage(); return mmceComplement$fluidStorage==null ? null : mmceComplement$fluidStorage.getTankInteractionHandler(index); }
     @Override public boolean mmceComplement$hasGasStorage() { DynamicMachine m=mmceComplement$getStorageMachine(); return CompatMods.isMekanismCompatLoaded() && m instanceof StorageMachine && ((StorageMachine)(Object)m).mmceComplement$hasGasStorage(); }
-    @Override public int mmceComplement$getGasStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getGasStorageSlots() : 0; }
-    @Override public int mmceComplement$getGasStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? ((StorageMachine)(Object)m).mmceComplement$getGasStorageCapacity() : 0; }
+    @Override public int mmceComplement$getGasStorageSlots() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? mmceComplement$capacitySettings.slots("Gas", ((StorageMachine)(Object)m).mmceComplement$getGasStorageSlots()) : 0; }
+    @Override public int mmceComplement$getGasStorageCapacity() { DynamicMachine m=mmceComplement$getStorageMachine(); return m instanceof StorageMachine ? mmceComplement$capacitySettings.capacity("Gas", ((StorageMachine)(Object)m).mmceComplement$getGasStorageCapacity()) : 0; }
     @Override public Object mmceComplement$getGasStorage() {
         if (!mmceComplement$hasGasStorage()) return null;
         if (mmceComplement$gasStorage==null) { mmceComplement$gasStorage=StorageGasBridge.create((TileEntity)(Object)this,mmceComplement$getGasStorageSlots(),mmceComplement$getGasStorageCapacity()); if(mmceComplement$pendingGasNBT!=null){StorageGasBridge.deserialize(mmceComplement$gasStorage,mmceComplement$pendingGasNBT);mmceComplement$pendingGasNBT=null;} }

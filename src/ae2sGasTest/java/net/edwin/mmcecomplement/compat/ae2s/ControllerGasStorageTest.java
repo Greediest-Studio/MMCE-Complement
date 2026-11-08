@@ -204,4 +204,20 @@ class ControllerGasStorageTest {
             executor.shutdownNow();
         }
     }
+
+    @Test void existingNativePortsObserveLiveTankCountsAndIndividualCapacities() {
+        Fixture f = new Fixture(1, 1000);
+        ControllerStorage second = new ControllerStorage(f.binding::get);
+        assertTrue(f.tanks.resize(2));
+        assertTrue(f.tanks.setCapacityInSlot(1, 4000));
+        assertEquals(5000, f.storage.insert(H, 6000, Actionable.SIMULATE, null));
+        assertEquals(5000, second.insert(H, 6000, Actionable.MODULATE, null));
+        assertEquals(5000, f.count(H));
+        assertFalse(f.tanks.resize(1));
+        assertFalse(f.tanks.setCapacityInSlot(1, 3999));
+        assertEquals(5000, f.storage.extract(H, 5000, Actionable.MODULATE, null));
+        assertTrue(f.tanks.resize(1));
+        assertEquals(0, f.count(H));
+        assertEquals(1000, second.insert(H, 6000, Actionable.MODULATE, null));
+    }
 }

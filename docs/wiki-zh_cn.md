@@ -1,8 +1,11 @@
 # MMCE Complement Wiki（中文）
 
-当前文档对应 MMCE Complement **1.6.0**，运行环境为 Minecraft 1.12.2。
+当前文档对应 MMCE Complement **1.6.2**，运行环境为 Minecraft 1.12.2。
 
 [English Wiki](wiki-en_us.md) · [附属模块指南](attachment-modules-zh_cn.md)
+
+新增内容：[多方块存储器](multiblock-storage-zh_cn.md) · [存储访问接口](ae-storage-access-port-zh_cn.md) ·
+[存储控制器 CraftTweaker API（含动态容量）](storage-controller-crafttweaker-zh_cn.md) · [AE2S 兼容说明](AE2S-COMPATIBILITY.md)。
 
 ## 项目简介
 
@@ -11,6 +14,10 @@ MMCE Complement 是 [Modular Machinery Community Edition（MMCE）](https://www.
 ## 安装与可选依赖
 
 必需的内容模组依赖为 Minecraft Forge、MMCE 和 AE2 Extended Life 或 Applied Energistics 2 - Supergiant (AE2S)；MixinBooter 仍是必需的技术加载器。其他兼容功能对本附属模组均为可选，只有同时检测到对应模组及所需 API 类时才会注册。特定 MMCE 版本自身仍可能传递依赖 GeckoLib，但 MMCE Complement 不再把它声明为自己的强依赖。
+
+AE2UEL 与 AE2S 二选一。AE2S 环境使用 Cleanroom 0.6.8+、Java 25 和官方 AppliedCompatibility 1.0.1；
+ME 气体使用原生 MekEng / Applied Mekanistics 1.2.1，UEL 则使用对应的 Mekanism Energistics。
+CrazyAE 能量/魔力等可选组合的原生 AE2S 支持不在已验收范围内，不能仅凭注册成功判断可用。
 
 | 功能 | 额外可选依赖 |
 | --- | --- |

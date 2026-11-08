@@ -75,6 +75,10 @@ public class ContainerStorage extends Container {
         return local < getVisibleTankCount() ? page * COLUMNS + local : -1;
     }
     public int getTankCapacity() { return mode == MODE_FLUIDS ? (storage == null ? 0 : storage.mmceComplement$getFluidStorageCapacity()) : mode == MODE_GASES ? (storage == null ? 0 : storage.mmceComplement$getGasStorageCapacity()) : 0; }
+    public int getTankCapacity(int index) {
+        return storage == null ? 0 : mode == MODE_FLUIDS ? storage.mmceComplement$getFluidCapacityInSlot(index)
+            : mode == MODE_GASES ? storage.mmceComplement$getGasCapacityInSlot(index) : 0;
+    }
     public IFluidHandler getFluidTank(int index) { return storage == null ? null : storage.mmceComplement$getFluidTank(index); }
     public Object getGasStorage() { return storage == null ? null : storage.mmceComplement$getGasStorage(); }
     public int getVisibleSlotCount() {
