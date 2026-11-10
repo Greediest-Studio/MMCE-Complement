@@ -1,5 +1,6 @@
 tile.mmce_complement.flux_input_hatch.name=无线通量网络输入仓
 tile.mmce_complement.flux_output_hatch.name=无线通量网络输出仓
+gui.mmce_complement.flux.chunk_loading_disabled=该服务器已禁止区块加载
 tile.mmce_complement.me_energy_input_bus.name=ME机械能源输入总线
 tile.mmce_complement.me_energy_output_bus.name=ME机械能源输出总线
 tile.mmce_complement.me_mana_input_bus.name=ME机械魔力输入总线

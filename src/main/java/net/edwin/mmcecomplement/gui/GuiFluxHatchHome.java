@@ -117,6 +117,11 @@ public class GuiFluxHatchHome extends GuiTabCore {
         fontRenderer.drawString(FluxTranslate.SURGE_MODE.t(), 20, 120, color);
         fontRenderer.drawString(FluxTranslate.DISABLE_LIMIT.t(), 20, 132, color);
         fontRenderer.drawString(FluxTranslate.CHUNK_LOADING.t(), 20, 144, color);
+        if (!hatch.isChunkLoadingAllowed()) {
+            String warning = I18n.format("gui.mmce_complement.flux.chunk_loading_disabled");
+            fontRenderer.drawString(warning,
+                88 - fontRenderer.getStringWidth(warning) / 2, 157, 0xFFFF5555);
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 tile.mmce_complement.flux_input_hatch.name=Wireless Flux Input Hatch
 tile.mmce_complement.flux_output_hatch.name=Wireless Flux Output Hatch
+gui.mmce_complement.flux.chunk_loading_disabled=Server disabled chunk loading
 tile.mmce_complement.me_energy_input_bus.name=ME Mechanical Energy Input Bus
 tile.mmce_complement.me_energy_output_bus.name=ME Mechanical Energy Output Bus
 tile.mmce_complement.me_mana_input_bus.name=ME Mechanical Mana Input Bus

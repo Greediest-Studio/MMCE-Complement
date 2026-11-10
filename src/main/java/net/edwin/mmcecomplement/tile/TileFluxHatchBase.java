@@ -17,6 +17,7 @@ import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.utils.Coord4D;
 import sonar.fluxnetworks.api.utils.NBTType;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
+import sonar.fluxnetworks.FluxConfig;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -58,6 +59,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     protected boolean chunkLoaded = true;
     protected boolean chunkLoadingRequested = false;
+    protected boolean serverChunkLoadingAllowed = true;
 
     // ---- Subclass hooks ------------------------------------------------
 
@@ -85,6 +87,12 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     public void update() {
         if (world == null || world.isRemote) {
             return;
+        }
+        boolean chunkLoadingAllowed = FluxConfig.enableChunkLoading;
+        if (serverChunkLoadingAllowed != chunkLoadingAllowed) {
+            serverChunkLoadingAllowed = chunkLoadingAllowed;
+            markDirty();
+            markForUpdateSync();
         }
         if (networkID > 0 && (network == null || network.isInvalid())) {
             IFluxNetwork net = FluxNetworkCache.instance.getNetwork(networkID);
@@ -135,6 +143,8 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         disableLimit = !nbt.hasKey("disableLimit") || nbt.getBoolean("disableLimit");
         surgeMode = nbt.getBoolean("surgeMode");
         chunkLoadingRequested = nbt.getBoolean("chunkLoading");
+        serverChunkLoadingAllowed = nbt.hasKey("serverChunkLoadingAllowed")
+            ? nbt.getBoolean("serverChunkLoadingAllowed") : FluxConfig.enableChunkLoading;
         folderID = nbt.hasKey("folderID") ? nbt.getInteger("folderID") : -1;
         customName = nbt.getString("customName");
         buffer.set(nbt.getLong("buffer"));
@@ -159,6 +169,8 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
         nbt.setLong("fnChange", lastCycleChange);
         nbt.setBoolean("disableLimit", disableLimit);
         nbt.setBoolean("chunkLoading", chunkLoadingRequested);
+        nbt.setBoolean("serverChunkLoadingAllowed", world == null || !world.isRemote
+            ? FluxConfig.enableChunkLoading : serverChunkLoadingAllowed);
         nbt.setBoolean("surgeMode", surgeMode);
         nbt.setInteger("folderID", folderID);
         nbt.setString("customName", customName);
@@ -234,7 +246,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
 
     @Override
     public boolean isForcedLoading() {
-        return false;
+        return chunkLoadingRequested && FluxConfig.enableChunkLoading;
     }
 
     @Override
@@ -325,12 +337,20 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     }
 
     public void setChunkLoadingRequested(boolean v) {
-        this.chunkLoadingRequested = v;
-        markDirty();
+        if (chunkLoadingRequested != v) {
+            chunkLoadingRequested = v;
+            markDirty();
+        }
     }
 
     public boolean isChunkLoadingRequested() {
         return chunkLoadingRequested;
+    }
+
+    /** The server's FN policy, synchronized through this tile's update NBT. */
+    public boolean isChunkLoadingAllowed() {
+        return world == null || !world.isRemote
+            ? FluxConfig.enableChunkLoading : serverChunkLoadingAllowed;
     }
 
     @Override
