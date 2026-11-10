@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
+import sonar.fluxnetworks.FluxConfig;
 
 /** Flux packet actions isolated from the always-loaded network entry point. */
 public final class FluxNetworkCompat {
@@ -63,7 +64,9 @@ public final class FluxNetworkCompat {
                 hatch.setDisableLimitRaw(nbt.getBoolean("v"));
                 break;
             case NetworkHandlerMMCE.FIELD_CHUNK_LOAD:
-                hatch.setChunkLoadingRequested(nbt.getBoolean("v"));
+                boolean requested = nbt.getBoolean("v");
+                if (requested && !FluxConfig.enableChunkLoading) return false;
+                hatch.setChunkLoadingRequested(requested);
                 break;
             case NetworkHandlerMMCE.FIELD_BUFFER_CAP:
                 hatch.setBufferCapacityRaw(nbt.getLong("v"));

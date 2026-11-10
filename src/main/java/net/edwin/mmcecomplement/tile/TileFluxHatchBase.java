@@ -337,6 +337,7 @@ public abstract class TileFluxHatchBase extends TileColorableMachineComponent
     }
 
     public void setChunkLoadingRequested(boolean v) {
+        v = v && FluxConfig.enableChunkLoading;
         if (chunkLoadingRequested != v) {
             chunkLoadingRequested = v;
             markDirty();

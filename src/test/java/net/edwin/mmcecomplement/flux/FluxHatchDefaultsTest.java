@@ -69,6 +69,9 @@ class FluxHatchDefaultsTest {
             assertFalse(clientView.isChunkLoadingAllowed());
 
             input.setChunkLoadingRequested(false);
+            input.setChunkLoadingRequested(true);
+            assertFalse(input.isChunkLoadingRequested());
+            input.setChunkLoadingRequested(false);
             assertFalse(input.isForcedLoading());
         } finally {
             FluxConfig.enableChunkLoading = previous;

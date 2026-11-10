@@ -39,6 +39,7 @@ public class GuiFluxHatchHome extends GuiTabCore {
     public SlidedSwitchButton chunkLoad;
 
     private int timer;
+    private boolean closeRejectedChunkLoadSwitch;
 
     public GuiFluxHatchHome(EntityPlayer player, TileFluxHatchBase hatch) {
         super(player, hatch);
@@ -92,7 +93,8 @@ public class GuiFluxHatchHome extends GuiTabCore {
         switches.add(surge);
         switches.add(disableLimit);
 
-        chunkLoad = new SlidedSwitchButton(140, 144, 3, guiLeft, guiTop, hatch.isChunkLoadingRequested());
+        chunkLoad = new SlidedSwitchButton(140, 144, 3, guiLeft, guiTop,
+            hatch.isChunkLoadingRequested() && hatch.isChunkLoadingAllowed());
         switches.add(chunkLoad);
 
         textBoxes.add(fluxName);
@@ -121,6 +123,10 @@ public class GuiFluxHatchHome extends GuiTabCore {
             String warning = I18n.format("gui.mmce_complement.flux.chunk_loading_disabled");
             fontRenderer.drawString(warning,
                 88 - fontRenderer.getStringWidth(warning) / 2, 157, 0xFFFF5555);
+        }
+        if (closeRejectedChunkLoadSwitch && chunkLoad != null) {
+            closeRejectedChunkLoadSwitch = false;
+            if (chunkLoad.slideControl) chunkLoad.switchButton();
         }
     }
 
@@ -226,6 +232,10 @@ public class GuiFluxHatchHome extends GuiTabCore {
         } else if (sw == disableLimit) {
             send(NetworkHandlerMMCE.FIELD_DISABLE_LIMIT, t);
         } else if (sw == chunkLoad) {
+            if (sw.slideControl && !hatch.isChunkLoadingAllowed()) {
+                closeRejectedChunkLoadSwitch = true;
+                return;
+            }
             send(NetworkHandlerMMCE.FIELD_CHUNK_LOAD, t);
         }
     }
