@@ -24,6 +24,7 @@ import net.edwin.mmcecomplement.attachment.AttachmentMachine;
 import net.edwin.mmcecomplement.attachment.AttachmentModule;
 import net.edwin.mmcecomplement.attachment.AttachmentPatternResolver;
 import net.edwin.mmcecomplement.attachment.AttachmentResolver;
+import net.edwin.mmcecomplement.variant.StorageStructureChecks;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeConditionCache;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeConditions;
 import net.edwin.mmcecomplement.attachment.ModuleRecipeData;
@@ -72,6 +73,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -444,24 +446,31 @@ public abstract class MixinTileMultiblockMachineController
     }
 
     /** Run attachment matching synchronously with MMCE's main structure check. */
-    @Inject(method = "checkStructure", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "checkStructure", at = @At("HEAD"))
     private void mmceComplement$restoreMainPatternForCheck(
         CallbackInfoReturnable<Boolean> cir) {
         mmceComplement$previousStructureCheckTick = lastStructureCheckTick;
         if (foundPattern == mmceComplement$combinedPattern) {
             foundPattern = mmceComplement$mainPattern;
         }
-        // A storage machine matched through the metadata-tolerant fallback in
-        // matchesRotation must also survive MMCE's subsequent strict
-        // revalidation pass.  The same block-type check is still required.
-        TileMultiblockMachineController controller =
-            (TileMultiblockMachineController) (Object) this;
-        if (foundMachine instanceof StorageMachine && foundPattern != null
-            && controller.getWorld() != null
-            && mmceComplement$matchesStorageBlockTypes(
-                foundPattern, controller.getWorld(), controller.getPos())) {
-            cir.setReturnValue(true);
+    }
+
+    /** Preserve MMCE's check cadence and lifecycle around the storage fallback. */
+    @Redirect(method = "checkStructure", at = @At(value = "INVOKE",
+        target = "Lhellfirepvp/modularmachinery/common/machine/TaggedPositionBlockArray;"
+            + "matches(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;ZLjava/util/Map;)Z",
+        remap = false), remap = false)
+    private boolean mmceComplement$matchStorageBlockTypesAfterNativeCheck(
+        TaggedPositionBlockArray pattern, World world, BlockPos center,
+        boolean checkTileBlocks,
+        Map<BlockPos, List<BlockArray.BlockInformation>> replacements) {
+        if (pattern.matches(world, center, checkTileBlocks, replacements)) {
+            return true;
         }
+        if (!StorageStructureChecks.isStorageVariant(foundMachine) || world == null) {
+            return false;
+        }
+        return mmceComplement$matchesStorageBlockTypes(pattern, world, center);
     }
 
     @Inject(method = "checkStructure", at = @At("RETURN"))
