@@ -19,6 +19,8 @@ public final class ModuleRecipeConditionCache {
 
     private volatile boolean hasRestrictions;
 
+    private volatile boolean initialized;
+
     /**
      * Replaces the complete snapshot. Recipe objects are identity-stable in
      * MMCE's registry, so identity keys avoid invoking addon-defined equality
@@ -26,8 +28,10 @@ public final class ModuleRecipeConditionCache {
      */
     public void rebuild(Iterable<?> recipes,
                         Collection<String> activeModules) {
+        int expectedSize = recipes instanceof Collection
+            ? ((Collection<?>) recipes).size() : 0;
         IdentityHashMap<ModuleRecipeData, ModuleRecipeConditions.Failure> rebuilt =
-            new IdentityHashMap<>();
+            new IdentityHashMap<>(expectedSize);
         boolean restricted = false;
         for (Object candidate : recipes) {
             ModuleRecipeData recipe = (ModuleRecipeData) candidate;
@@ -38,6 +42,7 @@ public final class ModuleRecipeConditionCache {
         // Publish this last: seeing true guarantees the corresponding snapshot
         // has already been made visible to recipe-search worker threads.
         hasRestrictions = restricted;
+        initialized = true;
     }
 
     /**
@@ -56,7 +61,12 @@ public final class ModuleRecipeConditionCache {
         return hasRestrictions;
     }
 
+    public boolean isInitialized() {
+        return initialized;
+    }
+
     public void clear() {
+        initialized = false;
         hasRestrictions = false;
         failures = Collections.emptyMap();
     }

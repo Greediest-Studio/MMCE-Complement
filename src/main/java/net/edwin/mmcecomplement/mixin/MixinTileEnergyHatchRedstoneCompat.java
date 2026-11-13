@@ -1,5 +1,7 @@
 package net.edwin.mmcecomplement.mixin;
 
+import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import net.edwin.mmcecomplement.redstone.EnergyHatchRedstoneLevel;
 import net.minecraft.tileentity.TileEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,10 +23,12 @@ public abstract class MixinTileEnergyHatchRedstoneCompat {
             target = "Lhellfirepvp/modularmachinery/common/util/RedstoneHelper;"
                 + "getRedstoneLevel(Lnet/minecraft/tileentity/TileEntity;)I"),
         remap = false)
-    private int mmceComplement$readRedstoneLevelWithoutHelper(TileEntity tile) {
-        if (tile == null || tile.getWorld() == null) {
+    private int mmceComplement$calculateEnergyComparatorLevel(TileEntity tile) {
+        if (!(tile instanceof IEnergyHandler)) {
             return 0;
         }
-        return tile.getWorld().getRedstonePowerFromNeighbors(tile.getPos());
+        IEnergyHandler energy = (IEnergyHandler) tile;
+        return EnergyHatchRedstoneLevel.fromEnergy(
+            energy.getCurrentEnergy(), energy.getMaxEnergy());
     }
 }

@@ -19,7 +19,9 @@ class ModuleRecipeConditionCacheTest {
         CountingRecipe blocked = new CountingRecipe("compression", null);
         ModuleRecipeConditionCache cache = new ModuleRecipeConditionCache();
 
+        assertFalse(cache.isInitialized());
         cache.rebuild(Arrays.asList(allowed, blocked), Collections.singleton("cooling"));
+        assertTrue(cache.isInitialized());
         assertTrue(cache.hasRestrictions());
         allowed.resetReads();
         blocked.resetReads();
@@ -42,6 +44,7 @@ class ModuleRecipeConditionCacheTest {
         assertEquals(ModuleRecipeConditions.Failure.NONE, cache.get(recipe));
 
         cache.clear();
+        assertFalse(cache.isInitialized());
         assertFalse(cache.hasRestrictions());
         assertEquals(ModuleRecipeConditions.Failure.MISSING_REQUIRED, cache.get(recipe));
     }

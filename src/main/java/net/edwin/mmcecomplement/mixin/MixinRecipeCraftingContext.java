@@ -13,6 +13,7 @@ import net.edwin.mmcecomplement.cycle.CycleComponentHandler;
 import net.edwin.mmcecomplement.cycle.CycleRuntime;
 import net.edwin.mmcecomplement.catalyst.CatalystRuntime;
 import net.edwin.mmcecomplement.mechannel.MEChannelReservationLifecycle;
+import net.edwin.mmcecomplement.mechannel.RequirementMEChannel;
 import net.edwin.mmcecomplement.compat.ae.tile.IMEDataPatternProvider;
 import net.edwin.mmcecomplement.tile.PrioritySmartInterfaceProvider;
 import net.edwin.mmcecomplement.tile.TileDataItemInputHatch;
@@ -39,6 +40,10 @@ import java.util.Map;
 public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Context {
 
     @Unique private int mmceComplement$catalystsUsed;
+    @Unique private boolean mmceComplement$hasCycleComponents;
+    @Unique private boolean mmceComplement$hasMEChannelRequirements;
+    @Unique private boolean mmceComplement$cycleStateActive;
+    @Unique private boolean mmceComplement$channelCleanupPending;
 
     @Override
     public boolean tryAcquireCatalyst(int max) {
@@ -72,30 +77,43 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
 
     @Inject(method = "startCrafting(J)V", at = @At("HEAD"))
     private void mmceComplement$beginSelfCycle(long seed, CallbackInfo ci) {
-        CycleRuntime.begin((RecipeCraftingContext) (Object) this);
+        if (mmceComplement$hasCycleComponents) {
+            CycleRuntime.begin((RecipeCraftingContext) (Object) this);
+            mmceComplement$cycleStateActive = true;
+        }
+        if (mmceComplement$hasMEChannelRequirements) {
+            mmceComplement$channelCleanupPending = true;
+        }
     }
 
     @Inject(method = "finishCrafting(J)V", at = @At("RETURN"))
     private void mmceComplement$clearSelfCycle(long seed, CallbackInfo ci) {
-        CycleRuntime.clear((RecipeCraftingContext) (Object) this);
-        MEChannelReservationLifecycle.release(
-            (RecipeCraftingContext) (Object) this);
+        mmceComplement$clearExtensionState();
     }
 
     @Inject(method = {"reset", "resetAll"}, at = @At("HEAD"))
     private void mmceComplement$clearResetSelfCycle(
         CallbackInfoReturnable<RecipeCraftingContext> cir) {
         mmceComplement$catalystsUsed = 0;
-        CycleRuntime.clear((RecipeCraftingContext) (Object) this);
-        MEChannelReservationLifecycle.release(
-            (RecipeCraftingContext) (Object) this);
+        mmceComplement$clearExtensionState();
     }
 
     @Inject(method = "destroy", at = @At("HEAD"))
     private void mmceComplement$clearDestroyedSelfCycle(CallbackInfo ci) {
-        CycleRuntime.clear((RecipeCraftingContext) (Object) this);
-        MEChannelReservationLifecycle.release(
-            (RecipeCraftingContext) (Object) this);
+        mmceComplement$clearExtensionState();
+    }
+
+    @Unique
+    private void mmceComplement$clearExtensionState() {
+        RecipeCraftingContext context = (RecipeCraftingContext) (Object) this;
+        if (mmceComplement$cycleStateActive) {
+            CycleRuntime.clear(context);
+            mmceComplement$cycleStateActive = false;
+        }
+        if (mmceComplement$channelCleanupPending) {
+            MEChannelReservationLifecycle.release(context);
+            mmceComplement$channelCleanupPending = false;
+        }
     }
 
     @Redirect(
@@ -121,14 +139,19 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
     private void mmceComplement$addDataItemComponents(
         Map<Long, Map<TileEntity, ProcessingComponent<?>>> components,
         CallbackInfo ci) {
+        boolean hasCycleComponents = false;
         for (Map.Entry<Long, Map<TileEntity, ProcessingComponent<?>>> entry
             : components.entrySet()) {
-            List<ProcessingComponent<?>> expanded = new ArrayList<>(
-                typeComponents.get(entry.getKey()));
+            Collection<ProcessingComponent<?>> original =
+                typeComponents.get(entry.getKey());
+            List<ProcessingComponent<?>> expanded = null;
             for (Map.Entry<TileEntity, ProcessingComponent<?>> componentEntry
                 : entry.getValue().entrySet()) {
                 if (componentEntry.getKey()
                     instanceof TileSelfCycleAssemblyHatch) {
+                    hasCycleComponents = true;
+                    expanded = mmceComplement$copyForExpansion(
+                        expanded, original);
                     TileSelfCycleAssemblyHatch hatch =
                         (TileSelfCycleAssemblyHatch) componentEntry.getKey();
                     expanded.add(new ProcessingComponent<>(
@@ -148,6 +171,8 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                 if (componentEntry.getKey() instanceof TileItemOutputAssemblyHatch) {
                     TileItemOutputAssemblyHatch hatch =
                         (TileItemOutputAssemblyHatch) componentEntry.getKey();
+                    expanded = mmceComplement$copyForExpansion(
+                        expanded, original);
                     expanded.add(new ProcessingComponent<>(
                         hatch.getFluidProvider(), hatch,
                         componentEntry.getValue().getTag()));
@@ -184,6 +209,8 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                     TileSmartInterface.SmartInterfaceProvider data =
                         provider.getDataProviderForGroup(entry.getKey());
                     if (data != null) {
+                        expanded = mmceComplement$copyForExpansion(
+                            expanded, original);
                         expanded.add(new ProcessingComponent<>(data, data,
                             componentEntry.getValue().getTag()));
                     }
@@ -202,15 +229,21 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                 // Do not let that marker suppress registration of its fluid
                 // component when an item and fluid requirement share a hatch.
                 if (!(componentEntry.getKey() instanceof TileItemInputAssemblyHatch)) {
+                    expanded = mmceComplement$copyForExpansion(
+                        expanded, original);
                     expanded.add(new ProcessingComponent<>(provider, provider,
                         componentEntry.getValue().getTag()));
                 }
+                expanded = mmceComplement$copyForExpansion(expanded, original);
                 expanded.add(new ProcessingComponent<>(
                     hatch.getFluidProvider(), hatch,
                     componentEntry.getValue().getTag()));
             }
-            typeComponents.put(entry.getKey(), expanded);
+            if (expanded != null) {
+                typeComponents.put(entry.getKey(), expanded);
+            }
         }
+        mmceComplement$hasCycleComponents = hasCycleComponents;
     }
 
     /**
@@ -221,13 +254,30 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
      */
     @Inject(method = "updateRequirementComponents", at = @At("RETURN"))
     private void mmceComplement$prioritizeDataItemComponents(CallbackInfo ci) {
+        boolean hasMEChannelRequirements = false;
         for (List<RequirementComponents> group : requirementComponents.values()) {
             for (RequirementComponents entry : group) {
-                entry.components().sort((left, right) -> {
-                    int leftPriority = cyclePriority(left);
-                    int rightPriority = cyclePriority(right);
-                    return Integer.compare(leftPriority, rightPriority);
-                });
+                if (entry.requirement() instanceof RequirementMEChannel) {
+                    hasMEChannelRequirements = true;
+                }
+                boolean hasCycleComponent = false;
+                boolean hasOrdinaryComponent = false;
+                for (ProcessingComponent<?> component : entry.components()) {
+                    if (component.getProvidedComponent()
+                        instanceof CycleComponentHandler) {
+                        hasCycleComponent = true;
+                    } else {
+                        hasOrdinaryComponent = true;
+                    }
+                    if (hasCycleComponent && hasOrdinaryComponent) {
+                        break;
+                    }
+                }
+                if (hasCycleComponent && hasOrdinaryComponent) {
+                    entry.components().sort((left, right) ->
+                        Integer.compare(cyclePriority(left),
+                            cyclePriority(right)));
+                }
                 if (!(entry.requirement()
                     instanceof RequirementInterfaceNumInput)) {
                     continue;
@@ -249,6 +299,18 @@ public abstract class MixinRecipeCraftingContext implements CatalystRuntime.Cont
                 }
             }
         }
+        mmceComplement$hasMEChannelRequirements = hasMEChannelRequirements;
+    }
+
+    @Unique
+    private static List<ProcessingComponent<?>> mmceComplement$copyForExpansion(
+        List<ProcessingComponent<?>> expanded,
+        Collection<ProcessingComponent<?>> original) {
+        if (expanded != null) {
+            return expanded;
+        }
+        return original == null ? new ArrayList<>()
+            : new ArrayList<>(original);
     }
 
     private static int cyclePriority(ProcessingComponent<?> component) {
